@@ -1,0 +1,13 @@
+LIBRARY   RELOADDAEMON
+DESCRIPTION '高速公路ETC密钥服务前置动态库'
+EXPORTS
+
+;启动服务
+beginTCPService
+
+;停止服务
+stopTCPService
+
+;设置回调函数
+setCallBack
+setPrintCallBack
