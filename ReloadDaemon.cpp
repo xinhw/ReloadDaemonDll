@@ -1,3 +1,15 @@
+/*-------------------------------------------------------------------------
+    Shanghai AvantPort Information Technology Co., Ltd
+
+    Software Development Division
+
+    Xin Hongwei(hongwei.xin@avantport.com)
+
+    Created£º2018/07/15 09:43:02
+
+    Reversion:
+        
+-------------------------------------------------------------------------*/
 // ReloadDaemon.cpp : Defines the entry point for the DLL application.
 //
 
@@ -25,6 +37,15 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 
 
 
+/*-------------------------------------------------------------------------
+Function:		beginTCPService
+Created:		2018-07-15 09:43:06
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 int __stdcall beginTCPService(int nportno,int ntimeout)
 {
 	int			ret;
@@ -54,30 +75,90 @@ int __stdcall beginTCPService(int nportno,int ntimeout)
 	return 0;
 }
 
+
+
+
+/*-------------------------------------------------------------------------
+Function:		stopTCPService
+Created:		2018-07-15 09:43:11
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 int __stdcall stopTCPService()
 {
 	gRun = FALSE;
-	Sleep(1);
+
+	Sleep(100);
 
 	WaitForSingleObject(hdlThread,INFINITE);
 
+	PRINTK("\n·þÎñÍ£Ö¹£¡");
 	WSACleanup();
 	return 0;
 }
 
+
+
+
+/*-------------------------------------------------------------------------
+Function:		setCallBack
+Created:		2018-07-15 09:43:18
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void __stdcall setCallBack(processCallback proc)
 {
 	theProc = proc;
 	return;
 }
 
+
+
+/*-------------------------------------------------------------------------
+Function:		setPrintCallBack
+Created:		2018-07-15 09:43:23
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void __stdcall setPrintCallBack(printMessageCallback proc)
 {
 	thePrintMsg = proc;
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		logEvent
+Created:		2018-07-15 09:43:29
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void logEvent(LPCTSTR pFormat, ...)
+{
+
+	TCHAR		chMsg[1024];
+	va_list		pArg;
+	
+	va_start(pArg, pFormat);
+	vsprintf(chMsg, pFormat, pArg);
+	va_end(pArg);
+	
+	if(NULL!=thePrintMsg) thePrintMsg(0,chMsg);
+	return;
+}
+
+void logEvent(int nType,LPCTSTR pFormat, ...)
 {
 	TCHAR		chMsg[1024];
 	va_list		pArg;
@@ -86,8 +167,6 @@ void logEvent(LPCTSTR pFormat, ...)
 	vsprintf(chMsg, pFormat, pArg);
 	va_end(pArg);
 	
-	if(NULL!=thePrintMsg) thePrintMsg(chMsg);
-
-	
+	if(NULL!=thePrintMsg) thePrintMsg(nType,chMsg);
 	return;
 }

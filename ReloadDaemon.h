@@ -12,24 +12,33 @@
 #define RELOADDAEMON_API __declspec(dllimport)
 #endif
 
-/*
-报文处理回调函数
-*/
+/*	报文处理回调函数*/
 typedef int (CALLBACK *processCallback)(PPACKAGEHEADER,WORD,BYTE *,WORD &,BYTE *); 
-typedef void (CALLBACK *printMessageCallback)(char *);
+processCallback theProc = NULL;
 
+/*	信息显示回调函数*/
+typedef void (CALLBACK *printMessageCallback)(int,char *);
+printMessageCallback thePrintMsg = NULL;
+
+
+/*	线程句柄*/
 HANDLE hdlThread = INVALID_HANDLE_VALUE;
 
-processCallback theProc = NULL;
-printMessageCallback thePrintMsg = NULL;
 
 extern "C"
 {
+	/*	开始服务*/
 	int __stdcall beginTCPService(int nportno,int ntimeout);
+
+	/*	停止服务*/
 	int __stdcall stopTCPService();
+
+	/*	设置报文处理回调函数*/
 	void __stdcall setCallBack(processCallback proc);
 
+	/*	设置信息显示回调函数*/
 	void __stdcall setPrintCallBack(printMessageCallback proc);
 }
 
 void logEvent(LPCTSTR pFormat, ...);
+void logEvent(int nType,LPCTSTR pFormat, ...);

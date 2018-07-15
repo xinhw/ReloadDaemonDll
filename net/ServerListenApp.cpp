@@ -1,7 +1,28 @@
+/*-------------------------------------------------------------------------
+    Shanghai AvantPort Information Technology Co., Ltd
+
+    Software Development Division
+
+    Xin Hongwei(hongwei.xin@avantport.com)
+
+    Created：2018/07/15 09:55:10
+
+    Reversion:
+        
+-------------------------------------------------------------------------*/
  
 
 
 
+/*-------------------------------------------------------------------------
+Function:		server_recv_thread
+Created:		2018-07-15 09:55:13
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 DWORD	WINAPI server_recv_thread(LPVOID p)
 {
 	int				ret;
@@ -83,16 +104,26 @@ DWORD	WINAPI server_recv_thread(LPVOID p)
 	}//while(gRun)
 
 endl:
-	pts->HD_Term();
 
+	//PRINTK("\nAPP：客户端服务线程(TCP)退出！");
+
+	pts->HD_Term();
 	free(ptp);
-	PRINTK("\nAPP：客户端服务线程(TCP)退出！");
 	return 0;
 }
 
 
 
 
+/*-------------------------------------------------------------------------
+Function:		AcceptWorkItem
+Created:		2018-07-15 09:55:18
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 DWORD	WINAPI	AcceptWorkItem(PVOID pvContext)
 {
 	int				ret,nerror;
@@ -115,7 +146,6 @@ DWORD	WINAPI	AcceptWorkItem(PVOID pvContext)
 
 	//	解析报文
 	PRINTK("\n等待来自客户端(TCP) [%s]的数据:",inet_ntoa(pcltsock->skaddr.sin_addr));
-
 
 	while(gRun)
 	{
@@ -223,7 +253,7 @@ DWORD	WINAPI	AcceptWorkItem(PVOID pvContext)
 		//////////////////////////////////////////////////////////////////////////	
 		nLen = 0;
 		memset(pszNetBuff,0x00,HUGE_BUFFER_SIZE);
-		ret = pt.combine_a_block(&ph,wSize,pszData,nLen,pszNetBuff);
+		ret = pt.combine_a_block(&ph,wRecv,pszData,nLen,pszNetBuff);
 		if(ret)
 		{
 			PRINTK("\n应答组包错误：%d",ret);
@@ -246,7 +276,7 @@ endl:
 
 	InterlockedDecrement(&glConnectNum);
 
-	PRINTK("\n客户端[socket=%08X]退出",pcltsock->nsocket);
+	PRINTK("\n客户端(TCP) [%s]退出",inet_ntoa(pcltsock->skaddr.sin_addr));
 
 	closesocket(pcltsock->nsocket);
 	free(pcltsock);
