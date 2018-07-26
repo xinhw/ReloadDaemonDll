@@ -38,8 +38,14 @@ public:
 
 	static const string toHexString(const unsigned char* input, const int datasize);
 	
-	static void XorBytes(int nlen,const BYTE *var1,const BYTE *var2,BYTE *var);
-	
+	static void xorBytes(int nlen,const BYTE *var1,const BYTE *var2,BYTE *var);
+
+	static void getDateTime(char *s);
+	static void getBCDDateTime(BYTE *szDateTime);
+
+	static BYTE ascToUC(BYTE  ch);
+	static void StringToByte(char *str,BYTE *arr);
+	static void ByteToString(BYTE *arr,BYTE nlen,char *str);
 };
 
 #endif

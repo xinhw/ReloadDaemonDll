@@ -2,8 +2,6 @@
 #ifndef		_ERRORCODE_H_
 #define		_ERRORCODE_H_
 
-
-
 	//          SOCKET创建和连接错误 
 	#define     ERR_SOCKET_CREATE			0x200
 	#define     ERR_SOCKET_CONNECT			0x201

@@ -65,7 +65,7 @@
 	#define	TOG(byteValue) (byteValue/1024/1024/1024)
 	#define  NHEADDATALEN 40
 
-
+	/*	线程参数*/
 	typedef	struct	threadParam
 	{
 		int		nportno;
@@ -73,5 +73,14 @@
 	}THREADPARAM;
 	#define PTHREADPARAM THREADPARAM *
 
+
+	typedef	struct	tagcardkey
+	{
+		BYTE bIndex;				/*	密钥索引*/
+		BYTE bHeaderLen;			/*	密钥头长度*/
+		BYTE *szKeyHeader;			/*	密钥头*/
+		char *strDesc;				/*	密钥描述*/
+	}CARDKEY;
+	#define PCARDKEY CARDKEY *
 
 #endif

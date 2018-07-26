@@ -186,8 +186,9 @@ DWORD	WINAPI	AcceptWorkItem(PVOID pvContext)
 		if(ret!=0) 
 		{
 			nerror = WSAGetLastError();
+			if(-23==ret) ret = 10054;
 			if(nerror==0) nerror = ret;
-
+			
 			PRINTK("\n´íÎóÂë£º%d",nerror);
 			goto endl;
 		}

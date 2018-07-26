@@ -324,10 +324,118 @@ const string CMisc::toHexString(const unsigned char* input, const int datasize)
 
 } 
 
-void CMisc::XorBytes(int nlen,const BYTE *var1,const BYTE *var2,BYTE *var)
+void CMisc::xorBytes(int nlen,const BYTE *var1,const BYTE *var2,BYTE *var)
 {
 	int i;
 
 	for(i=0;i<nlen;i++) var[i] = (BYTE)(var1[i]^var2[i]);
+	return;
+}
+
+
+void CMisc::getDateTime(char *s)
+{
+	SYSTEMTIME st;
+
+	if(NULL==s) return;
+
+	GetLocalTime(&st);
+
+	sprintf(s,"%04d%02d%02d%02d%02d%02d",
+			st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);
+	return;
+}
+
+void CMisc::getBCDDateTime(BYTE *szDateTime)
+{
+	char strTime[20];
+	int i;
+
+	memset(strTime,0x00,20);
+	getDateTime(strTime);
+
+	for(i=0;i<14;i=i+2)
+	{
+		szDateTime[i/2] = ascToUC(strTime[i])*0x10 + ascToUC(strTime[i+1]);
+	}
+	return;
+}
+
+
+
+
+/*-------------------------------------------------------------------------
+Function:		ascToUC
+Created:		2018-07-13 17:49:06
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+BYTE CMisc::ascToUC(BYTE  ch)
+{
+	BYTE value;
+	
+	switch(ch){
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+		value = ch - '0';
+		break;
+	case 'a':
+	case 'b':
+	case 'c':
+	case 'd':
+	case 'e':
+	case 'f':
+		value = ch - 'a'+10;
+		break;
+	case 'A':
+	case 'B':
+	case 'C':
+	case 'D':
+	case 'E':
+	case 'F':
+		value = ch - 'A'+10;
+		break;
+		
+	default:
+		value = 0;
+		break;
+    }
+	return value;
+}
+
+void CMisc::StringToByte(char *str,BYTE *arr)
+{
+	int i,nlen;
+
+	if(arr==NULL||str==NULL) return;
+
+	nlen = strlen(str);
+
+	for(i=0;i<nlen;i=i+2)
+	{
+		arr[i/2] = ascToUC(str[i])*0x10 + ascToUC(str[i+1]);
+	}
+	return;
+}
+
+
+void CMisc::ByteToString(BYTE *arr,BYTE nlen,char *str)
+{
+	BYTE i;
+
+	if(arr==NULL||str==NULL) return;
+
+	for(i=0;i<nlen;i++) sprintf(str+2*i,"%02X",arr[i]);
 	return;
 }
