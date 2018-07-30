@@ -239,7 +239,7 @@ int		ClsCommand::send_recv(WORD wTransType,
 
 	memset(szBuf,0x00,256);
 	ret = m_ptransfer->s_recv(&nLen,szBuf,NHEADDATALEN,3000);
-	if(ret<NHEADDATALEN)
+		if(ret<NHEADDATALEN)
 	{
 		PRINTK("\n报文接收失败1：%d",ret);
 		return ret;
@@ -313,8 +313,9 @@ Reversion:
         
 -------------------------------------------------------------------------*/
 int		ClsCommand::cmd_1032(BYTE bVer,BYTE *szAPPID,
-							BYTE *szRnd,WORD wSeqNo,DWORD nAmount,BYTE bTransFlag,BYTE *szDeviceNo,BYTE *szDateTime,
-							BYTE *szMAC)
+							BYTE *szRnd,WORD wSeqNo,DWORD nAmount,BYTE bTransFlag,BYTE *szDeviceNo,BYTE *szDateTime,DWORD dwRemain,
+							BYTE *szMAC1,
+							BYTE *szMAC2)
 {
 	int ret;
 	WORD nLen;
@@ -355,12 +356,19 @@ int		ClsCommand::cmd_1032(BYTE bVer,BYTE *szAPPID,
 	memcpy(szBuf+nLen,szDateTime,7);
 	nLen = nLen + 7;
 	
-	//10	认证MAC	B	4
-	memset(szBuf+nLen,0x00,4);
+	//10	MAC1	B	4
+	memcpy(szBuf+nLen,szMAC1,4);
 	nLen = nLen +4;
+
 	//11	卡片版本号	B	1
 	szBuf[nLen]=bVer;
 	nLen++;
+
+	//12	交易前余额 B 4
+	CMisc::Int2Bytes(dwRemain,szBuf+nLen);
+	nLen = nLen + 4;
+
+
 
 	ret = send_recv(0x1032,nLen,szBuf,&nLen,szBuf);
 	if(ret) return ret;
@@ -369,7 +377,7 @@ int		ClsCommand::cmd_1032(BYTE bVer,BYTE *szAPPID,
 	ret = ret * 0x100 + szBuf[1];
 	if(ret) return ret;
 	
-	memcpy(szMAC,szBuf+2,4);
+	memcpy(szMAC2,szBuf+2,4);
 
 	m_wRemainCount = szBuf[6];
 	m_wRemainCount = m_wRemainCount *0x100 + szBuf[7];
@@ -397,10 +405,10 @@ int		ClsCommand::cmd_1033(BYTE bVer,BYTE *szAPPID,
 {
 	int ret;
 	WORD nLen;
-	BYTE szBuf[64];
+	BYTE szBuf[256];
 
 	nLen = 0;
-	memset(szBuf,0x00,64);
+	memset(szBuf,0x00,256);
 
 	//1	银行网点编码	B	15
 	memcpy(szBuf+nLen,m_strBankID,15);
@@ -469,10 +477,10 @@ int		ClsCommand::cmd_1034(BYTE bVer,BYTE *szAPPID,
 {
 	int ret;
 	WORD nLen;
-	BYTE szBuf[64];
+	BYTE szBuf[256];
 
 	nLen = 0;
-	memset(szBuf,0x00,64);
+	memset(szBuf,0x00,256);
 
 	//1	银行网点编码	B	15
 	memcpy(szBuf+nLen,m_strBankID,15);
@@ -873,9 +881,8 @@ int		ClsCommand::cmd_1039(BYTE bVer,BYTE *szAPPID,
 	return 0;
 }
 
-//3.10	CPU卡密钥获取1040
 /*-------------------------------------------------------------------------
-Function:		ClsCommand.cmd_1040
+Function:		ClsCommand.getKey
 Created:		2018-07-16 17:03:22
 Author:			Xin Hongwei(hongwei.xin@avantport.com)
 Parameters: 
@@ -883,7 +890,7 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int		ClsCommand::cmd_1040(BYTE bVer,BYTE *szAPPID,
+int		ClsCommand::getKey(WORD wType,BYTE bVer,BYTE *szAPPID,
 						BYTE bKeyNo,
 						BYTE *szRnd,
 						BYTE *szAPDU,
@@ -892,7 +899,7 @@ int		ClsCommand::cmd_1040(BYTE bVer,BYTE *szAPPID,
 						BYTE *szEncKey,
 						BYTE *szMAC)
 {
-		int ret;
+	int ret;
 	WORD nLen;
 	BYTE szBuf[64];
 
@@ -935,11 +942,11 @@ int		ClsCommand::cmd_1040(BYTE bVer,BYTE *szAPPID,
 	memcpy(szBuf+nLen,szKeyHeader,bKeyHeaderLen);
 	nLen=nLen+bKeyHeaderLen;
 
-	//10	初始密钥分散因子	B	8
+	//10	保护密钥分散因子	B	8
 	memcpy(szBuf+nLen,szPDID,8);
 	nLen = nLen + 8;
 
-	ret = send_recv(0x1040,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(wType,nLen,szBuf,&nLen,szBuf);
 	if(ret) return ret;
 
 	ret = szBuf[0];
@@ -960,6 +967,58 @@ int		ClsCommand::cmd_1040(BYTE bVer,BYTE *szAPPID,
 	return 0;
 }
 
+
+//3.10	CPU卡密钥获取1040
+/*-------------------------------------------------------------------------
+Function:		ClsCommand.cmd_1040
+Created:		2018-07-16 17:03:22
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int		ClsCommand::cmd_1040(BYTE bVer,BYTE *szAPPID,
+						BYTE bKeyNo,
+						BYTE *szRnd,
+						BYTE *szAPDU,
+						BYTE bKeyHeaderLen,BYTE *szKeyHeader,
+						BYTE *szPDID,
+						BYTE *szEncKey,
+						BYTE *szMAC)
+{
+	int ret;
+	
+	ret = getKey(0x1040,bVer,szAPPID,bKeyNo,szRnd,szAPDU,bKeyHeaderLen,szKeyHeader,szPDID,szEncKey,szMAC);
+	
+	return ret;
+}
+
+/*-------------------------------------------------------------------------
+Function:		ClsCommand.cmd_1042
+Created:		2018-07-16 17:03:22
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int		ClsCommand::cmd_1042(BYTE bVer,BYTE *szAPPID,
+						BYTE bKeyNo,
+						BYTE *szRnd,
+						BYTE *szAPDU,
+						BYTE bKeyHeaderLen,BYTE *szKeyHeader,
+						BYTE *szPDID,
+						BYTE *szEncKey,
+						BYTE *szMAC)
+{
+	int ret;
+	
+	ret = getKey(0x1042,bVer,szAPPID,bKeyNo,szRnd,szAPDU,bKeyHeaderLen,szKeyHeader,szPDID,szEncKey,szMAC);
+	
+	return ret;
+}
+
 //3.11	CPU卡二次发行补充文件认证1041
 /*-------------------------------------------------------------------------
 Function:		ClsCommand.cmd_1041
@@ -978,7 +1037,7 @@ int		ClsCommand::cmd_1041(BYTE bVer,BYTE *szAPPID,
 {
 	int ret;
 	WORD nLen;
-	BYTE szBuf[64];
+	BYTE szBuf[512];
 
 	nLen = 0;
 	memset(szBuf,0x00,64);

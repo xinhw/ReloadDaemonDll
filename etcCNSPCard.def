@@ -3,10 +3,7 @@ EXPORTS
 
 ; 通用函数
 
-;设置终端机编号
-setDeviceNo
-;获取终端机编号
-getDeviceNo
+
 ;回调函数
 setCallbackFunc
 
@@ -29,8 +26,7 @@ signIn
 ;CPU卡复位
 cpuATS
 
-;读CPU卡文件
-cpuReadCardFile
+
 ;读取CPU卡文件：0016,0015,余额
 cpuReadCardFiles
 cpuReadCardRecord
@@ -51,14 +47,18 @@ cpuPurchase
 cpuVerifyTAC
 ;CPU卡重装密钥
 cpuReloadPIN
+;
+cpuUpdateFile000E
+cpuReloadPIN
+
 
 ;OBU函数
-;OBU复位
-obuATR
 ;OBU一发
 obuInit
 ;OBU读取信息
 obuRead
 ;OBU更新文件
 obuUpdateFile
+;
+obuUpdateLoadFlag
 

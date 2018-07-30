@@ -32,39 +32,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
     return TRUE;
 }
 
-/*	设置终端机编号*/
-/*-------------------------------------------------------------------------
-Function:		setDeviceNo
-Created:		2018-07-16 17:04:14
-Author:			Xin Hongwei(hongwei.xin@avantport.com)
-Parameters: 
-        
-Reversion:
-        
--------------------------------------------------------------------------*/
-void __stdcall setDeviceNo(BYTE *szNo)
-{
-	if(NULL!=szNo) memcpy(gszDeviceNo,szNo,6);
-	return;
-}
 
-
-
-/*	获取终端机编号*/
-/*-------------------------------------------------------------------------
-Function:		getDeviceNo
-Created:		2018-07-16 17:04:17
-Author:			Xin Hongwei(hongwei.xin@avantport.com)
-Parameters: 
-        
-Reversion:
-        
--------------------------------------------------------------------------*/
-void __stdcall getDeviceNo(BYTE *szNo)
-{
-	if(NULL!=szNo) memcpy(szNo,gszDeviceNo,6);
-	return;
-}
 
 /*-------------------------------------------------------------------------
 Function:		setCallbackFunc
@@ -78,6 +46,21 @@ Reversion:
 void	__stdcall	setCallbackFunc(CALLBACKFUNC p)
 {
 	pMyCallback = p;
+}
+
+
+
+void callbackMessage(char *strmsg)
+{
+	if(NULL==pMyCallback)
+	{
+		PRINTK("%s",strmsg);
+	}
+	else
+	{
+		pMyCallback(strlen(strmsg),strmsg);
+	}
+	return;
 }
 
 
@@ -132,6 +115,7 @@ int __stdcall connectOKS(char *strip,WORD wport)
 	{
 		PRINTK("\nconnect_server连接服务器%s:%d失败:%d",strip,wport,ret);
 		delete ptransfer;
+		ptransfer = NULL;
 		return ret;
 	}
 
@@ -219,6 +203,16 @@ int __stdcall openReader(int nType,int ncom,int nbaud)
 		return ret;
 	}
 
+	if(READER_TYPE_XIONGDI==nType)
+	{
+		preader = new CJTReader();
+
+		memset(strcom,0x00,32);
+		sprintf(strcom,"COM%d",ncom);
+		ret = preader->Open(strcom,nbaud);
+		return ret;
+	}
+
 
 	return -1;
 }
@@ -294,8 +288,11 @@ int __stdcall cpuATS(BYTE *szSNO,BYTE &bATSLen,BYTE *szATS)
 {
 	int ret;
 
+	if(!validation(0)) return -1;
+
 	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
 
+	bATSLen = 0;
 	ret = pcard->rats(szSNO,bATSLen,szATS);
 
 	delete pcard;
@@ -305,9 +302,9 @@ int __stdcall cpuATS(BYTE *szSNO,BYTE &bATSLen,BYTE *szATS)
 
 
 /*7. 读CPU卡文件
-	wFileID	[in]	文件的SFI
-	bLen	[out]	文件长度
-	szFile	[out]	文件内容
+	elf15		[out]	卡片发行基本数据文件
+	elf16		[out]	持卡人基本数据文件
+	dwRemain	[out]	余额
 */
 /*-------------------------------------------------------------------------
 Function:		cpuReadCardFiles
@@ -322,6 +319,8 @@ int __stdcall cpuReadCardFiles(BYTE *elf15,BYTE *elf16,DWORD &dwRemain)
 {
 	int ret;
 
+	if(!validation(0)) return -1;
+
 	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
 
 	ret = pcard->readCard(elf15,elf16,dwRemain);
@@ -332,11 +331,19 @@ int __stdcall cpuReadCardFiles(BYTE *elf15,BYTE *elf16,DWORD &dwRemain)
 }
 
 /*
-	可以读取：0018,0017,0019文件
+	8.	读取记录文件
+	bFileID		[in]	文件标识，SFI
+	bNo			[in]	记录号
+	bLen		[in]	记录长度
+	szRec		[out]	记录
+
+  可以读取：0018,0017,0019文件
 */
 int __stdcall cpuReadCardRecord(BYTE bFileID,BYTE bNo,BYTE bLen,BYTE *szRec)
 {
 	int ret;
+
+	if(!validation(0)) return -1;
 
 	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
 
@@ -348,7 +355,7 @@ int __stdcall cpuReadCardRecord(BYTE bFileID,BYTE bNo,BYTE bLen,BYTE *szRec)
 
 }
 
-/*8. CPU卡一发
+/*9. 用户卡一发
 	szFile0015	[in]	0015文件内容
 */
 /*-------------------------------------------------------------------------
@@ -364,6 +371,8 @@ int __stdcall cpuInit(BYTE *szFile0015)
 {
 	int ret;
 
+	if(!validation(1)) return -1;
+
 	CTYCPUCard *pcard = new CTYCPUCard(preader,pcmd);
 
 	ret = pcard->init(szFile0015);
@@ -375,7 +384,7 @@ int __stdcall cpuInit(BYTE *szFile0015)
 }
 
 
-/*9. 更新持卡人基本数据文件
+/*10. 更新持卡人基本数据文件
 	bVer		[in]	卡片版本号
 	szAPPID		[in]	卡片应用序列号
 	szFile		[in]	持卡人基本数据文件		
@@ -391,11 +400,21 @@ Reversion:
 -------------------------------------------------------------------------*/
 int __stdcall cpuUpdateUserFile(BYTE bVer,BYTE *szAPPID,BYTE *szFile)
 {
-	return 0;
+	int ret;
+
+	if(!validation(1)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+
+	ret = pcard->updateELF0016(bVer,szAPPID,szFile);
+
+	delete pcard;
+
+	return ret;
 }
 
 
-/*10. 更新卡发行基本数据文件
+/*11. 更新卡发行基本数据文件
 	bVer		[in]	卡片版本号
 	szAPPID		[in]	卡片应用序列号
 	szFile		[in]	卡发行基本数据文件		
@@ -411,12 +430,22 @@ Reversion:
 -------------------------------------------------------------------------*/
 int __stdcall cpuUpdateIssueFile(BYTE bVer,BYTE *szAPPID,BYTE *szFile)
 {
-	return 0;
+	int ret;
+
+	if(!validation(1)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+
+	ret = pcard->updateELF0015(bVer,szAPPID,szFile);
+
+	delete pcard;
+
+	return ret;
 }
 
 
 
-/*11. 更新卡片有效期
+/*12. 更新卡片有效期
 	bVer		[in]	卡片版本号
 	szAPPID		[in]	卡片应用序列号
 	szValidDate	[in]	新的有效期	
@@ -432,10 +461,20 @@ Reversion:
 -------------------------------------------------------------------------*/
 int __stdcall cpuUpdateValidDate(BYTE bVer,BYTE *szAPPID,BYTE *szValidDate)
 {
-	return 0;
+	int ret;
+
+	if(!validation(1)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+
+	ret = pcard->updateValidDate(bVer,szAPPID,szValidDate);
+
+	delete pcard;
+
+	return ret;
 }
 
-/*12. 圈存
+/*13. 圈存
 	bVer		[in]	卡片版本号
 	szAPPID		[in]	卡片应用序列号
 	dwAmount	[in]	圈存金额
@@ -452,21 +491,52 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall cpuCredit(BYTE bCardVer,BYTE *szAPPID,DWORD dwAmount,BYTE *szDateTime,
+int __stdcall cpuCredit(BYTE bVer,BYTE *szAPPID,DWORD dwAmount,BYTE *szDateTime,BYTE *szDeviceNo,
 						WORD &wSeqNo,BYTE *szTAC)
 {
 	int ret;
 
+	if(!validation(1)) return -1;
+
 	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
 
-	ret = pcard->credit(bCardVer,szAPPID,gszDeviceNo,dwAmount,wSeqNo,szDateTime,szTAC);
+	ret = pcard->credit(bVer,szAPPID,szDeviceNo,dwAmount,wSeqNo,szDateTime,szTAC);
 
 	delete pcard;
 
 	return ret;
 }
 
-/*13. 消费
+/*14. 更新本地000E文件
+	bVer		[in]	卡片版本号
+	szAPPID		[in]	卡片应用序列号
+	szFile000E	[in]	000E文件内容
+*/
+/*-------------------------------------------------------------------------
+Function:		cpuUpdateFile000E
+Created:		2018-07-16 17:04:57
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+				
+-------------------------------------------------------------------------*/
+int __stdcall cpuUpdateFile000E(BYTE bVer,BYTE *szAPPID,BYTE *szFile000E)
+{
+	int ret;
+
+	if(!validation(1)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+
+	ret = pcard->updateELF000E(bVer,szAPPID,szFile000E);
+
+	delete pcard;
+
+	return ret;
+}
+
+/*15. 消费
 	bVer		[in]	卡片版本号
 	szAPPID		[in]	卡片应用序列号
 	dwAmount	[in]	消费金额
@@ -484,13 +554,23 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall cpuPurchase(BYTE bCardVer,BYTE *szAPPID,DWORD dwAmount,DWORD dwAuditNo,BYTE *szDateTime,
+int __stdcall cpuPurchase(BYTE bVer,BYTE *szAPPID,DWORD dwAmount,DWORD dwAuditNo,BYTE *szDateTime,BYTE *szDeviceNo,
 						WORD &wSeqNo,BYTE *szTAC)
 {
-	return 0;
+	int ret;
+
+	if(!validation(1)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+
+	ret = pcard->debit(bVer,szAPPID,szDeviceNo,dwAmount,dwAuditNo,szDateTime,wSeqNo,szTAC);
+
+	delete pcard;
+
+	return ret;
 }
 
-/*13. CPU卡验证TAC
+/*16. CPU卡验证TAC
 	bVer		[in]	卡片版本号
 	szAPPID		[in]	卡片应用序列号
 	dwAmount	[in]	消费金额
@@ -508,18 +588,26 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall cpuVerifyTAC(BYTE bCardVer,BYTE *szAPPID,
-						   DWORD dwAmount,BYTE bTransFlag,DWORD dwAuditNo,BYTE *szDateTime,
+int __stdcall cpuVerifyTAC(BYTE bVer,BYTE *szAPPID,
+						   DWORD dwAmount,BYTE bTransFlag,BYTE *szDeviceNo,DWORD dwAuditNo,BYTE *szDateTime,
 						   BYTE *szTAC)
 {
-	return 0;
+	int ret;
+
+	if(!validation(1)) return -1;
+
+	ret = pcmd->cmd_1037(bVer,szAPPID,dwAmount,bTransFlag,szDeviceNo,dwAuditNo,szDateTime,szTAC);
+
+	return ret;
 }
 
 
 /*
-14. CPU卡重装密钥
+17. CPU卡重装PIN
 	bVer		[in]	卡片版本号
 	szAPPID		[in]	卡片应用序列号
+	bPINLen		[in]	PIN的长度
+	szPIN		[in]	新的PIN
 */
 /*-------------------------------------------------------------------------
 Function:		cpuReloadPIN
@@ -530,35 +618,30 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall cpuReloadPIN(BYTE bCardVer,BYTE *szAPPID)
+int __stdcall cpuReloadPIN(BYTE bVer,BYTE *szAPPID,BYTE bPINLen,BYTE *szPIN)
 {
-	return 0;
+	int ret;
+
+	if(!validation(1)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+
+	ret = pcard->reloadPIN(bVer,szAPPID,bPINLen,szPIN);
+
+	delete pcard;
+
+	return ret;
 }
 
 
 /***************************************************************************************/
 /*				OBU函数	    														   */
 /***************************************************************************************/
-/*6. OBU复位
-	bATRLen	[in]	OBU的ATR返回的长度
-	szATR	[in]	OBU的ATR信息
-*/
-/*-------------------------------------------------------------------------
-Function:		obuATR
-Created:		2018-07-16 17:05:10
-Author:			Xin Hongwei(hongwei.xin@avantport.com)
-Parameters: 
-        
-Reversion:
-        
--------------------------------------------------------------------------*/
-int __stdcall obuATR(BYTE &bATRLen,BYTE *szATR)
-{
-	return 0;
-}
 
-/*8. OBU一发
-	szEF01	[in]	车辆信息文件
+
+/*18. OBU一发
+	elf01_mk	[in]	系统信息文件
+	elf01_adf01	[in]	车辆信息文件
 */
 /*-------------------------------------------------------------------------
 Function:		obuInit
@@ -571,15 +654,25 @@ Reversion:
 -------------------------------------------------------------------------*/
 int __stdcall obuInit(BYTE *elf01_mk,BYTE *elf01_adf01)
 {
-	return 0;
+	int ret;
+
+	if(!validation(1)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader,pcmd);
+
+	ret = pcard->init(elf01_mk,elf01_adf01);
+
+	delete pcard;
+
+	return ret;
 }
 
-/*8. OBU读取信息
-	bVer	[in]	OBU合同版本号
-	szAPPID	[in]	OBU合同序列号
-	wFileID	[in]	文件ID
-	bLen	[out]	文件长度
-	szFile	[out]	文件信息
+
+
+
+/*19. OBU读取信息
+	elf01_mk	[in]	系统信息文件
+	elf01_adf01	[in]	车辆信息文件
 */
 /*-------------------------------------------------------------------------
 Function:		obuRead
@@ -594,6 +687,8 @@ int __stdcall obuRead(BYTE *elf01_mk,BYTE *elf01_adf01)
 {
 	int ret;
 
+	if(!validation(1)) return -1;
+
 	COBUCard *pcard = new COBUCard(preader,pcmd);
 
 	ret = pcard->read_obu(elf01_mk,elf01_adf01);
@@ -605,7 +700,7 @@ int __stdcall obuRead(BYTE *elf01_mk,BYTE *elf01_adf01)
 }
 
 
-/*8. OBU更新文件
+/*20. OBU更新文件
 	bVer	[in]	OBU合同版本号
 	szAPPID	[in]	OBU合同序列号
 	bLen	[in]	文件长度
@@ -620,9 +715,80 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall obuUpdateFile(BYTE bVer,BYTE *szAPPID,BYTE bLen,BYTE *szFile)
+int __stdcall obuUpdateFile(BYTE bVer,BYTE *szAPPID,BYTE bFileType,BYTE *szFile)
 {
-	return 0;
+	int ret;
+
+	if(!validation(1)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader,pcmd);
+
+	if(bFileType==0x01)		//	系统信息文件
+	{
+		ret = pcard->update_mf_elf01(bVer,szAPPID,szFile);
+	}
+	else					//	更新车辆信息文件
+	{
+		ret = pcard->update_adf_elf01(bVer,szAPPID,szFile);
+	}
+
+	delete pcard;
+
+	return ret;
 }
 
+/*21. OBU拆卸标志修改
+	bVer	[in]	OBU合同版本号
+	szAPPID	[in]	OBU合同序列号
+	bFlag	[in]	OBU拆卸标志
+*/
+int __stdcall obuUpdateLoadFlag(BYTE bVer,BYTE *szAPPID,BYTE bFlag)
+{
+	int ret;
 
+	if(!validation(1)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader,pcmd);
+
+	ret = pcard->update_load_flag(bVer,szAPPID,bFlag);
+
+	delete pcard;
+
+	return ret;
+}
+
+/*-------------------------------------------------------------------------
+Function:		validation
+Created:		2018-07-28 10:58:19
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+bool validation(int nlevel)
+{
+	bool bOk = true;
+
+	switch(nlevel)
+	{
+		case 1:
+			if(NULL==pcmd)
+			{
+				PRINTK("\n未连接到前置！");
+				bOk = false;
+				break;
+			}
+		case 0:
+			if(NULL==preader)
+			{
+				PRINTK("\n读卡器未打开！");
+				bOk = false;
+				break;
+			}
+		default:
+			break;
+	}
+
+	return bOk;
+}

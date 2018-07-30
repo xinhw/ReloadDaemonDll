@@ -8,10 +8,11 @@
 #include <conio.h>
 #include <time.h>
 
+#include "EncodeDLL.h"
 #include "datatypedef.h"
 
 #include ".\\log\\CommServiceLog.h"
-#include ".\\net\\tcptransfer.h"		
+#include ".\\net\\tcptransfer.h"
 #include ".\\protocol\\Protol.h"
 
 #include "ErrorCode.h"
@@ -22,6 +23,7 @@
 
 #include ".\\reader\\NXRsuReader.h"
 #include ".\\reader\\AISinoReader.h"
+#include ".\\reader\\JTReader.h"
 #include ".\\card\\cardbase.h"
 #include ".\\card\\tycpucard.h"
 #include ".\\card\\obucard.h"
@@ -40,6 +42,7 @@
 #include ".\\app\\command.cpp"
 #include ".\\reader\\NXRsuReader.cpp"
 #include ".\\reader\\AISinoReader.cpp"
+#include ".\\reader\\JTReader.cpp"
 #include ".\\card\\cardbase.cpp"
 #include ".\\card\\tycpucard.cpp"
 #include ".\\card\\obucard.cpp"

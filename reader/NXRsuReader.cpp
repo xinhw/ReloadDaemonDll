@@ -140,13 +140,15 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-UINT CNXRsuReader::Initialize(char *strsno,char *strResult)
+UINT CNXRsuReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 {
 	time_t tm;
 	time(&tm);
 	BYTE szTime[4];
 
 	int iResult = 0;
+
+	bATSLen = 0;
 
 	memset(szTime,0x00,4);
 	CMisc::Int2Bytes(tm,szTime);
@@ -215,19 +217,7 @@ UINT CNXRsuReader::Initialize(char *strsno,char *strResult)
 	return 0;
 }
 
-/*-------------------------------------------------------------------------
-Function:		CNXRsuReader.Initialize
-Created:		2018-07-19 10:36:42
-Author:			Xin Hongwei(hongwei.xin@avantport.com)
-Parameters: 
-        
-Reversion:
-        
--------------------------------------------------------------------------*/
-UINT CNXRsuReader::Initialize(BYTE btType)
-{
-	return 0x9000;
-}
+
 
 // 向卡机发送命令
 /*-------------------------------------------------------------------------
@@ -246,6 +236,9 @@ UINT CNXRsuReader::RunCmd(char *strCmd, char *strResult)
 
 	memset(pBuffer, 0, 257);
 
+#ifdef DEBUG_PRINT
+	PRINTK("\nOBU-CMD:%s",strCmd);
+#endif
 	// 将字符串转换成字节序列
 	pBuffer[0] = strlen(strCmd)/2;
 	CMisc::StringToByte(strCmd, pBuffer+1);
@@ -267,12 +260,18 @@ UINT CNXRsuReader::RunCmd(char *strCmd, char *strResult)
 	iResult = lpfn_TransferChannel_rs(m_hDevice, &iDID, &iChannelID, &iAPDULIST, (char *)btData, &iReturnStatus, 1000);
 	if(iResult != SUCCESS)
 	{
+		#ifdef DEBUG_PRINT
+			PRINTK("\nOBU-RSP: FAILURE WITH ERROR %d",strResult);
+		#endif
 		return iResult;
 	}
 
-
 	// 将返回的字节序列转换成字符串
 	CMisc::ByteToString(&btData[1], btData[0],strResult);
+
+#ifdef DEBUG_PRINT
+	PRINTK("\nOBU-RSP:%s",strResult);
+#endif
 
 	if(strlen(strResult) < 4)
 	{

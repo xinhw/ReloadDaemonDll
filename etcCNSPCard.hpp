@@ -1,41 +1,22 @@
+#pragma once
 
-// The following ifdef block is the standard way of creating macros which make exporting 
-// from a DLL simpler. All files within this DLL are compiled with the ETCCNSPCARD_EXPORTS
-// symbol defined on the command line. this symbol should not be defined on any project
-// that uses this DLL. This way any other project whose source files include this file see 
-// ETCCNSPCARD_API functions as being imported from a DLL, wheras this DLL sees symbols
-// defined with this macro as being exported.
-#ifdef ETCCNSPCARD_EXPORTS
-#define ETCCNSPCARD_API __declspec(dllexport)
-#else
-#define ETCCNSPCARD_API __declspec(dllimport)
-#endif
-
-#ifdef DEBUG_TEST
-#pragma message("测试程序")
-#else
-#pragma message("动态库")
-#endif
+#define _WINSOCKAPI_
+#include <windows.h>
+#include <winsock2.h>
+#include <stdio.h>
+#include <conio.h>
+#include <time.h>
 
 //	读卡器类型
 #define READER_TYPE_CPU_CARD		0x00
 #define READER_TYPE_OBU				0x01
-#define READER_TYPE_XIONGDI			0x02
+
 
 typedef void  (__stdcall *CALLBACKFUNC)(int nLen,char *pszstr);
-CALLBACKFUNC pMyCallback = NULL;
-void callbackMessage(char *strmsg);
 
 
 extern "C"
 {
-	/*	网络连接实例*/
-	CTcpTransfer *ptransfer=NULL;
-	/*	后台密钥服务实例*/
-	ClsCommand *pcmd = NULL;
-	/*	读卡器实例*/
-	CCardReader *preader = NULL;
-
 
 	/*	设置回调函数：因为一发的时间比较长，中间可通过回调函数返回信息，刷新界面；也可以通过回调知道进展*/
 	void	__stdcall	setCallbackFunc(CALLBACKFUNC p);
@@ -69,7 +50,7 @@ extern "C"
 
 
 	/***************************************************************************************/
-	/*				CPU函数																   */
+	/*				CPU用户卡函数																   */
 	/***************************************************************************************/
 	/*6. CPU卡复位
 		szSNO	[in]	卡唯一号
@@ -79,7 +60,7 @@ extern "C"
 	int __stdcall cpuATS(BYTE *szSNO,BYTE &bATSLen,BYTE *szATS);
 
 
-	/*7. 读CPU卡文件
+	/*7. 读CPU卡信息
 		elf15		[out]	卡片发行基本数据文件
 		elf16		[out]	持卡人基本数据文件
 		dwRemain	[out]	余额
@@ -208,8 +189,5 @@ extern "C"
 		bFlag	[in]	OBU拆卸标志
 	*/
 	int __stdcall obuUpdateLoadFlag(BYTE bVer,BYTE *szAPPID,BYTE bFlag);
-
-
-	bool validation(int nlevel);
 
 };

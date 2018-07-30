@@ -51,6 +51,7 @@ DWORD	WINAPI server_recv_thread(LPVOID p)
 
 	////////////////////////////////////////////////////////////////////////
 	PRINTK("\nAPP:server_recv_thread线程开始运行,监听端口%d！",ptp->nportno);
+	PRINTK("\nAPP:超时时间段%d秒",ptp->ntimeout);
 
 	ret = pts->HD_Init();
 	if(ret)
@@ -147,20 +148,15 @@ DWORD	WINAPI	AcceptWorkItem(PVOID pvContext)
 	//	解析报文
 	PRINTK("\n等待来自客户端(TCP) [%s]的数据:",inet_ntoa(pcltsock->skaddr.sin_addr));
 
+	nIdleTime = GetTickCount()/1000000;
+
 	while(gRun)
 	{
 		Sleep(1);
-		nIdleTime++;nTick++;
-
-		//	每个1秒nIdleTime增加++
-		if(nTick>1000)
-		{
-			nTick = 0;
-			nIdleTime++;
-		}
+		nTick = GetTickCount()/1000000;
 
 		//	长时间没有请求，退出
-		if(nIdleTime>pcltsock->nWaitTimeOut) 
+		if((nTick-nIdleTime)>pcltsock->nWaitTimeOut) 
 		{
 			PRINTK("\n客户端[socket = %08X]超时退出",pcltsock->nsocket);
 			goto endl;
@@ -178,7 +174,7 @@ DWORD	WINAPI	AcceptWorkItem(PVOID pvContext)
 		}
 
 		//	空闲等待
-		nIdleTime = 0;
+		nIdleTime = nTick;
 		memset(pszNetBuff,0x00,HUGE_BUFFER_SIZE);
 		
 		//取报文头：40字节

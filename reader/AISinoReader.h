@@ -46,10 +46,7 @@ private:
 public:
 	virtual UINT Open(char *strAddress, unsigned int iBaud);
 	virtual void Close();
-	virtual UINT Initialize(char *strsno,char *strResult);
-	UINT Initialize(BYTE btType);
+	virtual UINT Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult);
 	virtual UINT RunCmd(char *strCmd, char *strResult);
 	virtual UINT Halt();
-
-
 };

@@ -105,6 +105,15 @@ int CCPUCardBase::clear(BYTE *elf15)
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		CCPUCardBase.validation
+Created:		2018-07-28 10:57:39
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 bool CCPUCardBase::validation()
 {
 	if(NULL==m_pReader)
@@ -112,13 +121,12 @@ bool CCPUCardBase::validation()
 		PRINTK("\n读卡器未初始化");
 		return false;
 	}
-	/*
+	
 	if(NULL==m_pCmd)
 	{
 		PRINTK("\n未连接到前置");
 		return false;
 	}
-	*/
 
 	return true;
 }
@@ -135,12 +143,12 @@ Reversion:
 int CCPUCardBase::rats(BYTE *szSNO,BYTE &bATSLen,BYTE *szATS)
 {
 	int ret;
-	char strats[256],strsno[10];
+	BYTE strats[256],strsno[10];
 
 	if(!validation()) return -1;
 
 	memset(strats,0x00,256);
-	ret = m_pReader->Initialize(strsno,strats);
+	ret = m_pReader->Initialize(strsno,bATSLen,strats);
 	if(0==ret)
 	{
 		memcpy(szSNO,strsno,4);
@@ -227,12 +235,12 @@ int CCPUCardBase::readRecord(BYTE bFileID,BYTE bNo,BYTE bLen,BYTE *szRec)
 	ret = preader->RunCmd("00A40000023F00",strresp);
 	if(ret) return ret;
 
-	//	2. 选择1001 ADF
+	//	1. 选择1001 ADF
 	memset(strresp,0x00,256);
 	ret = preader->RunCmd("00A40000021001",strresp);
 	if(ret) return ret;
 
-	//	1. 读取记录文件
+	//	2. 读取记录文件
 	memset(strcmd,0x00,11);
 	sprintf(strcmd,"00B2%02X%02X%02X",bNo,(BYTE)((bFileID>>3)&0x04),bLen);
 	
@@ -285,22 +293,23 @@ int CCPUCardBase::credit(BYTE bVer,BYTE *szAPPID,BYTE *szDeviceNo,DWORD dwAmount
 
 	memset(szBuf,0x00,32);
 	CMisc::StringToByte(strResp,szBuf);
-	//	余额[4]
+	//	余额		[4]
 	CMisc::Bytes2Int(szBuf,(int *)&dwRemain);
-	//	在线交易序号[2]
+	//	在线交易序号	[2]
 	wSeqNo = szBuf[4];
 	wSeqNo = wSeqNo*0x100 + szBuf[5];
-	//[1]
-	//[1]
-	//	随机数
+	//	密钥标识	[1]
+	//	密钥版本	[1]
+	//	随机数		[4]
 	memcpy(szRnd,szBuf+8,4);
-	//	MAC1
+	//	MAC1		[4]
 	memcpy(szMAC1,szBuf+12,4);
 
 	CMisc::getBCDDateTime(szDateTime);
 
 	ret = m_pCmd->cmd_1032(bVer,szAPPID,
-						szRnd,wSeqNo,dwAmount,0x02,szDeviceNo,szDateTime,
+						szRnd,wSeqNo,dwAmount,0x02,szDeviceNo,szDateTime,dwRemain,
+						szMAC1,
 						szMAC2);
 	if(ret) return ret;
 
@@ -388,3 +397,255 @@ int CCPUCardBase::debit(BYTE bVer,BYTE *szAPPID,BYTE *szDeviceNo,DWORD dwAmount,
 }
 
 
+
+/*-------------------------------------------------------------------------
+Function:		CCPUCardBase.updateELF0015
+Created:		2018-07-27 10:32:42
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int CCPUCardBase::updateELF0015(BYTE bVer,BYTE *szAPPID,BYTE *szFile0015)
+{
+	int		ret,i;
+	char	strCmd[256],strresp[256];
+	BYTE	szCmd[128],szRnd[4],szMAC[4];
+
+	if(!validation()) return -1;
+
+	//	1. 选择1001 ADF
+	memset(strresp,0x00,64);
+	ret = preader->RunCmd("00A40000021001",strresp);
+	if(ret) return ret;
+
+	//	2. 取随机数
+	memset(strresp,0x00,64);
+	ret = preader->RunCmd("0084000004",strresp);
+	if(ret) return ret;
+
+	CMisc::StringToByte(strresp,szRnd);
+	
+	memset(szCmd,0x00,128);
+	memcpy(szCmd,"\x04\xD6\x95\x00\x36",5);
+	memcpy(szCmd+5,szFile0015,50);
+
+	memset(szMAC,0x00,4);
+	ret = m_pCmd->cmd_1033(bVer,szAPPID,szRnd,0x02,55,szCmd,szMAC);
+	if(ret) return ret;
+
+	//	3. 更新文件
+	strcpy(strCmd,"04D6950036");
+	for(i=0;i<50;i++) sprintf(strCmd+10+2*i,"%02X",szFile0015[i]);
+	for(i=0;i<4;i++) sprintf(strCmd+110+2*i,"%02X",szMAC[i]);
+
+	memset(strresp,0x00,64);
+	ret = m_pReader->RunCmd(strCmd,strresp);
+	if(ret) return ret;
+
+	return 0;
+}
+
+
+
+/*-------------------------------------------------------------------------
+Function:		CCPUCardBase.updateELF0016
+Created:		2018-07-27 10:32:35
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int CCPUCardBase::updateELF0016(BYTE bVer,BYTE *szAPPID,BYTE *szFile0016)
+{
+	int		ret,i;
+	char	strCmd[256],strresp[64];
+	BYTE	szCmd[128],szRnd[4],szMAC[4];
+
+	if(!validation()) return -1;
+
+	//	1. 选择3F00
+	memset(strresp,0x00,64);
+	ret = preader->RunCmd("00A40000023F00",strresp);
+	if(ret) return ret;
+
+	//	2. 取随机数
+	memset(strresp,0x00,64);
+	ret = preader->RunCmd("0084000004",strresp);
+	if(ret) return ret;
+
+	CMisc::StringToByte(strresp,szRnd);
+	
+	memset(szCmd,0x00,128);
+	memcpy(szCmd,"\x04\xD6\x96\x00\x3B",5);
+	memcpy(szCmd+5,szFile0016,55);
+
+	memset(szMAC,0x00,4);
+	ret = m_pCmd->cmd_1033(bVer,szAPPID,szRnd,0x01,60,szCmd,szMAC);
+	if(ret) return ret;
+
+	//	3. 更新文件
+	strcpy(strCmd,"04D696003B");
+	for(i=0;i<55;i++) sprintf(strCmd+10+2*i,"%02X",szFile0016[i]);
+	for(i=0;i<4;i++) sprintf(strCmd+120+2*i,"%02X",szMAC[i]);
+
+	memset(strresp,0x00,64);
+	ret = m_pReader->RunCmd(strCmd,strresp);
+	if(ret) return ret;
+
+	return 0;
+}
+
+
+/*-------------------------------------------------------------------------
+Function:		CCPUCardBase.updateValidDate
+Created:		2018-07-27 10:32:35
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int CCPUCardBase::updateValidDate(BYTE bVer,BYTE *szAPPID,BYTE *szNewValidDate)
+{
+	int		ret,i;
+	char	strCmd[256],strresp[256];
+	BYTE	szCmd[128],szRnd[4],szMAC[4];
+
+	if(!validation()) return -1;
+
+	//	1. 选择1001 ADF
+	memset(strresp,0x00,64);
+	ret = preader->RunCmd("00A40000021001",strresp);
+	if(ret) return ret;
+
+	//	2. 取随机数
+	memset(strresp,0x00,64);
+	ret = preader->RunCmd("0084000004",strresp);
+	if(ret) return ret;
+
+	CMisc::StringToByte(strresp,szRnd);
+	
+	memset(szCmd,0x00,128);
+	memcpy(szCmd,"\x04\xD6\x95\x18\x08",5);
+	memcpy(szCmd+5,szNewValidDate,4);
+
+	memset(szMAC,0x00,4);
+	ret = m_pCmd->cmd_1035(bVer,szAPPID,szRnd,9,szCmd,szMAC);
+	if(ret) return ret;
+
+	//	3. 更新储值卡的有效日期
+	strcpy(strCmd,"04D6951808");
+	for(i=0;i<4;i++) sprintf(strCmd+10+2*i,"%02X",szNewValidDate[i]);
+	for(i=0;i<4;i++) sprintf(strCmd+18+2*i,"%02X",szMAC[i]);
+
+	memset(strresp,0x00,64);
+	ret = m_pReader->RunCmd(strCmd,strresp);
+	if(ret) return ret;
+
+	return 0;
+}
+
+
+
+
+/*-------------------------------------------------------------------------
+Function:		CCPUCardBase.updateELF000E
+Created:		2018-07-27 10:32:35
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int CCPUCardBase::updateELF000E(BYTE bVer,BYTE *szAPPID,BYTE *szFile000E)
+{
+	int		ret,i;
+	char	strCmd[256],strresp[256];
+	BYTE	szCmd[256],szRnd[4],szMAC[4];
+
+	if(!validation()) return -1;
+
+	//	1. 选择1001 ADF
+	memset(strresp,0x00,64);
+	ret = preader->RunCmd("00A40000021001",strresp);
+	if(ret) return ret;
+
+	//	2. 取随机数
+	memset(strresp,0x00,64);
+	ret = preader->RunCmd("0084000004",strresp);
+	if(ret) return ret;
+
+	CMisc::StringToByte(strresp,szRnd);
+	
+	memset(szCmd,0x00,256);
+	memcpy(szCmd,"\x04\xD6\x8E\x00\x4A",5);
+	memcpy(szCmd+5,szFile000E,70);
+
+	memset(szMAC,0x00,4);
+	ret = m_pCmd->cmd_1041(bVer,szAPPID,szRnd,75,szCmd,szMAC);
+	if(ret) return ret;
+
+	//	3. 更新000E文件
+	strcpy(strCmd,"04D68E004A");
+	for(i=0;i<70;i++) sprintf(strCmd+10+2*i,"%02X",szFile000E[i]);
+	for(i=0;i<4;i++) sprintf(strCmd+150+2*i,"%02X",szMAC[i]);
+
+	memset(strresp,0x00,64);
+	ret = m_pReader->RunCmd(strCmd,strresp);
+	if(ret) return ret;
+
+	return 0;
+}
+
+
+
+
+
+
+/*-------------------------------------------------------------------------
+Function:		CCPUCardBase.reloadPIN
+Created:		2018-07-28 10:57:24
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int CCPUCardBase::reloadPIN(BYTE bVer,BYTE *szAPPID,BYTE bPINLen,BYTE *szPIN)
+{
+	int		ret,i;
+	char	strCmd[64],strresp[256];
+	BYTE	szCmd[32],szRnd[4];
+
+	if(!validation()) return -1;
+
+	//	1. 选择1001 ADF
+	memset(strresp,0x00,64);
+	ret = preader->RunCmd("00A40000021001",strresp);
+	if(ret) return ret;
+
+	
+	memset(szCmd,0x00,32);
+	memcpy(szCmd,"\x80\x5E\x00\x41\x00",5);
+	szCmd[4] = (BYTE)(4+bPINLen);
+	memcpy(szCmd+5,szPIN,bPINLen);
+
+	memset(szRnd,0x00,4);
+
+	ret = m_pCmd->cmd_1039(bVer,szAPPID,szRnd,5+bPINLen,szCmd,szCmd+5+bPINLen);
+	if(ret) return ret;
+
+	//	3. RELOAD PIN
+	memset(strCmd,0x00,64);
+	for(i=0;i<(bPINLen+9);i++) sprintf(strCmd+2*i,"%02X",szCmd[i]);
+
+	memset(strresp,0x00,64);
+	ret = m_pReader->RunCmd(strCmd,strresp);
+	if(ret) return ret;
+
+	return 0;
+
+}

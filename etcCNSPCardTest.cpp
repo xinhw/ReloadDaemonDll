@@ -1,12 +1,34 @@
+/*-------------------------------------------------------------------------
+    Shanghai AvantPort Information Technology Co., Ltd
+
+    Software Development Division
+
+    Xin Hongwei(hongwei.xin@avantport.com)
+
+    Created：2018/07/27 10:17:43
+
+    Reversion:
+        
+-------------------------------------------------------------------------*/
 #define __DEBUG__
 
 #define DEBUG_TEST
 #define	DEBUG_ICMD
 #define DEBUG_PRINT
 
-#include "dllinclude.hpp"
+/*
+//	还需要把：WS2_32.lib EncodeDLL.lib etcCNSPCard.lib 加入到连接中
+  #include "etcCNSPCard.hpp"
+*/
 
+#ifndef PRINTK
+#define PRINTK printf
+#endif
+
+
+#include "dllinclude.hpp"
 #include "etcCNSPCard.cpp"
+
 
 typedef	struct cmd_func
 {
@@ -25,8 +47,10 @@ void		test_cpucard_init(void);
 void		test_cpucard_personize(void);
 void		test_cpucard_credit(void);
 void		test_cpucard_debit(void);
+void		test_cpucard_update000e(void);
+void		test_cpucard_reload_pin(void);
 
-void		test_obu_reset(void);
+
 void		test_obu_read(void);
 void		test_obu_init(void);
 void		test_obu_personize(void);
@@ -49,8 +73,9 @@ CMD_FUNC cmd_func_tab[] =
 	{'P',"测试：用户卡二发",test_cpucard_personize},
 	{'C',"测试：用户卡充值",test_cpucard_credit},
 	{'D',"测试：用户卡消费",test_cpucard_debit},
+	{'A',"测试：用户卡更新000E文件",test_cpucard_update000e},
+	{'J',"测试：用户卡PIN重装",test_cpucard_reload_pin},
 
-	{'B',"测试：OBU复位",test_obu_reset},
 	{'0',"测试：OBU读卡信息",test_obu_read},
 	{'1',"测试：OBU一发",test_obu_init},
 	{'2',"测试：OBU二发",test_obu_personize},
@@ -159,12 +184,21 @@ void		print_cmd_usage(void)
 
 
 
+/*-------------------------------------------------------------------------
+Function:		test_open_reader
+Created:		2018-07-27 10:17:55
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void		test_open_reader(void)
 {
 	int ret,ntype;
 	int ncom,nbaud;
 
-	PRINTK("\n请输入读卡器类型(0--航天金卡读写器，1--万集OBU读写器\n");
+	PRINTK("\n请输入读卡器类型\n\t0--航天金卡读写器\n\t1--万集OBU读写器\n\t2--深圳雄帝读卡器\n");
 	scanf("%d",&ntype);
 
 	PRINTK("\n输入串口号：");
@@ -185,6 +219,15 @@ void		test_open_reader(void)
 	return;
 }
 
+/*-------------------------------------------------------------------------
+Function:		test_connect_kms
+Created:		2018-07-27 10:17:58
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void		test_connect_kms(void)
 {
 	int ret;
@@ -213,6 +256,15 @@ void		test_connect_kms(void)
 
 
 
+/*-------------------------------------------------------------------------
+Function:		test_close_reader
+Created:		2018-07-27 10:18:02
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void		test_close_reader(void)
 {
 	int ret;
@@ -231,6 +283,15 @@ void		test_close_reader(void)
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		test_search_card
+Created:		2018-07-27 10:18:05
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void		test_search_card(void)
 {
 	int ret;
@@ -239,6 +300,7 @@ void		test_search_card(void)
 
 	bLen = 0;
 	memset(szATS,0x00,64);
+	memset(szSNO,0x00,4);
 
 	ret = cpuATS(szSNO,bLen,szATS);
 	if(ret)
@@ -255,6 +317,15 @@ void		test_search_card(void)
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		test_cpucard_read
+Created:		2018-07-27 10:18:08
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void		test_cpucard_read(void)
 {
 	int ret,i;
@@ -284,20 +355,71 @@ void		test_cpucard_read(void)
 }
 
 
+BYTE ascToUC(BYTE  ch)
+{
+	BYTE value;
+	
+	switch(ch){
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+		value = ch - '0';
+		break;
+	case 'a':
+	case 'b':
+	case 'c':
+	case 'd':
+	case 'e':
+	case 'f':
+		value = ch - 'a'+10;
+		break;
+	case 'A':
+	case 'B':
+	case 'C':
+	case 'D':
+	case 'E':
+	case 'F':
+		value = ch - 'A'+10;
+		break;
+		
+	default:
+		value = 0;
+		break;
+    }
+	return value;
+}
+
+
+/*-------------------------------------------------------------------------
+Function:		test_cpucard_init
+Created:		2018-07-27 10:18:11
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void		test_cpucard_init(void)
 {
 	int ret,i,n;
 	BYTE elf15[50];
 
 	//	C4FECFC4C4FECFC4 01 50 6401 6666660018474415 2018010120181231C4FE4144353337320000000001030000000000000000
-	char *p15 = "C4FECFC4C4FECFC40150640166666600184744152018010120181231C4FE4144353337320000000001030000000000000000";
+	char *p15 = "C4FECFC4C4FECFC40150640166666612184744152018010120181231C4FE4144353337320000000001030000000000000000";
 
 	memset(elf15,0x00,50);
 
 	n = strlen(p15);
 	for(i=0;i<n;i=i+2)
 	{
-		elf15[i/2] = CMisc::ascToUC(p15[i])*0x10 + CMisc::ascToUC(p15[i+1]);
+		elf15[i/2] = ascToUC(p15[i])*0x10 + ascToUC(p15[i+1]);
 	}
 
 	ret = cpuInit(elf15);
@@ -313,12 +435,74 @@ void		test_cpucard_init(void)
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		test_cpucard_personize
+Created:		2018-07-27 10:18:15
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void		test_cpucard_personize(void)
 {
+	int ret;
+	BYTE elf15[50],elf16[55];
+	DWORD dwRemain;
+	BYTE bVer,szAPPID[8];
+
+	memset(elf15,0x00,50);
+	memset(elf16,0x00,55);
+	dwRemain = 0;
+
+	ret =cpuReadCardFiles(elf15,elf16,dwRemain);
+	if(ret)
+	{
+		PRINTK("\n读用户卡失败:%d",ret);
+		return;
+	}
+
+	bVer = elf15[9];
+	memcpy(szAPPID,elf15+12,8);
+
+	//	更新0015文件
+	ret = cpuUpdateIssueFile(bVer,szAPPID,elf15);
+	if(ret)
+	{
+		PRINTK("\n更新 0015 文件失败:%d",ret);
+		return;
+	}
+
+	//	更新0016文件
+	ret = cpuUpdateUserFile(bVer,szAPPID,elf16);
+	if(ret)
+	{
+		PRINTK("\n更新 0016 文件失败:%d",ret);
+		return;
+	}
+
+	//	更新有效日期
+	ret = cpuUpdateValidDate(bVer,szAPPID,(BYTE *)"\x20\x20\x12\x01");
+	if(ret)
+	{
+		PRINTK("\n更新用户卡有效日期:%d",ret);
+		return;
+	}
+	
+
 	return;
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		test_cpucard_credit
+Created:		2018-07-27 10:18:18
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void		test_cpucard_credit(void)
 {
 	int ret;
@@ -327,6 +511,7 @@ void		test_cpucard_credit(void)
 	WORD wSeqNo;
 	DWORD dwRemain;
 	BYTE bVer,szAPPID[8];
+	BYTE szDeviceNo[6];
 
 	memset(elf15,0x00,50);
 	memset(elf16,0x00,55);
@@ -342,7 +527,9 @@ void		test_cpucard_credit(void)
 	bVer= elf15[9];
 	memcpy(szAPPID,elf15+12,8);
 
-	ret = cpuCredit(bVer,szAPPID,10000,szTransTime,wSeqNo,szTAC);
+	memset(szDeviceNo,0x00,6);
+
+	ret = cpuCredit(bVer,szAPPID,10000,szTransTime,szDeviceNo,wSeqNo,szTAC);
 	if(ret)
 	{
 		PRINTK("\n圈存失败：%4X",ret);
@@ -354,35 +541,33 @@ void		test_cpucard_credit(void)
 	return;
 }
 
+/*-------------------------------------------------------------------------
+Function:		test_cpucard_debit
+Created:		2018-07-27 10:18:22
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void		test_cpucard_debit(void)
 {
 	return;
 }
 
-
-void		test_obu_reset(void)
-{
-	int ret;
-	BYTE bLen,i;
-	BYTE szATS[64];
-
-	ret = obuATR(bLen,szATS);
-	if(ret)
-	{
-		PRINTK("\n没找到OBU");
-		return;
-	}
-
-	PRINTK("\nOBU复位信息：");
-	for(i=0;i<bLen;i++) PRINTK("%02X",szATS[i]);
-
-	return;
-}
-
+/*-------------------------------------------------------------------------
+Function:		test_obu_read
+Created:		2018-07-27 10:18:28
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void		test_obu_read(void)
 {
 	int ret,i;
-	BYTE elf01_mk[100],elf01_adf01[80];
+	BYTE elf01_mk[100],elf01_adf01[256];
 
 	memset(elf01_mk,0x00,100);
 	memset(elf01_adf01,0x00,80);
@@ -390,7 +575,7 @@ void		test_obu_read(void)
 	ret = obuRead(elf01_mk,elf01_adf01);
 	if(ret)
 	{
-		PRINTK("\n读取OBU信息失败！");
+		PRINTK("\n读取OBU信息失败：%d",ret);
 		return;
 	}
 
@@ -403,17 +588,87 @@ void		test_obu_read(void)
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		test_obu_init
+Created:		2018-07-27 10:18:31
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void		test_obu_init(void)
 {
 	return;
 }
 
+/*-------------------------------------------------------------------------
+Function:		test_obu_personize
+Created:		2018-07-27 10:18:34
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void		test_obu_personize(void)
 {
+	int ret;
+	BYTE elf01_mk[100],elf01_adf01[256];
+	BYTE bVer,szAPPID[8];
+
+	memset(elf01_mk,0x00,100);
+	memset(elf01_adf01,0x00,80);
+
+	ret = obuRead(elf01_mk,elf01_adf01);
+	if(ret)
+	{
+		PRINTK("\n读取OBU信息失败！");
+		return;
+	}
+
+	bVer = elf01_mk[9];
+	memcpy(szAPPID,elf01_mk+10,8);
+
+	/*
+	ret = obuUpdateFile(bVer,szAPPID,1,elf01_mk);
+	if(ret)
+	{
+		PRINTK("\n更新 系统信息文件 失败:%04X",ret);
+		return;
+	}
+	*/
+	memset(elf01_adf01,0x00,80);
+	memcpy(elf01_adf01,"宁A-12345",9);
+	elf01_adf01[14]=0x01;
+	elf01_adf01[15]=0x00;
+
+	ret = obuUpdateFile(bVer,szAPPID,2,elf01_adf01);
+	if(ret)
+	{
+		PRINTK("\n更新 车辆信息文件 失败:%04X",ret);
+		return;
+	}
+
+	ret = obuUpdateLoadFlag(bVer,szAPPID,0x01);
+	if(ret)
+	{
+		PRINTK("\n更新 拆卸标志 失败:%04X",ret);
+		return;
+	}
 	return;
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		test_signin
+Created:		2018-07-27 10:18:37
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void		test_signin(void)
 {
 	int ret;
@@ -426,6 +681,98 @@ void		test_signin(void)
 		return;
 	}
 	PRINTK("\n签到成功！");
+
+	return;
+}
+
+
+
+
+
+/*-------------------------------------------------------------------------
+Function:		test_cpucard_update000e
+Created:		2018-07-27 10:18:37
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+void		test_cpucard_update000e(void)
+{
+	int ret;
+	BYTE elf15[50],elf16[55];
+	DWORD dwRemain;
+	BYTE bVer,szAPPID[8];
+	BYTE szFile000E[70];
+
+	memset(elf15,0x00,50);
+	memset(elf16,0x00,55);
+	dwRemain = 0;
+
+	ret =cpuReadCardFiles(elf15,elf16,dwRemain);
+	if(ret)
+	{
+		PRINTK("\n读用户卡失败:%d",ret);
+		return;
+	}
+
+	bVer = elf15[9];
+	memcpy(szAPPID,elf15+12,8);
+
+	memset(szFile000E,0x00,70);
+
+	ret = cpuUpdateFile000E(bVer,szAPPID,szFile000E);
+	if(ret)
+	{
+		PRINTK("\nCPU卡二次发行补充文件认证失败！");
+		return;
+	}
+	PRINTK("\nCPU卡二次发行补充文件认证成功！");
+	return;
+}
+
+
+/*-------------------------------------------------------------------------
+Function:		test_cpucard_reload_pin
+Created:		2018-07-28 11:00:55
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+void		test_cpucard_reload_pin(void)
+{
+	int ret;
+	BYTE elf15[50],elf16[55];
+	DWORD dwRemain;
+	BYTE bVer,szAPPID[8];
+
+	memset(elf15,0x00,50);
+	memset(elf16,0x00,55);
+	dwRemain = 0;
+
+	ret =cpuReadCardFiles(elf15,elf16,dwRemain);
+	if(ret)
+	{
+		PRINTK("\n读用户卡失败:%d",ret);
+		return;
+	}
+
+	bVer = elf15[9];
+	memcpy(szAPPID,elf15+12,8);
+
+	ret = cpuReloadPIN(bVer,szAPPID,6,(BYTE *)"123456");
+	if(ret)
+	{
+		PRINTK("\nPIN解锁失败！");
+	}
+	else
+	{
+		PRINTK("\nPIN解锁成功！");
+	}
+
 
 	return;
 }

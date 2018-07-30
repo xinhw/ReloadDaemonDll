@@ -47,5 +47,10 @@ public:
 	int debit(BYTE bVer,BYTE *szAPPID,BYTE *szDeviceNo,DWORD dwAmount,DWORD dwAuditNo,BYTE *szTransTime,
 				WORD &wSeqNo,				
 				BYTE *szTAC);
+	int updateELF0015(BYTE bVer,BYTE *szAPPID,BYTE *szFile0015);
+	int updateELF0016(BYTE bVer,BYTE *szAPPID,BYTE *szFile0016);
+	int updateValidDate(BYTE bVer,BYTE *szAPPID,BYTE *szNewValidDate);
+	int updateELF000E(BYTE bVer,BYTE *szAPPID,BYTE *szFile000E);
+	int reloadPIN(BYTE bVer,BYTE *szAPPID,BYTE bPINLen,BYTE *szPIN);
 
 };

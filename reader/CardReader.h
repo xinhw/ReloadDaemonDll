@@ -19,7 +19,7 @@ private:
 	double m_dTimeSum;
 public:
 	virtual UINT Open(char *strAddress, unsigned int iBaud) = 0;
-	virtual UINT Initialize(char *strsno,char *strResult) = 0;
+	virtual UINT Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult) = 0;
 	virtual void Close() = 0;
 	virtual UINT RunCmd(char *strCmd, char *strResult) = 0;
 	virtual UINT Halt()=0;

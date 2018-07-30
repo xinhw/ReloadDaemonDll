@@ -14,8 +14,6 @@
 #define		__CCOMMMAND_H__
 
 
-
-
 class ClsCommand
 {
 public:
@@ -24,14 +22,16 @@ public:
 	~ClsCommand();
 
 public:
-	//3.1	操作员签到认证1031（一期不实现）
+	//4.1	操作员签到认证1031
 	int		cmd_1031(BYTE *szOperatorNo);
-	//3.2	充资认证1032
+
+	//4.2	用户卡圈存认证1032
 	int		cmd_1032(BYTE bVer,BYTE *szAPPID,
-					BYTE *szRnd,WORD wSeqNo,DWORD nAmount,BYTE bTransFlag,BYTE *szDeviceNo,BYTE *szDateTime,
+					BYTE *szRnd,WORD wSeqNo,DWORD nAmount,BYTE bTransFlag,BYTE *szDeviceNo,BYTE *szDateTime,DWORD dwRemain,
+					BYTE *szMAC1,
 					BYTE *szMAC);
 
-	//3.3	CPU卡二次发行认证1033
+	//4.3	用户卡二次发行认证1033
 	int		cmd_1033(BYTE bVer,BYTE *szAPPID,
 					BYTE *szRnd,
 					BYTE bFileType,
@@ -39,7 +39,7 @@ public:
 					BYTE *szCmd,
 					BYTE *szMAC);
 
-	//3.4	OBU二次发行认证1034
+	//4.4	OBU二次发行认证1034
 	int		cmd_1034(BYTE bVer,BYTE *szAPPID,
 					BYTE *szRnd,
 					BYTE bFileType,
@@ -47,38 +47,38 @@ public:
 					BYTE *szCmd,
 					BYTE *szMAC);
 
-	//3.5	修改储值卡有效期认证1035
+	//4.5	用户卡修改有效期认证1035
 	int		cmd_1035(BYTE bVer,BYTE *szAPPID,
 					BYTE *szRnd,
 					BYTE bCmdLen,
 					BYTE *szCmd,
 					BYTE *szMAC);
 
-	//3.6	消费认证 1036
+	//4.6	用户卡消费认证 1036
 	int		cmd_1036(BYTE bVer,BYTE *szAPPID,
 					BYTE *szRnd,
 					WORD wSeqNo,DWORD nAuditNo,DWORD nRemain,DWORD nAmount,BYTE bTransFlag,BYTE *szDeviceNo,BYTE *szDateTime,
 					BYTE *szMAC);
 
-	//3.7	消费TAC验证 1037
+	//4.7	用户卡消费TAC验证 1037
 	int		cmd_1037(BYTE bVer,BYTE *szAPPID,
 					DWORD nAmount,BYTE bTransFlag,BYTE *szDeviceNo,DWORD nAuditNo,BYTE *szDateTime,BYTE *szTAC);
 
-	//3.8	拆卸标志修改1038
+	//4.8	OBU修改拆卸标志认证1038
 	int		cmd_1038(BYTE bVer,BYTE *szAPPID,
 					BYTE *szRnd,
 					BYTE bCmdLen,
 					BYTE *szCmd,
 					BYTE *szMAC);
 
-	//3.9	PIN解锁认证1039
+	//4.9	用户卡PIN重装认证1039
 	int		cmd_1039(BYTE bVer,BYTE *szAPPID,
 					BYTE *szRnd,
 					BYTE bCmdLen,
 					BYTE *szCmd,
 					BYTE *szMAC);
 
-	//3.10	CPU卡密钥获取1040
+	//4.10	用户卡获取密钥1040
 	int		cmd_1040(BYTE bVer,BYTE *szAPPID,
 						BYTE bKeyNo,
 						BYTE *szRnd,
@@ -88,14 +88,25 @@ public:
 						BYTE *szEncKey,
 						BYTE *szMAC);
 
-	//3.11	CPU卡二次发行补充文件认证1041
+	//4.11	用户卡二次发行补充文件认证1041
 	int		cmd_1041(BYTE bVer,BYTE *szAPPID,
 					BYTE *szRnd,
 					BYTE bCmdLen,
 					BYTE *szCmd,
 					BYTE *szMAC);
 
-	//3.12	计算通行卡的KeyA密钥 2011
+	//4.12	OBU获取密钥1042
+	int		cmd_1042(BYTE bVer,BYTE *szAPPID,
+						BYTE bKeyNo,
+						BYTE *szRnd,
+						BYTE *szAPDU,
+						BYTE bKeyHeaderLen,BYTE *szKeyHeader,
+						BYTE *szPDID,
+						BYTE *szEncKey,
+						BYTE *szMAC);
+
+
+	//4.13	计算通行卡的KeyA密钥 2011
 	int		cmd_2011(BYTE *szCityCode,BYTE *szSerialNo,BYTE *szAuditNo,BYTE *szCardMAC,BYTE bKeyNum,BYTE *szSectorID,
 					BYTE *szKey);
 	
@@ -106,6 +117,15 @@ private:
 	int		send_recv(WORD wTransType,
 					  WORD	wLenIn,UCHAR	*pszBufIn,
 					  WORD	*wLenOut,UCHAR	*pszBufOut,UINT	nWaitMaxTime = 3);
+	int		getKey(WORD wType,BYTE bVer,BYTE *szAPPID,
+						BYTE bKeyNo,
+						BYTE *szRnd,
+						BYTE *szAPDU,
+						BYTE bKeyHeaderLen,BYTE *szKeyHeader,
+						BYTE *szPDID,
+						BYTE *szEncKey,
+						BYTE *szMAC);
+
 private:
 	char	m_strBankID[16];		//	银行网点唯一编号
 	WORD	m_wRemainCount;			//	针对本设备的剩余次数；

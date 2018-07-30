@@ -1,3 +1,15 @@
+/*-------------------------------------------------------------------------
+    Shanghai AvantPort Information Technology Co., Ltd
+
+    Software Development Division
+
+    Xin Hongwei(hongwei.xin@avantport.com)
+
+    Created：2018/07/27 14:07:06
+
+    Reversion:
+        
+-------------------------------------------------------------------------*/
 #pragma once
 
 
@@ -10,13 +22,15 @@ public:
 
 public:
 	//	初始化
-	int init(BYTE *elf15);
-	//	个人化
-	int personalize(BYTE *elf15,BYTE *elf16);
+	int init(BYTE *elf01_mf,BYTE *elf01_adf);
 	//	卡片清除
-	int clear(BYTE *elf15);
+	int clear();
+private:
+	int obu_load_key(BYTE bVer,BYTE *szAPPID,BYTE *szDID,BYTE bKeyNo,BYTE bKeyHeaderLen,BYTE *szKeyHeader);
 
 public:
 	int read_obu(BYTE *elf01_mk,BYTE *elf01_adf01);
-	
+	int update_mf_elf01(BYTE bVer,BYTE *szAPPID,BYTE *szELF01);
+	int update_adf_elf01(BYTE bVer,BYTE *szAPPID,BYTE *szELF01);
+	int update_load_flag(BYTE bVer,BYTE *szAPPID,BYTE bFlag);
 };

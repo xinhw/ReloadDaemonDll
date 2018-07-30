@@ -141,7 +141,7 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-UINT CAISINOReader::Initialize(char *strsno,char *strResult)
+UINT CAISINOReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 {
 	int ret;
 	BYTE pszBuf[128];
