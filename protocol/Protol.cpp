@@ -1,18 +1,57 @@
+/*-------------------------------------------------------------------------
+    Shanghai AvantPort Information Technology Co., Ltd
+
+    Software Development Division
+
+    Xin Hongwei(hongwei.xin@avantport.com)
+
+    Created：2018/07/31 16:06:16
+
+    Reversion:
+        
+-------------------------------------------------------------------------*/
  
 
 
 
+/*-------------------------------------------------------------------------
+Function:		CProtocol.CProtocol
+Created:		2018-07-31 16:06:19
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 CProtocol::CProtocol()
 {
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		CProtocol.~CProtocol
+Created:		2018-07-31 16:06:22
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 CProtocol::~CProtocol()
 {
 }
 
 
 
+/*-------------------------------------------------------------------------
+Function:		CProtocol.parse_a_block
+Created:		2018-07-31 16:06:25
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 int		CProtocol::parse_a_block(WORD nSize,BYTE *pszBuf,
 					  PPACKAGEHEADER pph,
 					  WORD &wLen,BYTE *pszData)
@@ -64,6 +103,15 @@ int		CProtocol::parse_a_block(WORD nSize,BYTE *pszBuf,
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		CProtocol.combine_a_block
+Created:		2018-07-31 16:06:29
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 int		CProtocol::combine_a_block(PPACKAGEHEADER pph,WORD wLen,BYTE *pszData,
 						WORD	&wSize,BYTE	*pszBufOut)
 {
@@ -111,6 +159,15 @@ int		CProtocol::combine_a_block(PPACKAGEHEADER pph,WORD wLen,BYTE *pszData,
 
 
 
+/*-------------------------------------------------------------------------
+Function:		CProtocol.print_package_header
+Created:		2018-07-31 16:06:33
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void	CProtocol::print_package_header(PPACKAGEHEADER pph)
 {
 	PRINTK("\n消息类型:		%04x",pph->wTransType);

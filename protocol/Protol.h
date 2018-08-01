@@ -1,3 +1,15 @@
+/*-------------------------------------------------------------------------
+    Shanghai AvantPort Information Technology Co., Ltd
+
+    Software Development Division
+
+    Xin Hongwei(hongwei.xin@avantport.com)
+
+    Created£º2018/07/31 16:06:40
+
+    Reversion:
+        
+-------------------------------------------------------------------------*/
  
 //PROTOL.H
 

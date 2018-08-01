@@ -53,12 +53,18 @@ cpuReloadPIN
 
 
 ;OBU函数
+;获取OBU芯片序列号
+obuGetUID
+
 ;OBU一发
 obuInit
+
 ;OBU读取信息
 obuRead
+obuReadVehicleFile
+
 ;OBU更新文件
 obuUpdateFile
-;
-obuUpdateLoadFlag
 
+;更改拆卸标志
+obuUpdateLoadFlag

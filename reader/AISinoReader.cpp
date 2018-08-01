@@ -243,3 +243,20 @@ UINT CAISINOReader::Halt()
 }
 
 
+UINT CAISINOReader::PSAM_RunCmd(char *strCmd, char *strResult)
+{
+	PRINTK("\n航天金卡读卡器暂时未实现PSAM指令函数");
+	return -1;
+}
+
+UINT CAISINOReader::PSAM_Atr(BYTE bNode,BYTE &brLen,char *strATR)
+{
+	PRINTK("\n航天金卡读卡器暂时未实现PSAM复位函数");
+	return -1;
+}
+
+UINT CAISINOReader::SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE &bRetFileLen,char *strResp)
+{
+	PRINTK("\n航天金卡读卡器暂时未实现SecureRead函数");
+	return -1;
+}

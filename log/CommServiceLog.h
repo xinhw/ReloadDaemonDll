@@ -1,3 +1,15 @@
+/*-------------------------------------------------------------------------
+    Shanghai AvantPort Information Technology Co., Ltd
+
+    Software Development Division
+
+    Xin Hongwei(hongwei.xin@avantport.com)
+
+    Created£º2018/08/01 19:55:42
+
+    Reversion:
+        
+-------------------------------------------------------------------------*/
  
 #ifndef		__COMMSERVICELOG_H_
 #define		__COMMSERVICELOG_H_
@@ -17,7 +29,6 @@ private:
 	static void init();
 public:	
 	static void LogEvent(LPCTSTR pFormat, ...);
-    static void LogSqlEvent(LPCTSTR pFormat, ...);
 };
 
 #endif

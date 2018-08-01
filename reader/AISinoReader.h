@@ -49,4 +49,7 @@ public:
 	virtual UINT Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult);
 	virtual UINT RunCmd(char *strCmd, char *strResult);
 	virtual UINT Halt();
+	virtual UINT PSAM_RunCmd(char *strCmd, char *strResult);
+	virtual UINT PSAM_Atr(BYTE bNode,BYTE &brLen,char *strATR);
+	virtual UINT SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE &bRetFileLen,char *strResp);
 };

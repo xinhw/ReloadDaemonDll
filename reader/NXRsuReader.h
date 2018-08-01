@@ -69,6 +69,15 @@ private:
 	// OBU休眠应答
 	typedef int (WINAPI *LPFN_SetMMI_rs)(long fd, int * DID, int * ReturnStatus, int TimeOut);
 
+	//	发出读取OBU文件请求(GetSecure_rq)
+	typedef int (WINAPI *LPFN_GetSecure_rq)(long fd,int accessCredentialsOp ,int mode, int DID,
+										char * pAccessCredentials,int keyIdForEncryptOp, int FID, int offset, int length, char * pRandRSU, 
+										int KeyIdForAuthen,int KeyIdForEncrypt, int TimeOut);
+	//	获取读取OBU文件请求回应(GetSecure_rs)
+	typedef int (WINAPI *LPFN_GetSecure_rs)(long fd, int * DID,int * FID,int * length,char * pFile,
+										char * authenticator,int * ReturnStatus, int TimeOut);
+
+
 	LPFN_RSU_Open lpfn_RSU_Open;
 	LPFN_RSU_Close lpfn_RSU_Close;
 	LPFN_RSU_INIT_rq lpfn_RSU_INIT_rq;
@@ -83,15 +92,25 @@ private:
 	LPFN_TransferChannel_rs lpfn_TransferChannel_rs;
 	LPFN_SetMMI_rq lpfn_SetMMI_rq;
 	LPFN_SetMMI_rs lpfn_SetMMI_rs;
+	LPFN_GetSecure_rq lpfn_GetSecure_rq;
+	LPFN_GetSecure_rs lpfn_GetSecure_rs;
+
 
 private:
 	unsigned long m_ulCardNum;
+	BYTE m_bPSAMNode;
 
 public:
 	virtual UINT Open(char *strAddress, unsigned int iBaud);
 	virtual void Close();
 	virtual UINT Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult);
 	virtual UINT RunCmd(char *strCmd, char *strResult);
-	UINT PSAM_RunCmd(char *strCmd, char *strResult);
 	virtual UINT Halt();
+
+	//	PSAM卡函数
+	virtual UINT PSAM_RunCmd(char *strCmd, char *strResult);
+	virtual UINT PSAM_Atr(BYTE bNode,BYTE &brLen,char *strATR);
+	virtual UINT SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE &bRetFileLen,char *strResp);
+
+
 };

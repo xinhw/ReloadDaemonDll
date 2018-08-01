@@ -18,12 +18,17 @@ class CCardReader
 private:
 	double m_dTimeSum;
 public:
+	BYTE	m_szApplication[16];
+public:
 	virtual UINT Open(char *strAddress, unsigned int iBaud) = 0;
 	virtual UINT Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult) = 0;
 	virtual void Close() = 0;
 	virtual UINT RunCmd(char *strCmd, char *strResult) = 0;
 	virtual UINT Halt()=0;
-	
+	virtual UINT PSAM_RunCmd(char *strCmd, char *strResult) = 0;
+	virtual UINT PSAM_Atr(BYTE bNode,BYTE &brLen,char *strATR) = 0;
+	virtual UINT SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE &bRetFileLen,char *strResp) = 0;
+
 	void WriteReaderLog(char * strText)
 	{
 		CCommServiceLog::LogEvent(strText);

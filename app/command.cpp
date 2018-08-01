@@ -287,9 +287,17 @@ int		ClsCommand::cmd_1031(BYTE *szOperatorNo)
 	WORD nLen;
 	BYTE szBuf[32];
 
+	nLen = 0;
 	memset(szBuf,0x00,32);
+	
+	//1	银行网点编码	B	15
+	memcpy(szBuf+nLen,m_strBankID,15);
+	nLen = nLen + 15;
+	//2. 操作员编号
+	memcpy(szBuf+nLen,szOperatorNo,6);
+	nLen = nLen + 6;
 
-	ret = send_recv(0x1031,6,szOperatorNo,&nLen,szBuf);
+	ret = send_recv(0x1031,21,szBuf,&nLen,szBuf);
 	if(ret) return ret;
 
 	ret = szBuf[0];

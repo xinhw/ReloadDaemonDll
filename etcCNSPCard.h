@@ -36,7 +36,6 @@ extern "C"
 	/*	读卡器实例*/
 	CCardReader *preader = NULL;
 
-
 	/*	设置回调函数：因为一发的时间比较长，中间可通过回调函数返回信息，刷新界面；也可以通过回调知道进展*/
 	void	__stdcall	setCallbackFunc(CALLBACKFUNC p);
 
@@ -55,7 +54,7 @@ extern "C"
 	/*3. 打开读卡器
 		nType	[in]	读卡器类型，0——航天金卡读卡器，1——万集读卡器
 		ncom	[in]	端口号
-		nbaud	[in]	波特率		航天金卡读卡器参数是115200，万集读卡器是0
+		nbaud	[in]	波特率		航天金卡读卡器参数是：115200，万集读卡器是：0
 	*/
 	int __stdcall openReader(int nType,int ncom,int nbaud);
 
@@ -67,7 +66,6 @@ extern "C"
 	*/
 	int __stdcall signIn(char *strOperator);
 
-
 	/***************************************************************************************/
 	/*				CPU函数																   */
 	/***************************************************************************************/
@@ -77,7 +75,6 @@ extern "C"
 		szATS	[in]	卡片ATS信息
 	*/
 	int __stdcall cpuATS(BYTE *szSNO,BYTE &bATSLen,BYTE *szATS);
-
 
 	/*7. 读CPU卡文件
 		elf15		[out]	卡片发行基本数据文件
@@ -186,13 +183,15 @@ extern "C"
 		elf01_adf01	[in]	车辆信息文件
 	*/
 	int __stdcall obuInit(BYTE *elf01_mk,BYTE *elf01_adf01);
+	int __stdcall obuPreInit(BYTE *elf01_mk);
+	int	__stdcall obuGetUID(BYTE *szUID);
 
-	/*19. OBU读取信息
+	/*19. OBU读取 系统信息文件信息
 		elf01_mk	[in]	系统信息文件
-		elf01_adf01	[in]	车辆信息文件
 	*/
-	int __stdcall obuRead(BYTE *elf01_mk,BYTE *elf01_adf01);
-
+	int __stdcall obuRead(BYTE *elf01_mk);
+	/*	OBU读取 车辆信息文件*/
+	int __stdcall obuReadVehicleFile(BYTE bNode,BYTE bVer,BYTE *szPlainFile);
 
 	/*20. OBU更新文件
 		bVer	[in]	OBU合同版本号

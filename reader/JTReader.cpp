@@ -1,6 +1,27 @@
+/*-------------------------------------------------------------------------
+    Shanghai AvantPort Information Technology Co., Ltd
+
+    Software Development Division
+
+    Xin Hongwei(hongwei.xin@avantport.com)
+
+    Created£º2018/07/31 15:59:18
+
+    Reversion:
+        
+-------------------------------------------------------------------------*/
 
 
 
+/*-------------------------------------------------------------------------
+Function:		CJTReader.CJTReader
+Created:		2018-07-31 15:59:20
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 CJTReader::CJTReader()
 {
 	m_icom= 0;
@@ -9,6 +30,15 @@ CJTReader::CJTReader()
 
 
 
+/*-------------------------------------------------------------------------
+Function:		CJTReader.~CJTReader
+Created:		2018-07-31 15:59:23
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 CJTReader::~CJTReader()
 {
 	Close();
@@ -17,6 +47,15 @@ CJTReader::~CJTReader()
 
 
 
+/*-------------------------------------------------------------------------
+Function:		CJTReader.initDll
+Created:		2018-07-31 15:59:27
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 int CJTReader::initDll()
 {
 	if(m_hDll!=NULL) FreeLibrary(m_hDll);
@@ -39,6 +78,15 @@ int CJTReader::initDll()
 	return 0;
 }
 
+/*-------------------------------------------------------------------------
+Function:		CJTReader.Open
+Created:		2018-07-31 15:59:30
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 UINT CJTReader::Open(char *strAddress, unsigned int iBaud)
 {
 	int ret;
@@ -67,6 +115,15 @@ UINT CJTReader::Open(char *strAddress, unsigned int iBaud)
 	return 0;
 }
 
+/*-------------------------------------------------------------------------
+Function:		CJTReader.Close
+Created:		2018-07-31 15:59:34
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void CJTReader::Close()
 {
 	if(lp_jt_closereader!=NULL)
@@ -78,6 +135,15 @@ void CJTReader::Close()
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		CJTReader.Initialize
+Created:		2018-07-31 15:59:38
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 UINT CJTReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 {
 	int ret;
@@ -114,6 +180,15 @@ UINT CJTReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 	return ret;
 }
 
+/*-------------------------------------------------------------------------
+Function:		CJTReader.RunCmd
+Created:		2018-07-31 15:59:42
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 UINT CJTReader::RunCmd(char *strCmd, char *strResult)
 {
 	int ret;
@@ -172,6 +247,15 @@ UINT CJTReader::RunCmd(char *strCmd, char *strResult)
 
 
 
+/*-------------------------------------------------------------------------
+Function:		CJTReader.Halt
+Created:		2018-07-31 15:59:46
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 UINT CJTReader::Halt()
 {
 	if(lp_jt_closecard==NULL) return -1;
@@ -181,4 +265,21 @@ UINT CJTReader::Halt()
 	return 0;
 }
 
+UINT CJTReader::PSAM_RunCmd(char *strCmd, char *strResult)
+{
+	PRINTK("\nÉîÛÚÐÛµÛ¶Á¿¨Æ÷ÔÝÊ±Î´ÊµÏÖPSAMÖ¸Áîº¯Êý");
+	return -1;
+}
 
+UINT CJTReader::PSAM_Atr(BYTE bNode,BYTE &brLen,char *strATR)
+{
+	PRINTK("\nÉîÛÚÐÛµÛ¶Á¿¨Æ÷ÔÝÊ±Î´ÊµÏÖPSAM¸´Î»º¯Êý");
+	return -1;
+}
+
+
+UINT CJTReader::SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE &bRetFileLen,char *strResp)
+{
+	PRINTK("\nÉîÛÚÐÛµÛ¶Á¿¨Æ÷ÔÝÊ±Î´ÊµÏÖSecureReadº¯Êý");
+	return -1;
+}

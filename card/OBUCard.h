@@ -8,7 +8,7 @@
     Created£º2018/07/27 14:07:06
 
     Reversion:
-        
+			OBU¿¨Àà
 -------------------------------------------------------------------------*/
 #pragma once
 
@@ -25,12 +25,17 @@ public:
 	int init(BYTE *elf01_mf,BYTE *elf01_adf);
 	//	¿¨Æ¬Çå³ý
 	int clear();
+
+	int preInit(BYTE *elf01_mf);
+
 private:
 	int obu_load_key(BYTE bVer,BYTE *szAPPID,BYTE *szDID,BYTE bKeyNo,BYTE bKeyHeaderLen,BYTE *szKeyHeader);
 
 public:
-	int read_obu(BYTE *elf01_mk,BYTE *elf01_adf01);
+	int read_obu(BYTE *elf01_mk);
 	int update_mf_elf01(BYTE bVer,BYTE *szAPPID,BYTE *szELF01);
 	int update_adf_elf01(BYTE bVer,BYTE *szAPPID,BYTE *szELF01);
 	int update_load_flag(BYTE bVer,BYTE *szAPPID,BYTE bFlag);
+	int read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile);
+	int getOBUUID(BYTE *szUID);
 };

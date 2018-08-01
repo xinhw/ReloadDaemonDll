@@ -74,20 +74,6 @@ int CCPUCardBase::init(BYTE *elf15)
 	return 0;
 }
 
-//	个人化
-/*-------------------------------------------------------------------------
-Function:		CCPUCardBase.personalize
-Created:		2018-07-24 16:12:18
-Author:			Xin Hongwei(hongwei.xin@avantport.com)
-Parameters: 
-        
-Reversion:
-        
--------------------------------------------------------------------------*/
-int CCPUCardBase::personalize(BYTE *elf15,BYTE *elf16)
-{
-	return 0;
-}
 
 //	卡片清除
 /*-------------------------------------------------------------------------
@@ -148,6 +134,8 @@ int CCPUCardBase::rats(BYTE *szSNO,BYTE &bATSLen,BYTE *szATS)
 	if(!validation()) return -1;
 
 	memset(strats,0x00,256);
+	memset(strsno,0x00,10);
+
 	ret = m_pReader->Initialize(strsno,bATSLen,strats);
 	if(0==ret)
 	{

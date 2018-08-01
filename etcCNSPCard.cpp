@@ -54,7 +54,7 @@ void callbackMessage(char *strmsg)
 {
 	if(NULL==pMyCallback)
 	{
-		PRINTK("%s",strmsg);
+		PRINTK("\n%s",strmsg);
 	}
 	else
 	{
@@ -102,7 +102,6 @@ int __stdcall connectOKS(char *strip,WORD wport)
 	}
 
 	ptransfer = new CTcpTransfer();
-
 	ret = ptransfer->init_socket();
 	if(ret)
 	{
@@ -125,6 +124,9 @@ int __stdcall connectOKS(char *strip,WORD wport)
 		pcmd = NULL;
 	}
 	pcmd = new ClsCommand(ptransfer);
+
+	pcmd->setBankID("520130110151206");
+	pcmd->setAgentCode("668801");
 
 	return 0;
 }
@@ -203,6 +205,7 @@ int __stdcall openReader(int nType,int ncom,int nbaud)
 		return ret;
 	}
 
+	//	深圳雄帝CPU卡读卡器
 	if(READER_TYPE_XIONGDI==nType)
 	{
 		preader = new CJTReader();
@@ -667,12 +670,48 @@ int __stdcall obuInit(BYTE *elf01_mk,BYTE *elf01_adf01)
 	return ret;
 }
 
+/*-------------------------------------------------------------------------
+Function:		obuPreInit
+Created:		2018-07-16 17:05:13
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int __stdcall obuPreInit(BYTE *elf01_mk)
+{
+	int ret;
+
+	if(!validation(1)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader,pcmd);
+
+	ret = pcard->preInit(elf01_mk);
+
+	delete pcard;
+
+	return ret;
+}
 
 
+int	__stdcall obuGetUID(BYTE *szUID)
+{
+	int ret;
+
+	if(!validation(1)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader,pcmd);
+
+	ret = pcard->getOBUUID(szUID);
+
+	delete pcard;
+
+	return ret;
+}
 
 /*19. OBU读取信息
 	elf01_mk	[in]	系统信息文件
-	elf01_adf01	[in]	车辆信息文件
 */
 /*-------------------------------------------------------------------------
 Function:		obuRead
@@ -683,7 +722,7 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall obuRead(BYTE *elf01_mk,BYTE *elf01_adf01)
+int __stdcall obuRead(BYTE *elf01_mk)
 {
 	int ret;
 
@@ -691,7 +730,7 @@ int __stdcall obuRead(BYTE *elf01_mk,BYTE *elf01_adf01)
 
 	COBUCard *pcard = new COBUCard(preader,pcmd);
 
-	ret = pcard->read_obu(elf01_mk,elf01_adf01);
+	ret = pcard->read_obu(elf01_mk);
 
 	delete pcard;
 
@@ -699,6 +738,35 @@ int __stdcall obuRead(BYTE *elf01_mk,BYTE *elf01_adf01)
 
 }
 
+/*
+	通过PSAM卡解密车辆信息文件；
+	bNode		[in]	PSAM的节点号
+	bVer		[in]	PSAM卡中解密密钥的版本
+	szPlainFile	[out]	解密的车辆信息文件
+*/
+/*-------------------------------------------------------------------------
+Function:		obuReadVehicleFile
+Created:		2018-07-16 17:05:15
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int __stdcall obuReadVehicleFile(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
+{
+	int ret;
+
+	if(!validation(1)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader,pcmd);
+
+	ret = pcard->read_vechile_file(bNode,bVer,szPlainFile);
+
+	delete pcard;
+
+	return 0;
+}
 
 /*20. OBU更新文件
 	bVer	[in]	OBU合同版本号

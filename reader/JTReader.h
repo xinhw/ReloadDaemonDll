@@ -1,3 +1,15 @@
+/*-------------------------------------------------------------------------
+    Shanghai AvantPort Information Technology Co., Ltd
+
+    Software Development Division
+
+    Xin Hongwei(hongwei.xin@avantport.com)
+
+    Created£º2018/07/31 15:59:53
+
+    Reversion:
+        
+-------------------------------------------------------------------------*/
 #pragma once
 #include "CardReader.h"
 
@@ -31,4 +43,7 @@ public:
 	virtual UINT Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult);
 	virtual UINT RunCmd(char *strCmd, char *strResult);
 	virtual UINT Halt();
+	virtual UINT PSAM_RunCmd(char *strCmd, char *strResult);
+	virtual UINT PSAM_Atr(BYTE bNode,BYTE &brLen,char *strATR);
+	virtual UINT SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE &bRetFileLen,char *strResp);
 };

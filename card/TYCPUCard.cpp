@@ -126,7 +126,18 @@ int CTYCPUCard::init(BYTE *elf15)
 	BYTE	szEncKey[32],szMAC[4];
 	BYTE	INIT_KEY[16],szBuf[64],szSubKey[16];
 
-	memcpy(INIT_KEY,"\xB5\xDD\x74\x72\x1B\x1E\x81\xD0\x08\x80\x91\x97\x45\xE2\x9D\xA2",16);
+
+	memset(strCmd,0x00,512);
+	GetPrivateProfileString("APP","INITKEY","",strCmd,33,".\\key.ini");
+	if(strlen(strCmd)==0)
+	{
+		strcpy(strCmd,"B5DD74721B1E81D00880919745E29DA2");
+		WritePrivateProfileString("APP","INITKEY",strCmd,".\\key.ini");
+	}
+	CMisc::StringToByte(strCmd,INIT_KEY);
+	PRINTK("\nINIKEY: %s",strCmd);
+
+	//memcpy(INIT_KEY,"\xB5\xDD\x74\x72\x1B\x1E\x81\xD0\x08\x80\x91\x97\x45\xE2\x9D\xA2",16);
 
 	//	MF下的密钥
 	CARDKEY arr_mf_keys[] = 
@@ -687,27 +698,7 @@ int CTYCPUCard::init(BYTE *elf15)
 	return 0;
 }
 
-//	个人化
-/*-------------------------------------------------------------------------
-Function:		CTYCPUCard.personalize
-Created:		2018-07-24 16:12:57
-Author:			Xin Hongwei(hongwei.xin@avantport.com)
-Parameters: 
-        
-Reversion:
-        
--------------------------------------------------------------------------*/
-int CTYCPUCard::personalize(BYTE *elf15,BYTE *elf16)
-{
 
-
-
-
-
-
-	
-	return 0;
-}
 
 //	卡片清除
 /*-------------------------------------------------------------------------

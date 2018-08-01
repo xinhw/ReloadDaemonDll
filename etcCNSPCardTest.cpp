@@ -49,7 +49,7 @@ void		test_cpucard_credit(void);
 void		test_cpucard_debit(void);
 void		test_cpucard_update000e(void);
 void		test_cpucard_reload_pin(void);
-
+void		test_obu_pre_init(void);
 
 void		test_obu_read(void);
 void		test_obu_init(void);
@@ -75,6 +75,8 @@ CMD_FUNC cmd_func_tab[] =
 	{'D',"测试：用户卡消费",test_cpucard_debit},
 	{'A',"测试：用户卡更新000E文件",test_cpucard_update000e},
 	{'J',"测试：用户卡PIN重装",test_cpucard_reload_pin},
+
+	{'Y',"测试：OBU卡预处理",test_obu_pre_init},
 
 	{'0',"测试：OBU读卡信息",test_obu_read},
 	{'1',"测试：OBU一发",test_obu_init},
@@ -354,7 +356,15 @@ void		test_cpucard_read(void)
 	return;
 }
 
-
+/*-------------------------------------------------------------------------
+Function:		ascToUC
+Created:		2018-07-27 10:18:08
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 BYTE ascToUC(BYTE  ch)
 {
 	BYTE value;
@@ -568,21 +578,45 @@ void		test_obu_read(void)
 {
 	int ret,i;
 	BYTE elf01_mk[100],elf01_adf01[256];
+	BYTE szAPPID[8];
+	BYTE szPlainText[128],bVer;
 
 	memset(elf01_mk,0x00,100);
 	memset(elf01_adf01,0x00,80);
 
-	ret = obuRead(elf01_mk,elf01_adf01);
+	ret = obuGetUID(szAPPID);
 	if(ret)
 	{
-		PRINTK("\n读取OBU信息失败：%d",ret);
+		PRINTK("\n获取OBUUID失败:%d",ret);
+	}
+	else
+	{
+		PRINTK("\nOBU UID:%02X%02X%02X%02X",szAPPID[0],szAPPID[1],szAPPID[2],szAPPID[3]);
+	}
+
+	ret = obuRead(elf01_mk);
+	if(ret)
+	{
+		PRINTK("\n读取OBU 系统信息文件 失败：%d",ret);
+		return;
+	}
+
+	bVer = elf01_mk[9];
+
+	ret = obuReadVehicleFile(1,bVer,szPlainText);
+	if(ret)
+	{
+		PRINTK("\n读取OBU 车辆信息文件 失败：%d",ret);
 		return;
 	}
 
 	PRINTK("\n读取0BU信息成功：");
-	PRINTK("\nELF01[MK]:");
+
+	PRINTK("\n系统信息文件:");
 	for(i=0;i<30;i++) PRINTK("%02X ",elf01_mk[i]);
 
+	PRINTK("\n车辆信息文件:");
+	for(i=0;i<59;i++) PRINTK("%02X ",elf01_mk[i]);
 
 	return;
 }
@@ -599,6 +633,34 @@ Reversion:
 -------------------------------------------------------------------------*/
 void		test_obu_init(void)
 {
+	int ret;
+	BYTE elf01_mk[100],elf01_adf01[256];
+
+	memset(elf01_mk,0x00,100);
+	memset(elf01_adf01,0x00,256);
+
+	//	先读出来一个OBU的信息
+	ret = obuRead(elf01_mk);
+	if(ret)
+	{
+		PRINTK("\n读取OBU信息失败！");
+		return;
+	}
+
+	memset(elf01_adf01,0x00,80);
+	memcpy(elf01_adf01,"宁A-12345",9);
+	elf01_adf01[14]=0x01;
+	elf01_adf01[15]=0x00;
+
+	//	然后初始化
+	ret= obuInit(elf01_mk,elf01_adf01);
+	if(ret)
+	{
+		PRINTK("\nOBU初始化失败！");
+		return;
+	}
+	PRINTK("\nOBU初始化成功！");
+
 	return;
 }
 
@@ -620,7 +682,7 @@ void		test_obu_personize(void)
 	memset(elf01_mk,0x00,100);
 	memset(elf01_adf01,0x00,80);
 
-	ret = obuRead(elf01_mk,elf01_adf01);
+	ret = obuRead(elf01_mk);
 	if(ret)
 	{
 		PRINTK("\n读取OBU信息失败！");
@@ -630,14 +692,14 @@ void		test_obu_personize(void)
 	bVer = elf01_mk[9];
 	memcpy(szAPPID,elf01_mk+10,8);
 
-	/*
+
 	ret = obuUpdateFile(bVer,szAPPID,1,elf01_mk);
 	if(ret)
 	{
 		PRINTK("\n更新 系统信息文件 失败:%04X",ret);
 		return;
 	}
-	*/
+	/*	*/
 	memset(elf01_adf01,0x00,80);
 	memcpy(elf01_adf01,"宁A-12345",9);
 	elf01_adf01[14]=0x01;
@@ -660,6 +722,33 @@ void		test_obu_personize(void)
 }
 
 
+void		test_obu_pre_init(void)
+{
+	int ret;
+	BYTE elf01_mk[100],elf01_adf01[256];
+
+	memset(elf01_mk,0x00,100);
+	memset(elf01_adf01,0x00,256);
+
+	//	先读出来一个OBU的信息
+	ret = obuRead(elf01_mk);
+	if(ret)
+	{
+		PRINTK("\n读取OBU信息失败！");
+		return;
+	}
+
+	//	然后初始化
+	ret= obuPreInit(elf01_mk);
+	if(ret)
+	{
+		PRINTK("\nOBU预初始化失败！");
+		return;
+	}
+	PRINTK("\nOBU预初始化成功！");
+
+	return;
+}
 /*-------------------------------------------------------------------------
 Function:		test_signin
 Created:		2018-07-27 10:18:37

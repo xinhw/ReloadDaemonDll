@@ -32,6 +32,7 @@
 #define PRINTK printf
 #else
 #define PRINTK	CCommServiceLog::LogEvent
+#pragma message("写日志功能开启")
 #endif
 
 

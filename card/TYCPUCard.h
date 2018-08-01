@@ -8,7 +8,7 @@
     Created：2018/07/24 16:12:29
 
     Reversion:
-        
+			天喻CPU卡类
 -------------------------------------------------------------------------*/
 #pragma once
 
@@ -25,9 +25,6 @@ private:
 public:
 	//	初始化
 	int init(BYTE *elf15);
-	//	个人化
-	int personalize(BYTE *elf15,BYTE *elf16);
 	//	卡片清除
 	int clear(BYTE *elf15);
-
 };
