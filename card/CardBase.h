@@ -52,4 +52,5 @@ public:
 	int updateELF000E(BYTE bVer,BYTE *szAPPID,BYTE *szFile000E);
 	int reloadPIN(BYTE bVer,BYTE *szAPPID,BYTE bPINLen,BYTE *szPIN);
 
+	int readAdfFile(BYTE bFID,BYTE bOffset, BYTE bLength, BYTE *szFile);
 };

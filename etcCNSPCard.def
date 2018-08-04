@@ -2,7 +2,7 @@ LIBRARY	"ETCCNSPCARD"
 EXPORTS
 
 ; 通用函数
-
+getDllVersion
 
 ;回调函数
 setCallbackFunc
@@ -26,10 +26,10 @@ signIn
 ;CPU卡复位
 cpuATS
 
-
 ;读取CPU卡文件：0016,0015,余额
 cpuReadCardFiles
 cpuReadCardRecord
+cpuReadAdfFile
 
 ;CPU卡一发
 cpuInit

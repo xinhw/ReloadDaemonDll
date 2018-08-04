@@ -209,14 +209,14 @@ UINT CNXRsuReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 	memcpy(m_szApplication+8,btApplication+2,4);
 	memcpy(m_szApplication+12,btApplication+2,4);
 
-	/*
+
 	int i;
 	PRINTK("\nbtApplication:");
 	for(i=0;i<32;i++) PRINTK("%02X ",(BYTE)btApplication[i]);
 
 	PRINTK("\nOBU APPLICATION:");
 	for(i=0;i<16;i++) PRINTK("%02X",(BYTE)m_szApplication[i]);
-	*/
+	/*	*/
 	return 0;
 }
 
@@ -462,7 +462,15 @@ UINT CNXRsuReader::Halt()
 	return 0;
 }
 
-
+/*-------------------------------------------------------------------------
+Function:		CNXRsuReader.SecureRead
+Created:		2018-07-19 10:37:03
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 UINT CNXRsuReader::SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLength,
 							BYTE &bRetFileLen,char *strResp)
 {

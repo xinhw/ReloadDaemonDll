@@ -124,20 +124,32 @@ int CTYCPUCard::init(BYTE *elf15)
 	BYTE	sRnd[16];
 	char	strCmd[512],strResp[128];
 	BYTE	szEncKey[32],szMAC[4];
-	BYTE	INIT_KEY[16],szBuf[64],szSubKey[16];
+	BYTE	ENCODER_INIT_KEY[16],szBuf[64],szSubKey[16];
+	BYTE	CARD_INIT_KEY[16];
 
+	//memcpy(INIT_KEY,"\xB5\xDD\x74\x72\x1B\x1E\x81\xD0\x08\x80\x91\x97\x45\xE2\x9D\xA2",16);
 
+	//	加密机的缺省主控密钥
 	memset(strCmd,0x00,512);
-	GetPrivateProfileString("APP","INITKEY","",strCmd,33,".\\key.ini");
+	GetPrivateProfileString("ENCODER","INITKEY","",strCmd,33,".\\key.ini");
 	if(strlen(strCmd)==0)
 	{
 		strcpy(strCmd,"B5DD74721B1E81D00880919745E29DA2");
-		WritePrivateProfileString("APP","INITKEY",strCmd,".\\key.ini");
+		WritePrivateProfileString("ENCODER","INITKEY",strCmd,".\\key.ini");
 	}
-	CMisc::StringToByte(strCmd,INIT_KEY);
-	PRINTK("\nINIKEY: %s",strCmd);
+	CMisc::StringToByte(strCmd,ENCODER_INIT_KEY);
+	PRINTK("\nENCODER INIT KEY: %s",strCmd);
 
-	//memcpy(INIT_KEY,"\xB5\xDD\x74\x72\x1B\x1E\x81\xD0\x08\x80\x91\x97\x45\xE2\x9D\xA2",16);
+	//	空白用户卡缺省主控密钥
+	memset(strCmd,0x00,512);
+	GetPrivateProfileString("CARD","INITKEY","",strCmd,33,".\\key.ini");
+	if(strlen(strCmd)==0)
+	{
+		strcpy(strCmd,"B5DD74721B1E81D00880919745E29DA2");
+		WritePrivateProfileString("CARD","INITKEY",strCmd,".\\key.ini");
+	}
+	CMisc::StringToByte(strCmd,CARD_INIT_KEY);
+	PRINTK("\nCARD INIT KEY: %s",strCmd);
 
 	//	MF下的密钥
 	CARDKEY arr_mf_keys[] = 
@@ -276,23 +288,25 @@ int CTYCPUCard::init(BYTE *elf15)
 		return ret;
 	}
 
+	//	先用加密机初始主控根密钥分散、解密
 	memset(szSubKey,0x00,16);
-	sm4_diversify(INIT_KEY,szAPPID,szSubKey);
+	sm4_diversify(ENCODER_INIT_KEY,szAPPID,szSubKey);
 
 	memset(szBuf,0x00,64);
 	sm4_decode(szSubKey,szEncKey,szBuf);
 	sm4_decode(szSubKey,szEncKey+16,szBuf+16);
 	
+	//	然后用卡片缺省主控密钥加密、计算MAC
 	memset(szEncKey,0x00,32);
-	sm4_encode(INIT_KEY,szBuf,szEncKey);
-	sm4_encode(INIT_KEY,szBuf+16,szEncKey+16);
+	sm4_encode(CARD_INIT_KEY,szBuf,szEncKey);
+	sm4_encode(CARD_INIT_KEY,szBuf+16,szEncKey+16);
 	
 	memset(szBuf,0x00,64);
 	memcpy(szBuf,(BYTE *)"\x84\xD4\x00\x00\x24",5);
 	memcpy(szBuf+5,szEncKey,32);
 
 	memset(szMAC,0x00,4);
-	sm4_cal_mac(INIT_KEY,sRnd,37,szBuf,szMAC);
+	sm4_cal_mac(CARD_INIT_KEY,sRnd,37,szBuf,szMAC);
 
 	//	3. 装载卡片主控密钥
 	memset(strCmd,0x00,128);

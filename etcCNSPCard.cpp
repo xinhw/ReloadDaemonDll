@@ -48,8 +48,30 @@ void	__stdcall	setCallbackFunc(CALLBACKFUNC p)
 	pMyCallback = p;
 }
 
+/*-------------------------------------------------------------------------
+Function:		getDllVersion
+Created:		2018-07-16 17:04:20
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+void	__stdcall	getDllVersion(char *strVer)
+{
+	strcpy(strVer,DLL_VERSION);
+	return;
+}
 
-
+/*-------------------------------------------------------------------------
+Function:		callbackMessage
+Created:		2018-07-16 17:04:20
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void callbackMessage(char *strmsg)
 {
 	if(NULL==pMyCallback)
@@ -332,6 +354,33 @@ int __stdcall cpuReadCardFiles(BYTE *elf15,BYTE *elf16,DWORD &dwRemain)
 
 	return ret;
 }
+
+
+/*-------------------------------------------------------------------------
+Function:		cpuReadAdfFile
+Created:		2018-08-03 15:28:51
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int __stdcall cpuReadAdfFile(BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE *szFile)
+{
+	int ret;
+
+	if(!validation(0)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+
+	ret = pcard->readAdfFile(bFileID,bOffset,bLength,szFile);
+
+	delete pcard;
+
+	return ret;
+
+}
+
 
 /*
 	8.	读取记录文件
@@ -679,7 +728,7 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall obuPreInit(BYTE *elf01_mk)
+int __stdcall obuPreInit(WORD wDFID,BYTE *elf01_mk)
 {
 	int ret;
 
@@ -687,14 +736,22 @@ int __stdcall obuPreInit(BYTE *elf01_mk)
 
 	COBUCard *pcard = new COBUCard(preader,pcmd);
 
-	ret = pcard->preInit(elf01_mk);
+	ret = pcard->preInit(wDFID,elf01_mk);
 
 	delete pcard;
 
 	return ret;
 }
 
-
+/*-------------------------------------------------------------------------
+Function:		obuGetUID
+Created:		2018-07-16 17:05:13
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+				获取OBU芯片序列号
+-------------------------------------------------------------------------*/
 int	__stdcall obuGetUID(BYTE *szUID)
 {
 	int ret;
@@ -709,6 +766,8 @@ int	__stdcall obuGetUID(BYTE *szUID)
 
 	return ret;
 }
+
+
 
 /*19. OBU读取信息
 	elf01_mk	[in]	系统信息文件
@@ -859,4 +918,20 @@ bool validation(int nlevel)
 	}
 
 	return bOk;
+}
+
+
+int __stdcall obuUnlockApplication(BYTE bVer,BYTE *szAPPID)
+{
+	int ret;
+
+	if(!validation(1)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader,pcmd);
+
+	ret = pcard->unlockapp(bVer,szAPPID);
+
+	delete pcard;
+
+	return ret;
 }

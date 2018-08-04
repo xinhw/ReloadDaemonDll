@@ -17,6 +17,8 @@
 #pragma message("动态库")
 #endif
 
+#define DLL_VERSION		"V0.12 测试版的动态库"
+
 //	读卡器类型
 #define READER_TYPE_CPU_CARD		0x00
 #define READER_TYPE_OBU				0x01
@@ -35,6 +37,8 @@ extern "C"
 	ClsCommand *pcmd = NULL;
 	/*	读卡器实例*/
 	CCardReader *preader = NULL;
+
+	void	__stdcall	getDllVersion(char *strVer);
 
 	/*	设置回调函数：因为一发的时间比较长，中间可通过回调函数返回信息，刷新界面；也可以通过回调知道进展*/
 	void	__stdcall	setCallbackFunc(CALLBACKFUNC p);
@@ -82,7 +86,14 @@ extern "C"
 		dwRemain	[out]	余额
 	*/
 	int __stdcall cpuReadCardFiles(BYTE *elf15,BYTE *elf16,DWORD &dwRemain);
-
+	/*
+	读取ADF下的二进制文件
+		bFileID		[in]	短文件标识符
+		bOffset		[in]	位移
+		bLength		[in]	读取长度
+		szFile		[out]	读取的信息
+	*/
+	int __stdcall cpuReadAdfFile(BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE *szFile);
 	/*
 		8.	读取记录文件
 		bFileID		[in]	文件标识，SFI
@@ -183,7 +194,7 @@ extern "C"
 		elf01_adf01	[in]	车辆信息文件
 	*/
 	int __stdcall obuInit(BYTE *elf01_mk,BYTE *elf01_adf01);
-	int __stdcall obuPreInit(BYTE *elf01_mk);
+	int __stdcall obuPreInit(WORD wDFID,BYTE *elf01_mk);
 	int	__stdcall obuGetUID(BYTE *szUID);
 
 	/*19. OBU读取 系统信息文件信息
@@ -192,7 +203,7 @@ extern "C"
 	int __stdcall obuRead(BYTE *elf01_mk);
 	/*	OBU读取 车辆信息文件*/
 	int __stdcall obuReadVehicleFile(BYTE bNode,BYTE bVer,BYTE *szPlainFile);
-
+	
 	/*20. OBU更新文件
 		bVer	[in]	OBU合同版本号
 		szAPPID	[in]	OBU合同序列号
@@ -207,6 +218,7 @@ extern "C"
 		bFlag	[in]	OBU拆卸标志
 	*/
 	int __stdcall obuUpdateLoadFlag(BYTE bVer,BYTE *szAPPID,BYTE bFlag);
+	int __stdcall obuUnlockApplication(BYTE bVer,BYTE *szAPPID);
 
 
 	bool validation(int nlevel);

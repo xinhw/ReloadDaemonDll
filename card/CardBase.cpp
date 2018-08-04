@@ -635,5 +635,36 @@ int CCPUCardBase::reloadPIN(BYTE bVer,BYTE *szAPPID,BYTE bPINLen,BYTE *szPIN)
 	if(ret) return ret;
 
 	return 0;
+}
 
+
+int CCPUCardBase::readAdfFile(BYTE bFID,BYTE bOffset, BYTE bLength, BYTE *szFile)
+{
+	int		ret;
+	char	strCmd[64],strresp[256];
+	BYTE	bFileID;
+
+	if(!validation()) return -1;
+
+	//	0. 选择3F00
+	memset(strresp,0x00,64);
+	ret = preader->RunCmd("00A40000023F00",strresp);
+	if(ret) return ret;
+
+	//	1. 选择1001 ADF
+	memset(strresp,0x00,64);
+	ret = preader->RunCmd("00A40000021001",strresp);
+	if(ret) return ret;
+
+	//	2. 读取二进制文件
+	bFileID = (BYTE)(0x80+bFID);
+
+	memset(strCmd,0x00,64);
+	sprintf(strCmd,"00B0%02X%02X%02X",bFileID,bOffset,bLength);
+
+	memset(strresp,0x00,64);
+	ret = m_pReader->RunCmd(strCmd,strresp);
+	if(ret) return ret;
+
+	return 0;
 }

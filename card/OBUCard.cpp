@@ -127,7 +127,7 @@ Parameters:
 Reversion:
 				由于部里发行的OBU有问题，所以做了一个预处理功能来实现。
 -------------------------------------------------------------------------*/
-int COBUCard::preInit(BYTE *elf01_mf)
+int COBUCard::preInit(WORD wDFID,BYTE *elf01_mf)
 {
 	int		ret;
 	BYTE	bVer,szAPPID[8];
@@ -137,6 +137,7 @@ int COBUCard::preInit(BYTE *elf01_mf)
 	BYTE	szEncKey[32],szMAC[4];
 
 	BYTE	szOBUID[8];
+	int		i;
 
 	//	版本号和应用序列号
 	bVer = elf01_mf[9];
@@ -172,134 +173,127 @@ int COBUCard::preInit(BYTE *elf01_mf)
 	}
 
 	//	替换主控密钥：	84D401001C	1002FE 	000000（密钥头） 	分散因子是OBUUID重复两遍，保护密钥因子是OBUUID两遍
-	callbackMessage("替换OBU系统主控密钥");
-
-	memset(strResp,0x00,32);
-	ret = m_pReader->RunCmd("0084000004",strResp);
-	if(ret)
+	if(0x3F00==wDFID)
 	{
-		sprintf(strCmd,"失败，返回:%04X",ret);
-		callbackMessage(strCmd);
-		return ret;
-	}
-	memset(sRnd,0x00,16);
-	CMisc::StringToByte(strResp,sRnd);
+		callbackMessage("替换OBU系统主控密钥");
 
-	//	6保护，导出6，  保护因子用合同序列号，分散因子用芯片序列号。替换系统主控密钥。
-	callbackMessage("从前置获取密钥");
-	ret = m_pCmd->cmd_1042(bVer,szOBUID,
-							0x01,
-							sRnd,
-							(BYTE *)"\x84\xD4\x01\x00\x24",
-							3,(BYTE *)"\x00\x40\x00",
-							szAPPID,
-							szEncKey,
-							szMAC);
-	if(ret)
-	{
-		sprintf(strCmd,"失败，返回:%04X",ret);
-		callbackMessage(strCmd);
-		return ret;
-	}
+		memset(strResp,0x00,32);
+		ret = m_pReader->RunCmd("0084000004",strResp);
+		if(ret)
+		{
+			sprintf(strCmd,"失败，返回:%04X",ret);
+			callbackMessage(strCmd);
+			return ret;
+		}
+		memset(sRnd,0x00,16);
+		CMisc::StringToByte(strResp,sRnd);
 
-	callbackMessage("装载主控密钥");
+		//	6保护，导出6，  保护因子用合同序列号，分散因子用芯片序列号。替换系统主控密钥。
+		callbackMessage("从前置获取密钥");
+		ret = m_pCmd->cmd_1042(bVer,szOBUID,
+								0x01,
+								sRnd,
+								(BYTE *)"\x84\xD4\x01\x00\x24",
+								3,(BYTE *)"\x00\x40\x00",
+								szAPPID,
+								szEncKey,
+								szMAC);
+		if(ret)
+		{
+			sprintf(strCmd,"失败，返回:%04X",ret);
+			callbackMessage(strCmd);
+			return ret;
+		}
 
-	memset(strCmd,0x00,128);
-	memcpy(strCmd,"84D4010024",10);
-	CMisc::ByteToString(szEncKey,32,strCmd+10);
-	CMisc::ByteToString(szMAC,4,strCmd+74);
+		callbackMessage("装载主控密钥");
+
+		memset(strCmd,0x00,128);
+		memcpy(strCmd,"84D4010024",10);
+		CMisc::ByteToString(szEncKey,32,strCmd+10);
+		CMisc::ByteToString(szMAC,4,strCmd+74);
 
 
-	int i;
-	PRINTK("\nVER:%02X\tbKeyNo:%02X\t",bVer,0x01);
-	PRINTK("\nAPPID:");
-	for(i=0;i<8;i++) PRINTK("%02X",szOBUID[i]);
-	PRINTK("\nDID:");
-	for(i=0;i<8;i++) PRINTK("%02X",szOBUID[i]);
-	PRINTK("\nRND:");
-	for(i=0;i<8;i++) PRINTK("%02X",sRnd[i]);
-
-	PRINTK("\nCMD:%s",strCmd);
-
-	memset(strResp,0x00,32);
-	ret = m_pReader->RunCmd(strCmd,strResp);
-	if(ret)
-	{
-		sprintf(strCmd,"失败，返回:%04X",ret);
-		callbackMessage(strCmd);
-		return ret;
+		memset(strResp,0x00,32);
+		ret = m_pReader->RunCmd(strCmd,strResp);
+		if(ret)
+		{
+			sprintf(strCmd,"失败，返回:%04X",ret);
+			callbackMessage(strCmd);
+			return ret;
+		}
 	}
 
-
-	//	进入DF01目录：	00A4000002 DF01
-	callbackMessage("进入DF01目录");
-
-	memset(strCmd,0x00,512);
-	memset(strResp,0x00,128);
-	ret = m_pReader->RunCmd("00A4000002DF01",strResp);
-	if(ret)
+	if(0xDF01==wDFID)
 	{
-		sprintf(strCmd,"失败，返回:%04X",ret);
-		callbackMessage(strCmd);
-		return ret;
+		//	进入DF01目录：	00A4000002 DF01
+		callbackMessage("进入DF01目录");
+
+		memset(strCmd,0x00,512);
+		memset(strResp,0x00,128);
+		ret = m_pReader->RunCmd("00A4000002DF01",strResp);
+		if(ret)
+		{
+			sprintf(strCmd,"失败，返回:%04X",ret);
+			callbackMessage(strCmd);
+			return ret;
+		}
+
+		//应用主控密钥：	84D401001C 	2002FE	000000（密钥头）	分散因子是OBUUID重复两遍，保护密钥因子是OBUUID两遍
+		callbackMessage("安装应用主控密钥");
+
+		memset(strResp,0x00,32);
+		ret = m_pReader->RunCmd("0084000004",strResp);
+		if(ret) return ret;
+
+		memset(sRnd,0x00,16);
+		CMisc::StringToByte(strResp,sRnd);
+
+		callbackMessage("从前置获取应用主控密钥");
+
+		//	7保护，导出7，保护因子用合同序列号，分散因子用芯片序列号。替换应用主控密钥。
+		ret = m_pCmd->cmd_1042(bVer,szOBUID,
+								0x03,
+								sRnd,
+								(BYTE *)"\x84\xD4\x01\x00\x24",
+								3,(BYTE *)"\x00\x40\x00",
+								szAPPID,
+								szEncKey,
+								szMAC);
+		if(ret)
+		{
+			sprintf(strCmd,"失败，返回:%04X",ret);
+			callbackMessage(strCmd);
+			return ret;
+		}
+
+		memset(strCmd,0x00,128);
+		memcpy(strCmd,"84D4010024",10);
+		CMisc::ByteToString(szEncKey,32,strCmd+10);
+		CMisc::ByteToString(szMAC,4,strCmd+74);
+
+		callbackMessage("装载应用主控密钥");
+
+
+		PRINTK("\nVER:%02X\tbKeyNo:%02X\t",bVer,0x03);
+		PRINTK("\nAPPID:");
+		for(i=0;i<8;i++) PRINTK("%02X",szOBUID[i]);
+		PRINTK("\nDID:");
+		for(i=0;i<8;i++) PRINTK("%02X",szOBUID[i]);
+		PRINTK("\nRND:");
+		for(i=0;i<8;i++) PRINTK("%02X",sRnd[i]);
+
+		PRINTK("\nCMD:%s",strCmd);
+			/*		*/	
+
+		memset(strResp,0x00,32);
+		ret = m_pReader->RunCmd(strCmd,strResp);
+		if(ret)
+		{
+			sprintf(strCmd,"失败，返回:%04X",ret);
+			callbackMessage(strCmd);
+			return ret;
+		}
 	}
-
-	//应用主控密钥：	84D401001C 	2002FE	000000（密钥头）	分散因子是OBUUID重复两遍，保护密钥因子是OBUUID两遍
-	callbackMessage("安装应用主控密钥");
-
-	memset(strResp,0x00,32);
-	ret = m_pReader->RunCmd("0084000004",strResp);
-	if(ret) return ret;
-
-	memset(sRnd,0x00,16);
-	CMisc::StringToByte(strResp,sRnd);
-
-	callbackMessage("从前置获取应用主控密钥");
-
-	//	7保护，导出7，保护因子用合同序列号，分散因子用芯片序列号。替换应用主控密钥。
-	ret = m_pCmd->cmd_1042(bVer,szOBUID,
-							0x03,
-							sRnd,
-							(BYTE *)"\x84\xD4\x01\x00\x24",
-							3,(BYTE *)"\x00\x40\x00",
-							szOBUID,
-							szEncKey,
-							szMAC);
-	if(ret)
-	{
-		sprintf(strCmd,"失败，返回:%04X",ret);
-		callbackMessage(strCmd);
-		return ret;
-	}
-
-	memset(strCmd,0x00,128);
-	memcpy(strCmd,"84D4010024",10);
-	CMisc::ByteToString(szEncKey,32,strCmd+10);
-	CMisc::ByteToString(szMAC,4,strCmd+74);
-
-	callbackMessage("装载应用主控密钥");
-
-	/*	
-	PRINTK("\nVER:%02X\tbKeyNo:%02X\t",bVer,0x03);
-	PRINTK("\nAPPID:");
-	for(i=0;i<8;i++) PRINTK("%02X",szOBUID[i]);
-	PRINTK("\nDID:");
-	for(i=0;i<8;i++) PRINTK("%02X",szOBUID[i]);
-	PRINTK("\nRND:");
-	for(i=0;i<8;i++) PRINTK("%02X",sRnd[i]);
-
-	PRINTK("\nCMD:%s",strCmd);
-	*/	
-
-	memset(strResp,0x00,32);
-	ret = m_pReader->RunCmd(strCmd,strResp);
-	if(ret)
-	{
-		sprintf(strCmd,"失败，返回:%04X",ret);
-		callbackMessage(strCmd);
-		return ret;
-	}
-
 	return 0;
 }
 
@@ -445,7 +439,6 @@ int COBUCard::init(BYTE *elf01_mf,BYTE *elf01_adf)
 		callbackMessage(strCmd);
 		return ret;
 	}
-	return 0;
 
 	//;	安装MF下的其他密钥
 	callbackMessage("安装MF下的其他密钥");
@@ -622,17 +615,6 @@ int COBUCard::read_obu(BYTE *elf01_mk)
 	if(ret) return ret;
 	CMisc::StringToByte(strresp,elf01_mk);
 
-
-
-	//	3. 读取0015文件：	卡发行基本数据文件
-	/*
-	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00B400000A00000000000000004F40",strresp);
-	if(ret) return ret;
-	CMisc::StringToByte(strresp,elf01_adf01);
-	*/
-
-
 	return 0;
 }
 
@@ -804,7 +786,7 @@ Author:			Xin Hongwei(hongwei.xin@avantport.com)
 Parameters: 
         
 Reversion:
-				解密 车辆信息文件
+				读取OBU 芯片序列号
 -------------------------------------------------------------------------*/
 int COBUCard::getOBUUID(BYTE *szUID)
 {
@@ -843,11 +825,23 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 	BYTE DF_UK2[16]={0xE0,0x02,0x1F,0xE5,0x30,0x08,0x3C,0xE2,0xEB,0x95,0xB5,0x2A,0xB4,0xB4,0xE1,0x1C};
 	BYTE sKey[16],sRnd[16];
 	BYTE bKeyIndex;
+	BOOL bSM4OBU = TRUE;
 
 	if(!validation()) return -1;
 	
 	bLen = 0x00;
 	memset(szATR,0x00,256);
+
+	//	“合同版本”等于FF或高4位小于5？
+	if(0xFF==bVer)
+	{
+		bSM4OBU = FALSE;
+	}
+	else
+	{
+		if((bVer>>4)<5) bSM4OBU = FALSE;
+	}
+
 
 	//	0. 复位
 	ret = preader->PSAM_Atr(bNode,bLen,(char *)szATR);
@@ -984,9 +978,16 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 
 	//801A594310 00000000000000000000000000000000
 	memset(strCmd,0x00,512);
-	sprintf(strCmd,"801A59%02X10",bKeyIndex+3);
-	for(i=0;i<16;i++) sprintf(strCmd+10+2*i,"%02X",preader->m_szApplication[i]);
-
+	if(bSM4OBU)
+	{
+		sprintf(strCmd,"801A59%02X10",bKeyIndex+3);
+		for(i=0;i<16;i++) sprintf(strCmd+10+2*i,"%02X",preader->m_szApplication[i]);
+	}
+	else
+	{
+		sprintf(strCmd,"801A39%02X08",bKeyIndex+3);
+		for(i=0;i<8;i++) sprintf(strCmd+10+2*i,"%02X",preader->m_szApplication[4+i]);
+	}
 	memset(strresp,0x00,256);
 	ret = preader->PSAM_RunCmd(strCmd,strresp);
 	if(ret) return ret;
@@ -999,6 +1000,49 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 	ret = preader->PSAM_RunCmd(strCmd,strresp);
 	if(ret) return ret;
 	CMisc::StringToByte(strresp+34,szPlainFile);
+
+	return 0;
+}
+
+
+int COBUCard::unlockapp(BYTE bVer,BYTE *szAPPID)
+{
+	int ret,i;
+	char strresp[256],strCmd[512];
+	BYTE szMAC[4],szRnd[16],szCmd[256];
+
+	if(!validation()) return -1;
+
+	//	0. 选择3F00目录
+	memset(strresp,0x00,256);
+	ret = preader->RunCmd("00A40000023F00",strresp);
+	if(ret) return ret;
+
+	memset(strresp,0x00,256);
+	ret = preader->RunCmd("00A4000002DF01",strresp);
+
+	memset(szRnd,0x00,16);
+	memset(strresp,0x00,64);
+	ret = preader->RunCmd("0084000004",strresp);
+	if(ret) return ret;
+	CMisc::StringToByte(strresp,szRnd);
+
+	//	2. 计算MAC
+	memset(szMAC,0x00,4);
+	memset(szCmd,0x00,256);
+	memcpy(szCmd,"\x84\x18\x00\x00\x04",5);
+
+	ret = m_pCmd->cmd_1034(bVer,szAPPID,szRnd,0x02,5,szCmd,szMAC);
+	if(ret) return ret;
+
+	//	3. Unlock Application
+	strcpy(strCmd,"8418000004");
+	for(i=0;i<4;i++) sprintf(strCmd+10+2*i,"%02X",szMAC[i]);
+
+	memset(strresp,0x00,256);
+	ret = preader->RunCmd(strCmd,strresp);
+	if(ret) return ret;
+
 
 	return 0;
 }

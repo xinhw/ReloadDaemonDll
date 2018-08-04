@@ -26,7 +26,7 @@ public:
 	//	¿¨Æ¬Çå³ý
 	int clear();
 
-	int preInit(BYTE *elf01_mf);
+	int preInit(WORD wDFID,BYTE *elf01_mf);
 
 private:
 	int obu_load_key(BYTE bVer,BYTE *szAPPID,BYTE *szDID,BYTE bKeyNo,BYTE bKeyHeaderLen,BYTE *szKeyHeader);
@@ -38,4 +38,6 @@ public:
 	int update_load_flag(BYTE bVer,BYTE *szAPPID,BYTE bFlag);
 	int read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile);
 	int getOBUUID(BYTE *szUID);
+	int unlockapp(BYTE bVer,BYTE *szAPPID);
+
 };

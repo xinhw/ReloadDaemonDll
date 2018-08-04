@@ -54,6 +54,7 @@ void		test_obu_pre_init(void);
 void		test_obu_read(void);
 void		test_obu_init(void);
 void		test_obu_personize(void);
+void		test_obu_unlock_adf(void);
 
 void		test_signin(void);
 
@@ -81,6 +82,7 @@ CMD_FUNC cmd_func_tab[] =
 	{'0',"测试：OBU读卡信息",test_obu_read},
 	{'1',"测试：OBU一发",test_obu_init},
 	{'2',"测试：OBU二发",test_obu_personize},
+	{'3',"测试：OBU解锁应用",test_obu_unlock_adf},
 
 	{'N',"测试：操作员签到",test_signin},
 
@@ -616,7 +618,7 @@ void		test_obu_read(void)
 	for(i=0;i<30;i++) PRINTK("%02X ",elf01_mk[i]);
 
 	PRINTK("\n车辆信息文件:");
-	for(i=0;i<59;i++) PRINTK("%02X ",elf01_mk[i]);
+	for(i=0;i<59;i++) PRINTK("%02X ",szPlainText[i]);
 
 	return;
 }
@@ -722,10 +724,41 @@ void		test_obu_personize(void)
 }
 
 
+
+void		test_obu_unlock_adf(void)
+{
+
+	int ret;
+	BYTE elf01_mk[100],elf01_adf01[256];
+	BYTE bVer,szAPPID[8];
+
+	memset(elf01_mk,0x00,100);
+	memset(elf01_adf01,0x00,80);
+
+	ret = obuRead(elf01_mk);
+	if(ret)
+	{
+		PRINTK("\n读取OBU信息失败！");
+		return;
+	}
+
+	bVer = elf01_mk[9];
+	memcpy(szAPPID,elf01_mk+10,8);
+
+	ret = obuUnlockApplication(bVer,szAPPID);
+	if(ret)
+	{
+		PRINTK("\n应用解锁失败！");
+		return;
+	}
+	PRINTK("\n应用解锁成功！");
+}
+
 void		test_obu_pre_init(void)
 {
 	int ret;
 	BYTE elf01_mk[100],elf01_adf01[256];
+	WORD wDFID = 0x3f00;
 
 	memset(elf01_mk,0x00,100);
 	memset(elf01_adf01,0x00,256);
@@ -739,16 +772,20 @@ void		test_obu_pre_init(void)
 	}
 
 	//	然后初始化
-	ret= obuPreInit(elf01_mk);
+	ret= obuPreInit(0xDF01,elf01_mk);
 	if(ret)
 	{
-		PRINTK("\nOBU预初始化失败！");
+		PRINTK("\nOBU的%04X预初始化失败！",wDFID);
 		return;
 	}
-	PRINTK("\nOBU预初始化成功！");
+	PRINTK("\nOBU的%04X预初始化成功！",wDFID);
 
 	return;
 }
+
+
+
+
 /*-------------------------------------------------------------------------
 Function:		test_signin
 Created:		2018-07-27 10:18:37
