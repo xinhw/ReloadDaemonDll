@@ -17,12 +17,13 @@
 #pragma message("动态库")
 #endif
 
-#define DLL_VERSION		"V0.12 测试版的动态库"
+#define DLL_VERSION		"V0.13 测试版的动态库"
 
 //	读卡器类型
-#define READER_TYPE_CPU_CARD		0x00
-#define READER_TYPE_OBU				0x01
-#define READER_TYPE_XIONGDI			0x02
+#define READER_TYPE_CPU_CARD		0x00			//	航天金卡用户卡读卡器
+#define READER_TYPE_OBU				0x01			//	万集OBU读卡器
+#define READER_TYPE_XIONGDI			0x02			//	雄帝用户卡读卡器
+#define READER_TYPE_JINYI			0x03			//	金溢OBU读卡器
 
 typedef void  (__stdcall *CALLBACKFUNC)(int nLen,char *pszstr);
 CALLBACKFUNC pMyCallback = NULL;
@@ -38,6 +39,7 @@ extern "C"
 	/*	读卡器实例*/
 	CCardReader *preader = NULL;
 
+	//	返回动态库版本
 	void	__stdcall	getDllVersion(char *strVer);
 
 	/*	设置回调函数：因为一发的时间比较长，中间可通过回调函数返回信息，刷新界面；也可以通过回调知道进展*/

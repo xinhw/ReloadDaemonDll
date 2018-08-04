@@ -1,15 +1,54 @@
+/*-------------------------------------------------------------------------
+    Shanghai AvantPort Information Technology Co., Ltd
+
+    Software Development Division
+
+    Xin Hongwei(hongwei.xin@avantport.com)
+
+    Created£º2018/08/04 13:34:20
+
+    Reversion:
+        
+-------------------------------------------------------------------------*/
 
 
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.CMisc
+Created:		2018-08-04 13:34:23
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 CMisc::CMisc()
 {
 }
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.~CMisc
+Created:		2018-08-04 13:34:26
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 CMisc::~CMisc()
 {
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.SystemShutdown
+Created:		2018-08-04 13:34:29
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 BOOL CMisc::SystemShutdown(DWORD dwFlag)
 {
 
@@ -43,6 +82,15 @@ BOOL CMisc::SystemShutdown(DWORD dwFlag)
 
 
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.SetBoxDatetime
+Created:		2018-08-04 13:34:32
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 BOOL CMisc::SetBoxDatetime(SYSTEMTIME *pstm)
 {
 	HANDLE					hToken; 
@@ -67,6 +115,15 @@ BOOL CMisc::SetBoxDatetime(SYSTEMTIME *pstm)
 
 
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.FindFileByName
+Created:		2018-08-04 13:34:35
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 bool CMisc::FindFileByName(TCHAR *pszFile)
 {
 	
@@ -92,6 +149,15 @@ bool CMisc::FindFileByName(TCHAR *pszFile)
 
 #define CRC_PRESET 0xffff
 #define CRC_POLYNOM 0x8408
+/*-------------------------------------------------------------------------
+Function:		CMisc.calcCRC
+Created:		2018-08-04 13:34:38
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 WORD CMisc::calcCRC(BYTE *data,UINT length)
 {
 	WORD crc = CRC_PRESET;
@@ -110,6 +176,15 @@ WORD CMisc::calcCRC(BYTE *data,UINT length)
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.bcd2bin
+Created:		2018-08-04 13:34:42
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 BYTE CMisc::bcd2bin(BYTE b)
 {
 	BYTE ch=0;
@@ -122,6 +197,15 @@ BYTE CMisc::bcd2bin(BYTE b)
 
 
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.GetMemoryInfo
+Created:		2018-08-04 13:34:45
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 BOOL CMisc::GetMemoryInfo(DWORD &dwTotalSpace,DWORD &dwFreeSpace)
 {
 	MEMORYSTATUS meminfo;
@@ -141,6 +225,15 @@ BOOL CMisc::GetMemoryInfo(DWORD &dwTotalSpace,DWORD &dwFreeSpace)
 }  
 
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.GetDiscInfo
+Created:		2018-08-04 13:34:48
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 BOOL CMisc::GetDiscInfo(DWORD &dwTotalSpace,DWORD &dwFreeSpace)
 {
 #ifndef WINCE
@@ -259,6 +352,15 @@ BOOL CMisc::GetDiscInfo(DWORD &dwTotalSpace,DWORD &dwFreeSpace)
 
 
  
+/*-------------------------------------------------------------------------
+Function:		CMisc.Int2Bytes
+Created:		2018-08-04 13:34:53
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void	CMisc::Int2Bytes(int n,BYTE *pch)
 {
 	union tagInt2Bytes
@@ -278,6 +380,15 @@ void	CMisc::Int2Bytes(int n,BYTE *pch)
 }
 
  
+/*-------------------------------------------------------------------------
+Function:		CMisc.Bytes2Int
+Created:		2018-08-04 13:34:56
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void	CMisc::Bytes2Int(BYTE *pch,int *n)
 {
 	union tagInt2Bytes
@@ -297,6 +408,15 @@ void	CMisc::Bytes2Int(BYTE *pch,int *n)
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.bcd
+Created:		2018-08-04 13:34:59
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 UCHAR CMisc::bcd(UCHAR ch)
 {
 	UCHAR c;
@@ -310,6 +430,15 @@ UCHAR CMisc::bcd(UCHAR ch)
 
 
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.toHexString
+Created:		2018-08-04 13:35:02
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 const string CMisc::toHexString(const unsigned char* input, const int datasize)
 {
 	string output;
@@ -324,6 +453,15 @@ const string CMisc::toHexString(const unsigned char* input, const int datasize)
 
 } 
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.xorBytes
+Created:		2018-08-04 13:35:06
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void CMisc::xorBytes(int nlen,const BYTE *var1,const BYTE *var2,BYTE *var)
 {
 	int i;
@@ -333,6 +471,15 @@ void CMisc::xorBytes(int nlen,const BYTE *var1,const BYTE *var2,BYTE *var)
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.getDateTime
+Created:		2018-08-04 13:35:10
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void CMisc::getDateTime(char *s)
 {
 	SYSTEMTIME st;
@@ -346,6 +493,15 @@ void CMisc::getDateTime(char *s)
 	return;
 }
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.getBCDDateTime
+Created:		2018-08-04 13:35:13
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void CMisc::getBCDDateTime(BYTE *szDateTime)
 {
 	char strTime[20];
@@ -430,6 +586,15 @@ void CMisc::StringToByte(char *str,BYTE *arr)
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		CMisc.ByteToString
+Created:		2018-08-04 13:36:52
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void CMisc::ByteToString(BYTE *arr,BYTE nlen,char *str)
 {
 	BYTE i;

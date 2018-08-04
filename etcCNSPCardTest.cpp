@@ -49,10 +49,12 @@ void		test_cpucard_credit(void);
 void		test_cpucard_debit(void);
 void		test_cpucard_update000e(void);
 void		test_cpucard_reload_pin(void);
-void		test_obu_pre_init(void);
+void		test_cpucard_readadfile(void);
+
 
 void		test_obu_read(void);
 void		test_obu_init(void);
+void		test_obu_pre_init(void);
 void		test_obu_personize(void);
 void		test_obu_unlock_adf(void);
 
@@ -76,6 +78,7 @@ CMD_FUNC cmd_func_tab[] =
 	{'D',"测试：用户卡消费",test_cpucard_debit},
 	{'A',"测试：用户卡更新000E文件",test_cpucard_update000e},
 	{'J',"测试：用户卡PIN重装",test_cpucard_reload_pin},
+	{'E',"测试：用户卡读取ADF文件",test_cpucard_readadfile},
 
 	{'Y',"测试：OBU卡预处理",test_obu_pre_init},
 
@@ -202,7 +205,7 @@ void		test_open_reader(void)
 	int ret,ntype;
 	int ncom,nbaud;
 
-	PRINTK("\n请输入读卡器类型\n\t0--航天金卡读写器\n\t1--万集OBU读写器\n\t2--深圳雄帝读卡器\n");
+	PRINTK("\n请输入读卡器类型\n\t0--航天金卡读写器\n\t1--万集OBU读写器\n\t2--深圳雄帝读卡器\n\t3--深圳金溢OBU读写器\n");
 	scanf("%d",&ntype);
 
 	PRINTK("\n输入串口号：");
@@ -725,6 +728,15 @@ void		test_obu_personize(void)
 
 
 
+/*-------------------------------------------------------------------------
+Function:		test_obu_unlock_adf
+Created:		2018-08-04 13:33:07
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        		OBU解锁ADF
+-------------------------------------------------------------------------*/
 void		test_obu_unlock_adf(void)
 {
 
@@ -754,11 +766,20 @@ void		test_obu_unlock_adf(void)
 	PRINTK("\n应用解锁成功！");
 }
 
+/*-------------------------------------------------------------------------
+Function:		test_obu_pre_init
+Created:		2018-08-04 13:32:49
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        		OBU预处理流程
+-------------------------------------------------------------------------*/
 void		test_obu_pre_init(void)
 {
 	int ret;
 	BYTE elf01_mk[100],elf01_adf01[256];
-	WORD wDFID = 0x3f00;
+	WORD wDFID = 0x0000;
 
 	memset(elf01_mk,0x00,100);
 	memset(elf01_adf01,0x00,256);
@@ -772,13 +793,27 @@ void		test_obu_pre_init(void)
 	}
 
 	//	然后初始化
-	ret= obuPreInit(0xDF01,elf01_mk);
+	PRINTK("\n预处理系统主控密钥...");
+	wDFID = 0x3f00;
+	ret= obuPreInit(wDFID,elf01_mk);
 	if(ret)
 	{
 		PRINTK("\nOBU的%04X预初始化失败！",wDFID);
 		return;
 	}
-	PRINTK("\nOBU的%04X预初始化成功！",wDFID);
+	PRINTK("\n系统主控密钥预处理成功！");
+
+	wDFID = 0xDF01;
+	PRINTK("\n预处理应用主控密钥...");
+	ret= obuPreInit(wDFID,elf01_mk);
+	if(ret)
+	{
+		PRINTK("\nOBU的%04X预初始化失败！",wDFID);
+		return;
+	}
+
+	PRINTK("\n应用主控密钥预处理成功！");
+	PRINTK("\nOBU预处理完成，可以执行一发");
 
 	return;
 }
@@ -899,6 +934,60 @@ void		test_cpucard_reload_pin(void)
 		PRINTK("\nPIN解锁成功！");
 	}
 
+
+	return;
+}
+
+
+void test_cpucard_readadfile(void)
+{
+	int ret,i;
+	BYTE elf[256];
+
+
+	PRINTK("\n读取000E文件：");
+	memset(elf,0x00,256);
+	ret = cpuReadAdfFile(0x0e,0,0x46,elf);
+	if(ret)
+	{
+		PRINTK("\n读取 000E 文件失败:%04X",ret);
+		return;
+	}
+	for(i=0;i<0x46;i++)
+	{
+		if(i%32==0) PRINTK("\n");
+		PRINTK("%02X ",elf[i]);
+	}
+
+	PRINTK("\n读取0008文件：");
+	memset(elf,0x00,256);
+	ret = cpuReadAdfFile(0x08,0,128,elf);
+	if(ret)
+	{
+		PRINTK("\n读取 0008 文件失败:%04X",ret);
+		return;
+	}
+	for(i=0;i<128;i++)
+	{
+		if(i%32==0) PRINTK("\n");
+		PRINTK("%02X ",elf[i]);
+	}
+
+
+	PRINTK("\n读取0009文件：");
+	memset(elf,0x00,256);
+	ret = cpuReadAdfFile(0x09,0,128,elf);
+	if(ret)
+	{
+		PRINTK("\n读取 0009 文件失败:%04X",ret);
+		return;
+	}
+	for(i=0;i<128;i++)
+	{
+		if(i%32==0) PRINTK("\n");
+		PRINTK("%02X ",elf[i]);
+	}
+	
 
 	return;
 }

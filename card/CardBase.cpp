@@ -638,6 +638,15 @@ int CCPUCardBase::reloadPIN(BYTE bVer,BYTE *szAPPID,BYTE bPINLen,BYTE *szPIN)
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		CCPUCardBase.readAdfFile
+Created:		2018-08-04 13:42:43
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 int CCPUCardBase::readAdfFile(BYTE bFID,BYTE bOffset, BYTE bLength, BYTE *szFile)
 {
 	int		ret;

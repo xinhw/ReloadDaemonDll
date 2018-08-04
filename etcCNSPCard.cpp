@@ -238,6 +238,16 @@ int __stdcall openReader(int nType,int ncom,int nbaud)
 		return ret;
 	}
 
+	//	½ğÒçOBU¶Ë¿ÚÆ÷
+	if(READER_TYPE_JINYI==nType)
+	{
+		preader = new CJYRsuReader();
+
+		memset(strcom,0x00,32);
+		sprintf(strcom,"COM%d",ncom);
+		ret = preader->Open(strcom,nbaud);
+		return ret;
+	}
 
 	return -1;
 }

@@ -1,3 +1,15 @@
+/*-------------------------------------------------------------------------
+    Shanghai AvantPort Information Technology Co., Ltd
+
+    Software Development Division
+
+    Xin Hongwei(hongwei.xin@avantport.com)
+
+    Created£º2018/08/04 13:34:13
+
+    Reversion:
+        
+-------------------------------------------------------------------------*/
 
 #ifndef		__MISC_H__
 #define		__MISC_H__
@@ -26,8 +38,6 @@ public:
 	static WORD calcCRC(BYTE *data,UINT length);
 
 	static BYTE bcd2bin(BYTE b);
-
- 
 
 	static BOOL GetMemoryInfo(DWORD &dwTotalSpace,DWORD &dwFreeSpace);
 

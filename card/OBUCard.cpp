@@ -191,7 +191,7 @@ int COBUCard::preInit(WORD wDFID,BYTE *elf01_mf)
 		//	6保护，导出6，  保护因子用合同序列号，分散因子用芯片序列号。替换系统主控密钥。
 		callbackMessage("从前置获取密钥");
 		ret = m_pCmd->cmd_1042(bVer,szOBUID,
-								0x01,
+								0x81,
 								sRnd,
 								(BYTE *)"\x84\xD4\x01\x00\x24",
 								3,(BYTE *)"\x00\x40\x00",
@@ -252,7 +252,7 @@ int COBUCard::preInit(WORD wDFID,BYTE *elf01_mf)
 
 		//	7保护，导出7，保护因子用合同序列号，分散因子用芯片序列号。替换应用主控密钥。
 		ret = m_pCmd->cmd_1042(bVer,szOBUID,
-								0x03,
+								0x83,
 								sRnd,
 								(BYTE *)"\x84\xD4\x01\x00\x24",
 								3,(BYTE *)"\x00\x40\x00",
@@ -857,8 +857,11 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 	//	1. 选择3F00目录
 	memset(strresp,0x00,256);
 	ret = preader->PSAM_RunCmd("00A40000023F00",strresp);
-	if(ret) return ret;
-
+	if(ret) 
+	{
+		PRINTK("\nPSAM_RunCmd 返回:%04X",ret);
+		return ret;
+	}
 	//	2. 读取0015文件
 	memset(strresp,0x00,256);
 	ret = preader->PSAM_RunCmd("00B095000E",strresp);

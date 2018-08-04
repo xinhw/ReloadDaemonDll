@@ -14,7 +14,7 @@
 #include "NXRsuReader.h"
 
 /*-------------------------------------------------------------------------
-Function:		CNXRsuReader.CNXRsuReader
+Function:		CJYRsuReader.CJYRsuReader
 Created:		2018-07-19 10:36:26
 Author:			Xin Hongwei(hongwei.xin@avantport.com)
 Parameters: 
@@ -22,7 +22,7 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-CNXRsuReader::CNXRsuReader(void)
+CJYRsuReader::CJYRsuReader(void)
 {
 	m_hDll = NULL;
 	m_hDevice = NULL;
@@ -32,7 +32,7 @@ CNXRsuReader::CNXRsuReader(void)
 }
 
 /*-------------------------------------------------------------------------
-Function:		CNXRsuReader.~CNXRsuReader
+Function:		CJYRsuReader.~CJYRsuReader
 Created:		2018-07-19 10:36:28
 Author:			Xin Hongwei(hongwei.xin@avantport.com)
 Parameters: 
@@ -40,7 +40,7 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-CNXRsuReader::~CNXRsuReader(void)
+CJYRsuReader::~CJYRsuReader(void)
 {
 }
 
@@ -48,7 +48,7 @@ CNXRsuReader::~CNXRsuReader(void)
 
 
 /*-------------------------------------------------------------------------
-Function:		CNXRsuReader.Open
+Function:		CJYRsuReader.Open
 Created:		2018-07-19 10:36:31
 Author:			Xin Hongwei(hongwei.xin@avantport.com)
 Parameters: 
@@ -56,14 +56,14 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-UINT CNXRsuReader::Open(char *strAddress, unsigned int iBaud)
+UINT CJYRsuReader::Open(char *strAddress, unsigned int iBaud)
 {
-	m_hDll = LoadLibrary("RSUComm.dll");
+	m_hDll = LoadLibrary("RSUComm_JY.dll");
 	if(m_hDll == NULL)
 	{
 		DWORD dw = GetLastError();
 		char strError[32];
-		sprintf(strError,"无法加载万集读卡器动态库RSUComm.dll - %08X", dw);
+		sprintf(strError,"无法加载金溢RSUComm_JY.dll - %08X", dw);
 		PRINTK(strError);
 		return 0x1A13;
 	}
@@ -87,7 +87,6 @@ UINT CNXRsuReader::Open(char *strAddress, unsigned int iBaud)
 	lpfn_GetSecure_rq = (LPFN_GetSecure_rq)GetProcAddress(m_hDll, "GetSecure_rq");
 	lpfn_GetSecure_rs = (LPFN_GetSecure_rs)GetProcAddress(m_hDll,"GetSecure_rs");
 
-
 	int iDevType = 1;
 	if(!memcmp(strAddress,"COM",3))
 	{
@@ -107,7 +106,7 @@ UINT CNXRsuReader::Open(char *strAddress, unsigned int iBaud)
 }
 
 /*-------------------------------------------------------------------------
-Function:		CNXRsuReader.Close
+Function:		CJYRsuReader.Close
 Created:		2018-07-19 10:36:35
 Author:			Xin Hongwei(hongwei.xin@avantport.com)
 Parameters: 
@@ -115,7 +114,7 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-void CNXRsuReader::Close()
+void CJYRsuReader::Close()
 {
 	int ret;
 	int mode = 1;
@@ -140,7 +139,7 @@ void CNXRsuReader::Close()
 }
 
 /*-------------------------------------------------------------------------
-Function:		CNXRsuReader.Initialize
+Function:		CJYRsuReader.Initialize
 Created:		2018-07-19 10:36:52
 Author:			Xin Hongwei(hongwei.xin@avantport.com)
 Parameters: 
@@ -148,11 +147,12 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-UINT CNXRsuReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
+UINT CJYRsuReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 {
 	time_t tm;
 	time(&tm);
 	BYTE szTime[4];
+	int rlen = 0;
 
 	int iResult = 0;
 
@@ -161,7 +161,8 @@ UINT CNXRsuReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 	memset(szTime,0x00,4);
 	CMisc::Int2Bytes(tm,szTime);
 
-	iResult = lpfn_RSU_INIT_rq(m_hDevice, (char *)szTime, 3, 30, 22, 0, 1000);
+	PRINTK("\nlpfn_RSU_INIT_rq");
+	iResult = lpfn_RSU_INIT_rq(m_hDevice, (char *)szTime, 3, 22, 0, 1000);
 	if(iResult!=0)
 	{
 		PRINTK("\nlpfn_RSU_INIT_rq失败");
@@ -169,10 +170,11 @@ UINT CNXRsuReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 	}
 
 	int iState = 0;
-	BYTE btData[128];
-	memset(btData,0x00,128);
+	BYTE btData[256];
+	memset(btData,0x00,256);
 
-	iResult =lpfn_RSU_INIT_rs(m_hDevice, &iState, (char *)btData, 1000);
+	PRINTK("\nlpfn_RSU_INIT_rs");
+	iResult =lpfn_RSU_INIT_rs(m_hDevice, &iState, &rlen,(char *)btData, 1000);
 	if( iResult!= 0)
 	{
 		PRINTK("\nlpfn_RSU_INIT_rs 失败");
@@ -180,6 +182,7 @@ UINT CNXRsuReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 	}
 
 	time(&tm);
+	PRINTK("\nlpfn_INITIALISATION_rq");
 	iResult = lpfn_INITIALISATION_rq(m_hDevice, "\x08\xFF\xFF\x00", (char *)&tm, 0, 1, "\x01\x1A\x00\x2B\x04", 0, 2000);
 	if(iResult != 0)
 	{
@@ -196,6 +199,7 @@ UINT CNXRsuReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 	memset(btApplication,0x00,256);
 	memset(btObuConfiguration,0x00,128);
 
+	PRINTK("\nlpfn_INITIALISATION_rs");
 	iResult = lpfn_INITIALISATION_rs(m_hDevice, &iReturnStatus, &iProfile, &iApplicationlist, (char *)btApplication, (char *)btObuConfiguration, 2000);
 	if(iResult != 0)
 	{
@@ -216,7 +220,7 @@ UINT CNXRsuReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 
 	PRINTK("\nOBU APPLICATION:");
 	for(i=0;i<16;i++) PRINTK("%02X",(BYTE)m_szApplication[i]);
-
+	/*	*/
 	return 0;
 }
 
@@ -224,7 +228,7 @@ UINT CNXRsuReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 
 // 向卡机发送命令
 /*-------------------------------------------------------------------------
-Function:		CNXRsuReader.RunCmd
+Function:		CJYRsuReader.RunCmd
 Created:		2018-07-19 10:36:58
 Author:			Xin Hongwei(hongwei.xin@avantport.com)
 Parameters: 
@@ -232,7 +236,7 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-UINT CNXRsuReader::RunCmd(char *strCmd, char *strResult)
+UINT CJYRsuReader::RunCmd(char *strCmd, char *strResult)
 {
 	int iResult = 0;
 	BYTE pBuffer[257];
@@ -301,7 +305,7 @@ UINT CNXRsuReader::RunCmd(char *strCmd, char *strResult)
 
 // 向卡机发送命令
 /*-------------------------------------------------------------------------
-Function:		CNXRsuReader.PSAM_RunCmd
+Function:		CJYRsuReader.PSAM_RunCmd
 Created:		2018-07-19 10:37:03
 Author:			Xin Hongwei(hongwei.xin@avantport.com)
 Parameters: 
@@ -309,7 +313,7 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-UINT CNXRsuReader::PSAM_RunCmd(char *strCmd, char *strResult)
+UINT CJYRsuReader::PSAM_RunCmd(char *strCmd, char *strResult)
 {
 	int iResult = 0;
 	int iDID = 0;
@@ -345,13 +349,13 @@ UINT CNXRsuReader::PSAM_RunCmd(char *strCmd, char *strResult)
 	if(iResult != SUCCESS)
 	{
 		#ifdef DEBUG_PRINT
-			PRINTK("\nPSAM: RSP FAILURE WITH ERROR %d",strResult);
+			PRINTK("\nPSAM: RSP FAILURE WITH ERROR %d",iResult);
 		#endif
 		return iResult;
 	}
 
 	// 将返回的字节序列转换成字符串
-	CMisc::ByteToString(&btData[1], btData[0] + 2,strResult);
+	CMisc::ByteToString(&btData[1], btData[0],strResult);
 
 #ifdef DEBUG_PRINT
 	PRINTK("\nPSAM RSP:%s",strResult);
@@ -384,7 +388,7 @@ UINT CNXRsuReader::PSAM_RunCmd(char *strCmd, char *strResult)
 
 
 /*-------------------------------------------------------------------------
-Function:		CNXRsuReader.PSAM_RunCmd
+Function:		CJYRsuReader.PSAM_RunCmd
 Created:		2018-07-19 10:37:03
 Author:			Xin Hongwei(hongwei.xin@avantport.com)
 Parameters: 
@@ -392,10 +396,11 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-UINT CNXRsuReader::PSAM_Atr(BYTE bNode,BYTE &brLen,char *strATR)
+UINT CJYRsuReader::PSAM_Atr(BYTE bNode,BYTE &brLen,char *strATR)
 {
 	int iResult = 0;
 	BYTE btData[128];
+	int rlen = 0;
 
 	time_t tm;
 	BYTE szTime[4];
@@ -417,7 +422,7 @@ UINT CNXRsuReader::PSAM_Atr(BYTE bNode,BYTE &brLen,char *strATR)
 
 	int iRlen = 0;
 	memset(btData,0x00,128);
-	iResult = lpfn_PSAM_Reset_rs(m_hDevice, m_bPSAMNode, (char *)btData, 2000);
+	iResult = lpfn_PSAM_Reset_rs(m_hDevice, m_bPSAMNode, &rlen,(char *)btData, 2000);
 	if( iResult!= 0)
 	{
 		PRINTK("\nlpfn_PSAM_Reset_rs 失败");
@@ -429,7 +434,7 @@ UINT CNXRsuReader::PSAM_Atr(BYTE bNode,BYTE &brLen,char *strATR)
 
 
 /*-------------------------------------------------------------------------
-Function:		CNXRsuReader.Halt
+Function:		CJYRsuReader.Halt
 Created:		2018-07-19 10:37:07
 Author:			Xin Hongwei(hongwei.xin@avantport.com)
 Parameters: 
@@ -437,13 +442,13 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-UINT CNXRsuReader::Halt()
+UINT CJYRsuReader::Halt()
 {
 	return 0;
 }
 
 /*-------------------------------------------------------------------------
-Function:		CNXRsuReader.SecureRead
+Function:		CJYRsuReader.SecureRead
 Created:		2018-07-19 10:37:03
 Author:			Xin Hongwei(hongwei.xin@avantport.com)
 Parameters: 
@@ -451,7 +456,7 @@ Parameters:
 Reversion:
 				bKeyindex
 -------------------------------------------------------------------------*/
-UINT CNXRsuReader::SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLength,
+UINT CJYRsuReader::SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLength,
 							BYTE &bRetFileLen,char *strResp)
 {
 
