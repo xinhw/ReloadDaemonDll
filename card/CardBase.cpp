@@ -170,29 +170,29 @@ int CCPUCardBase::readCard(BYTE *elf15,BYTE *elf16,DWORD &dwRemain)
 
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00A40000023F00",strresp);
+	ret = m_pReader->RunCmd("00A40000023F00",strresp);
 	if(ret) return ret;
 
 	//	1. 读取0016文件：	持卡人基本数据文件
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00B0960037",strresp);
+	ret = m_pReader->RunCmd("00B0960037",strresp);
 	if(ret) return ret;
 	CMisc::StringToByte(strresp,elf16);
 
 	//	2. 选择1001 ADF
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00A40000021001",strresp);
+	ret = m_pReader->RunCmd("00A40000021001",strresp);
 	if(ret) return ret;
 
 	//	3. 读取0015文件：	卡发行基本数据文件
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00B0950032",strresp);
+	ret = m_pReader->RunCmd("00B0950032",strresp);
 	if(ret) return ret;
 	CMisc::StringToByte(strresp,elf15);
 
 	//	4. 读取卡片余额
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("805C000204",strresp);
+	ret = m_pReader->RunCmd("805C000204",strresp);
 	if(ret) return ret;
 	memset(szbuf,0x00,32);
 	CMisc::StringToByte(strresp,szbuf);
@@ -220,12 +220,12 @@ int CCPUCardBase::readRecord(BYTE bFileID,BYTE bNo,BYTE bLen,BYTE *szRec)
 
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00A40000023F00",strresp);
+	ret = m_pReader->RunCmd("00A40000023F00",strresp);
 	if(ret) return ret;
 
 	//	1. 选择1001 ADF
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00A40000021001",strresp);
+	ret = m_pReader->RunCmd("00A40000021001",strresp);
 	if(ret) return ret;
 
 	//	2. 读取记录文件
@@ -233,7 +233,7 @@ int CCPUCardBase::readRecord(BYTE bFileID,BYTE bNo,BYTE bLen,BYTE *szRec)
 	sprintf(strcmd,"00B2%02X%02X%02X",bNo,(BYTE)((bFileID>>3)&0x04),bLen);
 	
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd(strcmd,strresp);
+	ret = m_pReader->RunCmd(strcmd,strresp);
 	if(ret) return ret;
 
 	CMisc::StringToByte(strresp,szRec);
@@ -405,12 +405,12 @@ int CCPUCardBase::updateELF0015(BYTE bVer,BYTE *szAPPID,BYTE *szFile0015)
 
 	//	1. 选择1001 ADF
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("00A40000021001",strresp);
+	ret = m_pReader->RunCmd("00A40000021001",strresp);
 	if(ret) return ret;
 
 	//	2. 取随机数
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("0084000004",strresp);
+	ret = m_pReader->RunCmd("0084000004",strresp);
 	if(ret) return ret;
 
 	CMisc::StringToByte(strresp,szRnd);
@@ -456,12 +456,12 @@ int CCPUCardBase::updateELF0016(BYTE bVer,BYTE *szAPPID,BYTE *szFile0016)
 
 	//	1. 选择3F00
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("00A40000023F00",strresp);
+	ret = m_pReader->RunCmd("00A40000023F00",strresp);
 	if(ret) return ret;
 
 	//	2. 取随机数
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("0084000004",strresp);
+	ret = m_pReader->RunCmd("0084000004",strresp);
 	if(ret) return ret;
 
 	CMisc::StringToByte(strresp,szRnd);
@@ -506,12 +506,12 @@ int CCPUCardBase::updateValidDate(BYTE bVer,BYTE *szAPPID,BYTE *szNewValidDate)
 
 	//	1. 选择1001 ADF
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("00A40000021001",strresp);
+	ret = m_pReader->RunCmd("00A40000021001",strresp);
 	if(ret) return ret;
 
 	//	2. 取随机数
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("0084000004",strresp);
+	ret = m_pReader->RunCmd("0084000004",strresp);
 	if(ret) return ret;
 
 	CMisc::StringToByte(strresp,szRnd);
@@ -558,12 +558,12 @@ int CCPUCardBase::updateELF000E(BYTE bVer,BYTE *szAPPID,BYTE *szFile000E)
 
 	//	1. 选择1001 ADF
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("00A40000021001",strresp);
+	ret = m_pReader->RunCmd("00A40000021001",strresp);
 	if(ret) return ret;
 
 	//	2. 取随机数
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("0084000004",strresp);
+	ret = m_pReader->RunCmd("0084000004",strresp);
 	if(ret) return ret;
 
 	CMisc::StringToByte(strresp,szRnd);
@@ -606,13 +606,13 @@ int CCPUCardBase::reloadPIN(BYTE bVer,BYTE *szAPPID,BYTE bPINLen,BYTE *szPIN)
 {
 	int		ret,i;
 	char	strCmd[64],strresp[256];
-	BYTE	szCmd[32],szRnd[4];
+	BYTE	szCmd[32],szRnd[8];
 
 	if(!validation()) return -1;
 
 	//	1. 选择1001 ADF
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("00A40000021001",strresp);
+	ret = m_pReader->RunCmd("00A40000021001",strresp);
 	if(ret) return ret;
 
 	
@@ -621,7 +621,7 @@ int CCPUCardBase::reloadPIN(BYTE bVer,BYTE *szAPPID,BYTE bPINLen,BYTE *szPIN)
 	szCmd[4] = (BYTE)(4+bPINLen);
 	memcpy(szCmd+5,szPIN,bPINLen);
 
-	memset(szRnd,0x00,4);
+	memset(szRnd,0x00,8);
 
 	ret = m_pCmd->cmd_1039(bVer,szAPPID,szRnd,5+bPINLen,szCmd,szCmd+5+bPINLen);
 	if(ret) return ret;
@@ -657,12 +657,12 @@ int CCPUCardBase::readAdfFile(BYTE bFID,BYTE bOffset, BYTE bLength, BYTE *szFile
 
 	//	0. 选择3F00
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("00A40000023F00",strresp);
+	ret = m_pReader->RunCmd("00A40000023F00",strresp);
 	if(ret) return ret;
 
 	//	1. 选择1001 ADF
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("00A40000021001",strresp);
+	ret = m_pReader->RunCmd("00A40000021001",strresp);
 	if(ret) return ret;
 
 	//	2. 读取二进制文件
@@ -671,9 +671,11 @@ int CCPUCardBase::readAdfFile(BYTE bFID,BYTE bOffset, BYTE bLength, BYTE *szFile
 	memset(strCmd,0x00,64);
 	sprintf(strCmd,"00B0%02X%02X%02X",bFileID,bOffset,bLength);
 
-	memset(strresp,0x00,64);
+	memset(strresp,0x00,256);
 	ret = m_pReader->RunCmd(strCmd,strresp);
 	if(ret) return ret;
+
+	CMisc::StringToByte(strresp,szFile);
 
 	return 0;
 }

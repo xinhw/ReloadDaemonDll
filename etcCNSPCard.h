@@ -1,4 +1,3 @@
-
 // The following ifdef block is the standard way of creating macros which make exporting 
 // from a DLL simpler. All files within this DLL are compiled with the ETCCNSPCARD_EXPORTS
 // symbol defined on the command line. this symbol should not be defined on any project
@@ -17,7 +16,10 @@
 #pragma message("动态库")
 #endif
 
-#define DLL_VERSION		"V0.13 测试版的动态库"
+#define MAX_READER_NUM	32
+
+
+#define DLL_VERSION		"V0.15 多串口（测试版）动态库"
 
 //	读卡器类型
 #define READER_TYPE_CPU_CARD		0x00			//	航天金卡用户卡读卡器
@@ -25,20 +27,27 @@
 #define READER_TYPE_XIONGDI			0x02			//	雄帝用户卡读卡器
 #define READER_TYPE_JINYI			0x03			//	金溢OBU读卡器
 
+
+int gnDefaultCom = 0;
+
+
+/*回调函数*/
 typedef void  (__stdcall *CALLBACKFUNC)(int nLen,char *pszstr);
 CALLBACKFUNC pMyCallback = NULL;
 void callbackMessage(char *strmsg);
 
+/*	网络连接实例*/
+CTcpTransfer *ptransfer[MAX_READER_NUM];
+/*	后台密钥服务实例*/
+ClsCommand *pcmd[MAX_READER_NUM];
+/*	读卡器实例*/
+CCardReader *preader[MAX_READER_NUM];
+
+bool validation(int nlevel,int ncom = gnDefaultCom);
+
 
 extern "C"
 {
-	/*	网络连接实例*/
-	CTcpTransfer *ptransfer=NULL;
-	/*	后台密钥服务实例*/
-	ClsCommand *pcmd = NULL;
-	/*	读卡器实例*/
-	CCardReader *preader = NULL;
-
 	//	返回动态库版本
 	void	__stdcall	getDllVersion(char *strVer);
 
@@ -52,10 +61,10 @@ extern "C"
 		strip	[in]	前置的IP地址
 		wport	[in]	前置的PORT
 	*/
-	int __stdcall connectOKS(char *strip,WORD wport);
+	int __stdcall connectOKS(char *strip,WORD wport,int ncom = gnDefaultCom);
 
 	/*2. 关闭到在线密钥服务前置的连接*/
-	int __stdcall disconnectOKS();
+	int __stdcall disconnectOKS(int ncom = gnDefaultCom);
 
 	/*3. 打开读卡器
 		nType	[in]	读卡器类型，0——航天金卡读卡器，1——万集读卡器
@@ -65,12 +74,12 @@ extern "C"
 	int __stdcall openReader(int nType,int ncom,int nbaud);
 
 	/*4. 关闭读卡器*/
-	int __stdcall closeReader();
+	int __stdcall closeReader(int ncom = gnDefaultCom);
 
 	/*5. 操作员签到认证
 		strOperator	[in]	操作员卡号
 	*/
-	int __stdcall signIn(char *strOperator);
+	int __stdcall signIn(char *strOperator,int ncom = gnDefaultCom);
 
 	/***************************************************************************************/
 	/*				CPU函数																   */
@@ -80,14 +89,14 @@ extern "C"
 		bATSLen	[in]	卡片ATS返回的长度
 		szATS	[in]	卡片ATS信息
 	*/
-	int __stdcall cpuATS(BYTE *szSNO,BYTE &bATSLen,BYTE *szATS);
+	int __stdcall cpuATS(BYTE *szSNO,BYTE &bATSLen,BYTE *szATS,int ncom = gnDefaultCom);
 
 	/*7. 读CPU卡文件
 		elf15		[out]	卡片发行基本数据文件
 		elf16		[out]	持卡人基本数据文件
 		dwRemain	[out]	余额
 	*/
-	int __stdcall cpuReadCardFiles(BYTE *elf15,BYTE *elf16,DWORD &dwRemain);
+	int __stdcall cpuReadCardFiles(BYTE *elf15,BYTE *elf16,DWORD &dwRemain,int ncom = gnDefaultCom);
 	/*
 	读取ADF下的二进制文件
 		bFileID		[in]	短文件标识符
@@ -95,7 +104,7 @@ extern "C"
 		bLength		[in]	读取长度
 		szFile		[out]	读取的信息
 	*/
-	int __stdcall cpuReadAdfFile(BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE *szFile);
+	int __stdcall cpuReadAdfFile(BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE *szFile,int ncom = gnDefaultCom);
 	/*
 		8.	读取记录文件
 		bFileID		[in]	文件标识，SFI
@@ -105,12 +114,12 @@ extern "C"
 
 		可以读取：0018,0017,0019文件
 	*/
-	int __stdcall cpuReadCardRecord(BYTE bFileID,BYTE bNo,BYTE bLen,BYTE *szRec);
+	int __stdcall cpuReadCardRecord(BYTE bFileID,BYTE bNo,BYTE bLen,BYTE *szRec,int ncom = gnDefaultCom);
 
 	/*9. 用户卡一发
 		szFile0015	[in]	0015文件内容
 	*/
-	int __stdcall cpuInit(BYTE *szFile0015);
+	int __stdcall cpuInit(BYTE *szFile0015,int ncom = gnDefaultCom);
 
 
 	/*10. 更新持卡人基本数据文件
@@ -118,7 +127,7 @@ extern "C"
 		szAPPID		[in]	卡片应用序列号
 		szFile		[in]	持卡人基本数据文件		
 	*/
-	int __stdcall cpuUpdateUserFile(BYTE bVer,BYTE *szAPPID,BYTE *szFile);
+	int __stdcall cpuUpdateUserFile(BYTE bVer,BYTE *szAPPID,BYTE *szFile,int ncom = gnDefaultCom);
 
 
 	/*11. 更新卡发行基本数据文件
@@ -126,14 +135,14 @@ extern "C"
 		szAPPID		[in]	卡片应用序列号
 		szFile		[in]	卡发行基本数据文件		
 	*/
-	int __stdcall cpuUpdateIssueFile(BYTE bVer,BYTE *szAPPID,BYTE *szFile);
+	int __stdcall cpuUpdateIssueFile(BYTE bVer,BYTE *szAPPID,BYTE *szFile,int ncom = gnDefaultCom);
 
 	/*12. 更新卡片有效期
 		bVer		[in]	卡片版本号
 		szAPPID		[in]	卡片应用序列号
 		szValidDate	[in]	新的有效期	
 	*/
-	int __stdcall cpuUpdateValidDate(BYTE bVer,BYTE *szAPPID,BYTE *szValidDate);
+	int __stdcall cpuUpdateValidDate(BYTE bVer,BYTE *szAPPID,BYTE *szValidDate,int ncom = gnDefaultCom);
 
 	/*13. 圈存
 		bVer		[in]	卡片版本号
@@ -144,14 +153,14 @@ extern "C"
 		szTAC		[out]	TAC
 	*/
 	int __stdcall cpuCredit(BYTE bVer,BYTE *szAPPID,DWORD dwAmount,BYTE *szDateTime,BYTE *szDeviceNo,
-							WORD &wSeqNo,BYTE *szTAC);
+							WORD &wSeqNo,BYTE *szTAC,int ncom = gnDefaultCom);
 
 	/*14. 更新本地000E文件
 		bVer		[in]	卡片版本号
 		szAPPID		[in]	卡片应用序列号
 		szFile000E	[in]	000E文件内容
 	*/
-	int __stdcall cpuUpdateFile000E(BYTE bVer,BYTE *szAPPID,BYTE *szFile000E);
+	int __stdcall cpuUpdateFile000E(BYTE bVer,BYTE *szAPPID,BYTE *szFile000E,int ncom = gnDefaultCom);
 
 	/*15. 消费
 		bVer		[in]	卡片版本号
@@ -163,7 +172,7 @@ extern "C"
 		szTAC		[out]	TAC
 	*/
 	int __stdcall cpuPurchase(BYTE bVer,BYTE *szAPPID,DWORD dwAmount,DWORD dwAuditNo,BYTE *szDateTime,BYTE *szDeviceNo,
-							WORD &wSeqNo,BYTE *szTAC);
+							WORD &wSeqNo,BYTE *szTAC,int ncom = gnDefaultCom);
 
 	/*16. CPU卡验证TAC
 		bVer		[in]	卡片版本号
@@ -177,7 +186,7 @@ extern "C"
 	*/
 	int __stdcall cpuVerifyTAC(BYTE bVer,BYTE *szAPPID,
 							   DWORD dwAmount,BYTE bTransFlag,BYTE *szDeviceNo,DWORD dwAuditNo,BYTE *szDateTime,
-							   BYTE *szTAC);
+							   BYTE *szTAC,int ncom = gnDefaultCom);
 	/*
 	17. CPU卡重装PIN
 		bVer		[in]	卡片版本号
@@ -185,7 +194,7 @@ extern "C"
 		bPINLen		[in]	PIN的长度
 		szPIN		[in]	新的PIN
 	*/
-	int __stdcall cpuReloadPIN(BYTE bVer,BYTE *szAPPID,BYTE bPINLen,BYTE *szPIN);
+	int __stdcall cpuReloadPIN(BYTE bVer,BYTE *szAPPID,BYTE bPINLen,BYTE *szPIN,int ncom = gnDefaultCom);
 
 
 	/***************************************************************************************/
@@ -195,16 +204,16 @@ extern "C"
 		elf01_mk	[in]	系统信息文件
 		elf01_adf01	[in]	车辆信息文件
 	*/
-	int __stdcall obuInit(BYTE *elf01_mk,BYTE *elf01_adf01);
-	int __stdcall obuPreInit(WORD wDFID,BYTE *elf01_mk);
-	int	__stdcall obuGetUID(BYTE *szUID);
+	int __stdcall obuInit(BYTE *elf01_mk,BYTE *elf01_adf01,int ncom = gnDefaultCom);
+	int __stdcall obuPreInit(WORD wDFID,BYTE *elf01_mk,int ncom = gnDefaultCom);
+	int	__stdcall obuGetUID(BYTE *szUID,int ncom = gnDefaultCom);
 
 	/*19. OBU读取 系统信息文件信息
 		elf01_mk	[in]	系统信息文件
 	*/
-	int __stdcall obuRead(BYTE *elf01_mk);
+	int __stdcall obuRead(BYTE *elf01_mk,int ncom = gnDefaultCom);
 	/*	OBU读取 车辆信息文件*/
-	int __stdcall obuReadVehicleFile(BYTE bNode,BYTE bVer,BYTE *szPlainFile);
+	int __stdcall obuReadVehicleFile(BYTE bNode,BYTE bVer,BYTE *szPlainFile,int ncom = gnDefaultCom);
 	
 	/*20. OBU更新文件
 		bVer	[in]	OBU合同版本号
@@ -212,17 +221,13 @@ extern "C"
 		bFileType	[in]	文件类型（0x01: 系统信息文件，0x02: 车辆信息文件）
 		szFile	[out]	文件信息
 	*/
-	int __stdcall obuUpdateFile(BYTE bVer,BYTE *szAPPID,BYTE bFileType,BYTE *szFile);
+	int __stdcall obuUpdateFile(BYTE bVer,BYTE *szAPPID,BYTE bFileType,BYTE *szFile,int ncom = gnDefaultCom);
 
 	/*21. OBU拆卸标志修改
 		bVer	[in]	OBU合同版本号
 		szAPPID	[in]	OBU合同序列号
 		bFlag	[in]	OBU拆卸标志
 	*/
-	int __stdcall obuUpdateLoadFlag(BYTE bVer,BYTE *szAPPID,BYTE bFlag);
-	int __stdcall obuUnlockApplication(BYTE bVer,BYTE *szAPPID);
-
-
-	bool validation(int nlevel);
-
+	int __stdcall obuUpdateLoadFlag(BYTE bVer,BYTE *szAPPID,BYTE bFlag,int ncom = gnDefaultCom);
+	int __stdcall obuUnlockApplication(BYTE bVer,BYTE *szAPPID,int ncom = gnDefaultCom);
 };

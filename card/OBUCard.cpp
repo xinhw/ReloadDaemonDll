@@ -606,12 +606,12 @@ int COBUCard::read_obu(BYTE *elf01_mk)
 
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00A40000023F00",strresp);
+	ret = m_pReader->RunCmd("00A40000023F00",strresp);
 	if(ret) return ret;
 
 	//	1. 读取EF01文件：	系统信息文件
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00B081002B",strresp);
+	ret = m_pReader->RunCmd("00B081002B",strresp);
 	if(ret) return ret;
 	CMisc::StringToByte(strresp,elf01_mk);
 
@@ -638,13 +638,13 @@ int COBUCard::update_mf_elf01(BYTE bVer,BYTE *szAPPID,BYTE *szELF01)
 
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00A40000023F00",strresp);
+	ret = m_pReader->RunCmd("00A40000023F00",strresp);
 	if(ret) return ret;
 
 	//	1. 取随机数
 	memset(szRnd,0x00,16);
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("0084000004",strresp);
+	ret = m_pReader->RunCmd("0084000004",strresp);
 	if(ret) return ret;
 	CMisc::StringToByte(strresp,szRnd);
 
@@ -663,7 +663,7 @@ int COBUCard::update_mf_elf01(BYTE bVer,BYTE *szAPPID,BYTE *szELF01)
 	for(i=0;i<4;i++) sprintf(strCmd+208+2*i,"%02X",szMAC[i]);
 
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd(strCmd,strresp);
+	ret = m_pReader->RunCmd(strCmd,strresp);
 	if(ret) return ret;
 
 
@@ -691,17 +691,17 @@ int COBUCard::update_adf_elf01(BYTE bVer,BYTE *szAPPID,BYTE *szELF01)
 
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00A40000023F00",strresp);
+	ret = m_pReader->RunCmd("00A40000023F00",strresp);
 	if(ret) return ret;
 
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00A4000002DF01",strresp);
+	ret = m_pReader->RunCmd("00A4000002DF01",strresp);
 	if(ret) return ret;
 
 	//	1. 取随机数
 	memset(szRnd,0x00,16);
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("0084000004",strresp);
+	ret = m_pReader->RunCmd("0084000004",strresp);
 	if(ret) return ret;
 	CMisc::StringToByte(strresp,szRnd);
 
@@ -720,7 +720,7 @@ int COBUCard::update_adf_elf01(BYTE bVer,BYTE *szAPPID,BYTE *szELF01)
 	for(i=0;i<4;i++) sprintf(strCmd+168+2*i,"%02X",szMAC[i]);
 
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd(strCmd,strresp);
+	ret = m_pReader->RunCmd(strCmd,strresp);
 	if(ret) return ret;
 
 
@@ -747,13 +747,13 @@ int COBUCard::update_load_flag(BYTE bVer,BYTE *szAPPID,BYTE bFlag)
 
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00A40000023F00",strresp);
+	ret = m_pReader->RunCmd("00A40000023F00",strresp);
 	if(ret) return ret;
 
 	//	1. 取随机数
 	memset(szRnd,0x00,16);
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("0084000004",strresp);
+	ret = m_pReader->RunCmd("0084000004",strresp);
 	if(ret) return ret;
 	CMisc::StringToByte(strresp,szRnd);
 
@@ -772,7 +772,7 @@ int COBUCard::update_load_flag(BYTE bVer,BYTE *szAPPID,BYTE bFlag)
 	for(i=0;i<4;i++) sprintf(strCmd+12+2*i,"%02X",szMAC[i]);
 
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd(strCmd,strresp);
+	ret = m_pReader->RunCmd(strCmd,strresp);
 	if(ret) return ret;
 
 
@@ -844,7 +844,7 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 
 
 	//	0. 复位
-	ret = preader->PSAM_Atr(bNode,bLen,(char *)szATR);
+	ret = m_pReader->PSAM_Atr(bNode,bLen,(char *)szATR);
 	if(ret)
 	{
 		PRINTK("\nPSAM ATR FAILURE:%d",ret);
@@ -856,7 +856,7 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 
 	//	1. 选择3F00目录
 	memset(strresp,0x00,256);
-	ret = preader->PSAM_RunCmd("00A40000023F00",strresp);
+	ret = m_pReader->PSAM_RunCmd("00A40000023F00",strresp);
 	if(ret) 
 	{
 		PRINTK("\nPSAM_RunCmd 返回:%04X",ret);
@@ -864,7 +864,7 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 	}
 	//	2. 读取0015文件
 	memset(strresp,0x00,256);
-	ret = preader->PSAM_RunCmd("00B095000E",strresp);
+	ret = m_pReader->PSAM_RunCmd("00B095000E",strresp);
 	if(ret) return ret;
 
 	//	分散因子2
@@ -880,13 +880,13 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 	//	00B0960006
 	//	00A4000002 DF01
 	memset(strresp,0x00,256);
-	ret = preader->PSAM_RunCmd("00A4000002DF01",strresp);
+	ret = m_pReader->PSAM_RunCmd("00A4000002DF01",strresp);
 	if(ret) return ret;
 
 	//	4. 读取0017文件
 	//	00B097001B
 	memset(strresp,0x00,256);
-	ret = preader->PSAM_RunCmd("00B097001B",strresp);
+	ret = m_pReader->PSAM_RunCmd("00B097001B",strresp);
 	if(ret) return ret;
 
 	memset(szATR,0x00,256);
@@ -926,12 +926,12 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 	
 	//	5. 选择3F00目录		00A40000023F00
 	memset(strresp,0x00,256);
-	ret = preader->PSAM_RunCmd("00A40000023F00",strresp);
+	ret = m_pReader->PSAM_RunCmd("00A40000023F00",strresp);
 	if(ret) return ret;
 
 	//0084000008
 	memset(strresp,0x00,256);
-	ret = preader->PSAM_RunCmd("0084000008",strresp);
+	ret = m_pReader->PSAM_RunCmd("0084000008",strresp);
 	if(ret) return ret;
 	
 	memset(sRnd,0x00,16);
@@ -952,18 +952,18 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 	for(i=0;i<8;i++) sprintf(strCmd+10+2*i,"%02X",sRnd[i]);
 
 	memset(strresp,0x00,256);
-	ret = preader->PSAM_RunCmd(strCmd,strresp);
+	ret = m_pReader->PSAM_RunCmd(strCmd,strresp);
 	if(ret) return ret;
 
 	//00A4000002DF01
 	memset(strresp,0x00,256);
-	ret = preader->PSAM_RunCmd("00A4000002DF01",strresp);
+	ret = m_pReader->PSAM_RunCmd("00A4000002DF01",strresp);
 	if(ret) return ret;
 
 
 	//	2. 选择DF01 ADF
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00A4000002DF01",strresp);
+	ret = m_pReader->RunCmd("00A4000002DF01",strresp);
 	if(ret) return ret;
 
 	BYTE rLen = 0;
@@ -971,7 +971,7 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 
 	memset(strELF01,0x00,256);
 
-	ret = preader->SecureRead(bKeyIndex,0x01,0x00,59,rLen,strELF01);
+	ret = m_pReader->SecureRead(bKeyIndex,0x01,0x00,59,rLen,strELF01);
 	if(ret)
 	{
 		PRINTK("\nSecure Read Failure:%d",ret);
@@ -984,15 +984,15 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 	if(bSM4OBU)
 	{
 		sprintf(strCmd,"801A59%02X10",bKeyIndex+3);
-		for(i=0;i<16;i++) sprintf(strCmd+10+2*i,"%02X",preader->m_szApplication[i]);
+		for(i=0;i<16;i++) sprintf(strCmd+10+2*i,"%02X",m_pReader->m_szApplication[i]);
 	}
 	else
 	{
 		sprintf(strCmd,"801A39%02X08",bKeyIndex+3);
-		for(i=0;i<8;i++) sprintf(strCmd+10+2*i,"%02X",preader->m_szApplication[4+i]);
+		for(i=0;i<8;i++) sprintf(strCmd+10+2*i,"%02X",m_pReader->m_szApplication[4+i]);
 	}
 	memset(strresp,0x00,256);
-	ret = preader->PSAM_RunCmd(strCmd,strresp);
+	ret = m_pReader->PSAM_RunCmd(strCmd,strresp);
 	if(ret) return ret;
 
 	//80FA80 00 20 733E11E4DDFB2BCD61EF0A28669CD5BDD67B85307747320602B131A05E6A0C2D
@@ -1000,7 +1000,7 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 	sprintf(strCmd,"80FA8000%02X%s",strlen(strELF01)/2,strELF01);
 
 	memset(strresp,0x00,256);
-	ret = preader->PSAM_RunCmd(strCmd,strresp);
+	ret = m_pReader->PSAM_RunCmd(strCmd,strresp);
 	if(ret) return ret;
 	CMisc::StringToByte(strresp+34,szPlainFile);
 
@@ -1018,15 +1018,15 @@ int COBUCard::unlockapp(BYTE bVer,BYTE *szAPPID)
 
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00A40000023F00",strresp);
+	ret = m_pReader->RunCmd("00A40000023F00",strresp);
 	if(ret) return ret;
 
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd("00A4000002DF01",strresp);
+	ret = m_pReader->RunCmd("00A4000002DF01",strresp);
 
 	memset(szRnd,0x00,16);
 	memset(strresp,0x00,64);
-	ret = preader->RunCmd("0084000004",strresp);
+	ret = m_pReader->RunCmd("0084000004",strresp);
 	if(ret) return ret;
 	CMisc::StringToByte(strresp,szRnd);
 
@@ -1043,7 +1043,7 @@ int COBUCard::unlockapp(BYTE bVer,BYTE *szAPPID)
 	for(i=0;i<4;i++) sprintf(strCmd+10+2*i,"%02X",szMAC[i]);
 
 	memset(strresp,0x00,256);
-	ret = preader->RunCmd(strCmd,strresp);
+	ret = m_pReader->RunCmd(strCmd,strresp);
 	if(ret) return ret;
 
 

@@ -21,12 +21,33 @@ BOOL APIENTRY DllMain( HANDLE hModule,
                        LPVOID lpReserved
 					 )
 {
+	int i;
+
     switch (ul_reason_for_call)
 	{
 		case DLL_PROCESS_ATTACH:
+			PRINTK("\nDLL≥ı ºªØ(DLL_PROCESS_ATTACH)");			
+			for(i=0;i<MAX_READER_NUM;i++)
+			{				
+				ptransfer[i] = NULL;					
+				pcmd[i] = NULL;				
+				preader[i] = NULL;
+			}
+			
+			break;
 		case DLL_THREAD_ATTACH:
+			break;
 		case DLL_THREAD_DETACH:
+			break;
 		case DLL_PROCESS_DETACH:
+			PRINTK("\nDLLÕÀ≥ˆ«Â¿Ì(DLL_PROCESS_DETACH)");
+			
+			for(i=0;i<MAX_READER_NUM;i++)
+			{
+				closeReader(i);
+				disconnectOKS(i);
+			}
+			
 			break;
     }
     return TRUE;
@@ -102,10 +123,14 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall connectOKS(char *strip,WORD wport)
+int __stdcall connectOKS(char *strip,WORD wport,int ncom)
 {
 	int			ret;
 	WSADATA		wsaData;  	
+
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(connectOKS)£∫%d",ncom);
+
+	if(ncom>=MAX_READER_NUM) return ERR_OVER_MAX_COM;
 
 	//	WinSock2≥ı ºªØ
 	WORD wSockVersion = MAKEWORD(2,1);
@@ -116,39 +141,39 @@ int __stdcall connectOKS(char *strip,WORD wport)
 		return ret;
 	}
 
-	if(NULL!=ptransfer)
+	if(NULL!=ptransfer[ncom])
 	{
-		ptransfer->disconnect();
-		delete ptransfer;
-		ptransfer=NULL;
+		ptransfer[ncom]->disconnect();
+		delete ptransfer[ncom];
+		ptransfer[ncom]=NULL;
 	}
 
-	ptransfer = new CTcpTransfer();
-	ret = ptransfer->init_socket();
+	ptransfer[ncom] = new CTcpTransfer();
+	ret = ptransfer[ncom]->init_socket();
 	if(ret)
 	{
 		PRINTK("\ninit_socket ß∞‹:%d",ret);
 		return ret;
 	}
 
-	ret = ptransfer->connect_server(wport,strip);
+	ret = ptransfer[ncom]->connect_server(wport,strip);
 	if(ret)
 	{
 		PRINTK("\nconnect_server¡¨Ω”∑˛ŒÒ∆˜%s:%d ß∞‹:%d",strip,wport,ret);
-		delete ptransfer;
-		ptransfer = NULL;
+		delete ptransfer[ncom];
+		ptransfer[ncom] = NULL;
 		return ret;
 	}
 
-	if(NULL==pcmd)
+	if(NULL!=pcmd[ncom])
 	{
-		delete pcmd;
-		pcmd = NULL;
+		delete pcmd[ncom];
+		pcmd[ncom] = NULL;
 	}
-	pcmd = new ClsCommand(ptransfer);
+	pcmd[ncom] = new ClsCommand(ptransfer[ncom]);
 
-	pcmd->setBankID("520130110151206");
-	pcmd->setAgentCode("668801");
+	pcmd[ncom]->setBankID("520130110151206");
+	pcmd[ncom]->setAgentCode("668801");
 
 	return 0;
 }
@@ -163,18 +188,22 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall disconnectOKS()
+int __stdcall disconnectOKS(int ncom)
 {
-	if(NULL!=ptransfer)
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(disconnectOKS)£∫%d",ncom);
+
+	int n = ncom%MAX_READER_NUM;
+
+	if(NULL!=ptransfer[n])
 	{
-		ptransfer->disconnect();
-		delete ptransfer;
-		ptransfer=NULL;
+		ptransfer[n]->disconnect();
+		delete ptransfer[n];
+		ptransfer[n]=NULL;
 	}
-	if(NULL==pcmd)
+	if(NULL!=pcmd[n])
 	{
-		delete pcmd;
-		pcmd = NULL;
+		delete pcmd[n];
+		pcmd[n] = NULL;
 	}
 
 	return 0;
@@ -199,53 +228,58 @@ int __stdcall openReader(int nType,int ncom,int nbaud)
 	int ret;
 	char strcom[32];
 
-	if(NULL!=preader)
+	if(ncom>=MAX_READER_NUM) return ERR_OVER_MAX_COM;
+
+	gnDefaultCom = ncom;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(openReader)£∫%d",ncom);
+
+	if(NULL!=preader[ncom])
 	{
-		preader->Close();
-		delete preader;
+		preader[ncom]->Close();
+		delete preader[ncom];
 	}
 	
 	//	CPUø®∂¡ø®∆˜£®∫ΩÃÏΩø®£©
 	if(READER_TYPE_CPU_CARD==nType)
 	{
-		preader = new CAISINOReader();
+		preader[ncom] = new CAISINOReader();
 
 		memset(strcom,0x00,32);
 		sprintf(strcom,"COM%d",ncom);
-		ret = preader->Open(strcom,nbaud);
+		ret = preader[ncom]->Open(strcom,nbaud);
 		return ret;
 	}
 
 	//	OBU∂¡ø®∆˜£®ÕÚºØ∂¡ø®∆˜£©
 	if(READER_TYPE_OBU==nType)
 	{
-		preader = new CNXRsuReader();
+		preader[ncom] = new CNXRsuReader();
 
 		memset(strcom,0x00,32);
 		sprintf(strcom,"COM%d",ncom);
-		ret = preader->Open(strcom,nbaud);
+		ret = preader[ncom]->Open(strcom,nbaud);
 		return ret;
 	}
 
 	//	…Ó€⁄–€µ€CPUø®∂¡ø®∆˜
 	if(READER_TYPE_XIONGDI==nType)
 	{
-		preader = new CJTReader();
+		preader[ncom] = new CJTReader();
 
 		memset(strcom,0x00,32);
 		sprintf(strcom,"COM%d",ncom);
-		ret = preader->Open(strcom,nbaud);
+		ret = preader[ncom]->Open(strcom,nbaud);
 		return ret;
 	}
 
 	//	Ω“ÁOBU∂Àø⁄∆˜
 	if(READER_TYPE_JINYI==nType)
 	{
-		preader = new CJYRsuReader();
+		preader[ncom] = new CJYRsuReader();
 
 		memset(strcom,0x00,32);
 		sprintf(strcom,"COM%d",ncom);
-		ret = preader->Open(strcom,nbaud);
+		ret = preader[ncom]->Open(strcom,nbaud);
 		return ret;
 	}
 
@@ -264,13 +298,17 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall closeReader()
+int __stdcall closeReader(int ncom)
 {
-	if(NULL!=preader)
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(closeReader)£∫%d",ncom);
+
+	int n = ncom%MAX_READER_NUM;
+
+	if(NULL!=preader[n])
 	{
-		preader->Close();
-		delete preader;
-		preader = NULL;
+		preader[n]->Close();
+		delete preader[n];
+		preader[n] = NULL;
 	}
 
 	return 0;
@@ -288,15 +326,19 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall signIn(char *strOperator)
+int __stdcall signIn(char *strOperator,int ncom)
 {
 	int ret;
 	int n,i;
 	BYTE szBuf[6];
 
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(signIn)£∫%d",ncom);
+
+	int icom = ncom%MAX_READER_NUM;
+
 	if(NULL==strOperator) return -1;
-	if(NULL==ptransfer) return -2;
-	if(NULL==pcmd) return -3;
+	if(NULL==ptransfer[icom]) return -2;
+	if(NULL==pcmd[icom]) return -3;
 
 	n = strlen(strOperator);
 	if(n>12) n = 12;
@@ -304,9 +346,9 @@ int __stdcall signIn(char *strOperator)
 	memset(szBuf,0x00,6);
 	for(i=0;i<n;i=i+2) szBuf[i/2] = CMisc::ascToUC(strOperator[i])*0x10 + CMisc::ascToUC(strOperator[i+1]);
 
-	pcmd->setTCPTransfer(ptransfer);
+	pcmd[icom]->setTCPTransfer(ptransfer[icom]);
 
-	ret = pcmd->cmd_1031(szBuf);
+	ret = pcmd[icom]->cmd_1031(szBuf);
 	return ret;
 }
 
@@ -319,13 +361,17 @@ int __stdcall signIn(char *strOperator)
 	bATSLen	[in]	ø®∆¨ATS∑µªÿµƒ≥§∂»
 	szATS	[in]	ø®∆¨ATS–≈œ¢
 */
-int __stdcall cpuATS(BYTE *szSNO,BYTE &bATSLen,BYTE *szATS)
+int __stdcall cpuATS(BYTE *szSNO,BYTE &bATSLen,BYTE *szATS,int ncom)
 {
 	int ret;
 
-	if(!validation(0)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(cpuATS)£∫%d",ncom);
 
-	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(0,n)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader[n],pcmd[n]);
 
 	bATSLen = 0;
 	ret = pcard->rats(szSNO,bATSLen,szATS);
@@ -350,13 +396,17 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall cpuReadCardFiles(BYTE *elf15,BYTE *elf16,DWORD &dwRemain)
+int __stdcall cpuReadCardFiles(BYTE *elf15,BYTE *elf16,DWORD &dwRemain,int ncom)
 {
 	int ret;
 
-	if(!validation(0)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(cpuReadCardFiles)£∫%d",ncom);
 
-	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(0,n)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader[n],pcmd[n]);
 
 	ret = pcard->readCard(elf15,elf16,dwRemain);
 
@@ -375,13 +425,18 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall cpuReadAdfFile(BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE *szFile)
+int __stdcall cpuReadAdfFile(BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE *szFile,int ncom)
 {
 	int ret;
 
-	if(!validation(0)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(cpuReadAdfFile)£∫%d",ncom);
 
-	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(0,n)) return -1;
+
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader[n],pcmd[n]);
 
 	ret = pcard->readAdfFile(bFileID,bOffset,bLength,szFile);
 
@@ -401,13 +456,17 @@ int __stdcall cpuReadAdfFile(BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE *szFile
 
   ø…“‘∂¡»°£∫0018,0017,0019Œƒº˛
 */
-int __stdcall cpuReadCardRecord(BYTE bFileID,BYTE bNo,BYTE bLen,BYTE *szRec)
+int __stdcall cpuReadCardRecord(BYTE bFileID,BYTE bNo,BYTE bLen,BYTE *szRec,int ncom)
 {
 	int ret;
 
-	if(!validation(0)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(cpuReadCardRecord)£∫%d",ncom);
 
-	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(0,n)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader[n],pcmd[n]);
 
 	ret = pcard->readRecord(bFileID,bNo,bLen,szRec);
 
@@ -429,13 +488,17 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall cpuInit(BYTE *szFile0015)
+int __stdcall cpuInit(BYTE *szFile0015,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(cpuInit)£∫%d",ncom);
 
-	CTYCPUCard *pcard = new CTYCPUCard(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	CTYCPUCard *pcard = new CTYCPUCard(preader[n],pcmd[n]);
 
 	ret = pcard->init(szFile0015);
 
@@ -460,13 +523,17 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall cpuUpdateUserFile(BYTE bVer,BYTE *szAPPID,BYTE *szFile)
+int __stdcall cpuUpdateUserFile(BYTE bVer,BYTE *szAPPID,BYTE *szFile,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(cpuUpdateUserFile)£∫%d",ncom);
 
-	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader[n],pcmd[n]);
 
 	ret = pcard->updateELF0016(bVer,szAPPID,szFile);
 
@@ -490,13 +557,17 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall cpuUpdateIssueFile(BYTE bVer,BYTE *szAPPID,BYTE *szFile)
+int __stdcall cpuUpdateIssueFile(BYTE bVer,BYTE *szAPPID,BYTE *szFile,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(cpuUpdateIssueFile)£∫%d",ncom);
 
-	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader[n],pcmd[n]);
 
 	ret = pcard->updateELF0015(bVer,szAPPID,szFile);
 
@@ -521,13 +592,17 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall cpuUpdateValidDate(BYTE bVer,BYTE *szAPPID,BYTE *szValidDate)
+int __stdcall cpuUpdateValidDate(BYTE bVer,BYTE *szAPPID,BYTE *szValidDate,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(cpuUpdateValidDate)£∫%d",ncom);
 
-	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader[n],pcmd[n]);
 
 	ret = pcard->updateValidDate(bVer,szAPPID,szValidDate);
 
@@ -554,13 +629,17 @@ Reversion:
         
 -------------------------------------------------------------------------*/
 int __stdcall cpuCredit(BYTE bVer,BYTE *szAPPID,DWORD dwAmount,BYTE *szDateTime,BYTE *szDeviceNo,
-						WORD &wSeqNo,BYTE *szTAC)
+						WORD &wSeqNo,BYTE *szTAC,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(cpuCredit)£∫%d",ncom);
 
-	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader[n],pcmd[n]);
 
 	ret = pcard->credit(bVer,szAPPID,szDeviceNo,dwAmount,wSeqNo,szDateTime,szTAC);
 
@@ -583,13 +662,17 @@ Parameters:
 Reversion:
 				
 -------------------------------------------------------------------------*/
-int __stdcall cpuUpdateFile000E(BYTE bVer,BYTE *szAPPID,BYTE *szFile000E)
+int __stdcall cpuUpdateFile000E(BYTE bVer,BYTE *szAPPID,BYTE *szFile000E,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(cpuUpdateFile000E)£∫%d",ncom);
 
-	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader[n],pcmd[n]);
 
 	ret = pcard->updateELF000E(bVer,szAPPID,szFile000E);
 
@@ -617,13 +700,17 @@ Reversion:
         
 -------------------------------------------------------------------------*/
 int __stdcall cpuPurchase(BYTE bVer,BYTE *szAPPID,DWORD dwAmount,DWORD dwAuditNo,BYTE *szDateTime,BYTE *szDeviceNo,
-						WORD &wSeqNo,BYTE *szTAC)
+						WORD &wSeqNo,BYTE *szTAC,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(cpuPurchase)£∫%d",ncom);
 
-	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader[n],pcmd[n]);
 
 	ret = pcard->debit(bVer,szAPPID,szDeviceNo,dwAmount,dwAuditNo,szDateTime,wSeqNo,szTAC);
 
@@ -652,13 +739,17 @@ Reversion:
 -------------------------------------------------------------------------*/
 int __stdcall cpuVerifyTAC(BYTE bVer,BYTE *szAPPID,
 						   DWORD dwAmount,BYTE bTransFlag,BYTE *szDeviceNo,DWORD dwAuditNo,BYTE *szDateTime,
-						   BYTE *szTAC)
+						   BYTE *szTAC,int ncom)
 {
 	int ret;
+	
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(cpuVerifyTAC)£∫%d",ncom);
 
-	if(!validation(1)) return -1;
+	int n = ncom%MAX_READER_NUM;
 
-	ret = pcmd->cmd_1037(bVer,szAPPID,dwAmount,bTransFlag,szDeviceNo,dwAuditNo,szDateTime,szTAC);
+	if(!validation(1,n)) return -1;
+
+	ret = pcmd[n]->cmd_1037(bVer,szAPPID,dwAmount,bTransFlag,szDeviceNo,dwAuditNo,szDateTime,szTAC);
 
 	return ret;
 }
@@ -680,13 +771,17 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall cpuReloadPIN(BYTE bVer,BYTE *szAPPID,BYTE bPINLen,BYTE *szPIN)
+int __stdcall cpuReloadPIN(BYTE bVer,BYTE *szAPPID,BYTE bPINLen,BYTE *szPIN,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(cpuReloadPIN)£∫%d",ncom);
 
-	CCPUCardBase *pcard = new CCPUCardBase(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	CCPUCardBase *pcard = new CCPUCardBase(preader[n],pcmd[n]);
 
 	ret = pcard->reloadPIN(bVer,szAPPID,bPINLen,szPIN);
 
@@ -714,13 +809,17 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall obuInit(BYTE *elf01_mk,BYTE *elf01_adf01)
+int __stdcall obuInit(BYTE *elf01_mk,BYTE *elf01_adf01,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(obuInit)£∫%d",ncom);
 
-	COBUCard *pcard = new COBUCard(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader[n],pcmd[n]);
 
 	ret = pcard->init(elf01_mk,elf01_adf01);
 
@@ -738,13 +837,17 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall obuPreInit(WORD wDFID,BYTE *elf01_mk)
+int __stdcall obuPreInit(WORD wDFID,BYTE *elf01_mk,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(obuPreInit)£∫%d",ncom);
 
-	COBUCard *pcard = new COBUCard(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader[n],pcmd[n]);
 
 	ret = pcard->preInit(wDFID,elf01_mk);
 
@@ -762,13 +865,17 @@ Parameters:
 Reversion:
 				ªÒ»°OBU–æ∆¨–Ú¡–∫≈
 -------------------------------------------------------------------------*/
-int	__stdcall obuGetUID(BYTE *szUID)
+int	__stdcall obuGetUID(BYTE *szUID,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(obuGetUID)£∫%d",ncom);
 
-	COBUCard *pcard = new COBUCard(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader[n],pcmd[n]);
 
 	ret = pcard->getOBUUID(szUID);
 
@@ -791,13 +898,17 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall obuRead(BYTE *elf01_mk)
+int __stdcall obuRead(BYTE *elf01_mk,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(obuRead)£∫%d",ncom);
 
-	COBUCard *pcard = new COBUCard(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader[n],pcmd[n]);
 
 	ret = pcard->read_obu(elf01_mk);
 
@@ -822,13 +933,17 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall obuReadVehicleFile(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
+int __stdcall obuReadVehicleFile(BYTE bNode,BYTE bVer,BYTE *szPlainFile,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(obuReadVehicleFile)£∫%d",ncom);
 
-	COBUCard *pcard = new COBUCard(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader[n],pcmd[n]);
 
 	ret = pcard->read_vechile_file(bNode,bVer,szPlainFile);
 
@@ -852,13 +967,17 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-int __stdcall obuUpdateFile(BYTE bVer,BYTE *szAPPID,BYTE bFileType,BYTE *szFile)
+int __stdcall obuUpdateFile(BYTE bVer,BYTE *szAPPID,BYTE bFileType,BYTE *szFile,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(obuUpdateFile)£∫%d",ncom);
 
-	COBUCard *pcard = new COBUCard(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader[n],pcmd[n]);
 
 	if(bFileType==0x01)		//	œµÕ≥–≈œ¢Œƒº˛
 	{
@@ -879,13 +998,17 @@ int __stdcall obuUpdateFile(BYTE bVer,BYTE *szAPPID,BYTE bFileType,BYTE *szFile)
 	szAPPID	[in]	OBU∫œÕ¨–Ú¡–∫≈
 	bFlag	[in]	OBU≤–∂±Í÷æ
 */
-int __stdcall obuUpdateLoadFlag(BYTE bVer,BYTE *szAPPID,BYTE bFlag)
+int __stdcall obuUpdateLoadFlag(BYTE bVer,BYTE *szAPPID,BYTE bFlag,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(obuUpdateLoadFlag)£∫%d",ncom);
 
-	COBUCard *pcard = new COBUCard(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader[n],pcmd[n]);
 
 	ret = pcard->update_load_flag(bVer,szAPPID,bFlag);
 
@@ -903,23 +1026,27 @@ Parameters:
 Reversion:
         
 -------------------------------------------------------------------------*/
-bool validation(int nlevel)
+bool validation(int nlevel,int ncom)
 {
 	bool bOk = true;
+	
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(validation)£∫%d",ncom);
+
+	int n = ncom%MAX_READER_NUM;
 
 	switch(nlevel)
 	{
 		case 1:
-			if(NULL==pcmd)
+			if(NULL==pcmd[n])
 			{
-				PRINTK("\nŒ¥¡¨Ω”µΩ«∞÷√£°");
+				PRINTK("\nCOM[%d]Œ¥¡¨Ω”µΩ«∞÷√£°",n);
 				bOk = false;
 				break;
 			}
 		case 0:
-			if(NULL==preader)
+			if(NULL==preader[n])
 			{
-				PRINTK("\n∂¡ø®∆˜Œ¥¥Úø™£°");
+				PRINTK("\nCOM[%d]∂¡ø®∆˜Œ¥¥Úø™£°",n);
 				bOk = false;
 				break;
 			}
@@ -930,14 +1057,26 @@ bool validation(int nlevel)
 	return bOk;
 }
 
-
-int __stdcall obuUnlockApplication(BYTE bVer,BYTE *szAPPID)
+/*-------------------------------------------------------------------------
+Function:		obuUnlockApplication
+Created:		2018-07-28 10:58:19
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+				OBUΩ‚À¯”¶”√
+-------------------------------------------------------------------------*/
+int __stdcall obuUnlockApplication(BYTE bVer,BYTE *szAPPID,int ncom)
 {
 	int ret;
 
-	if(!validation(1)) return -1;
+	PRINTK("\r\n∂¡ø®∆˜∂Àø⁄(obuUnlockApplication)£∫%d",ncom);
 
-	COBUCard *pcard = new COBUCard(preader,pcmd);
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	COBUCard *pcard = new COBUCard(preader[n],pcmd[n]);
 
 	ret = pcard->unlockapp(bVer,szAPPID);
 

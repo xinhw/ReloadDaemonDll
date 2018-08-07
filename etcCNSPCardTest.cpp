@@ -29,6 +29,7 @@
 #include "dllinclude.hpp"
 #include "etcCNSPCard.cpp"
 
+int gnCom=0;
 
 typedef	struct cmd_func
 {
@@ -213,6 +214,8 @@ void		test_open_reader(void)
 	PRINTK("\n输入波特率：");
 	scanf("%d",&nbaud);
 
+	gnCom = ncom;
+
 	ret = openReader(ntype,ncom,nbaud);
 	if(ret)
 	{
@@ -249,7 +252,7 @@ void		test_connect_kms(void)
 	PRINTK("\n请输入前置端口:");
 	scanf("%d",&nport);
 
-	ret = connectOKS(strip,nport);
+	ret = connectOKS(strip,nport,gnCom);
 	if(ret)
 	{
 		PRINTK("\n连接前置服务程序失败:%d",ret);
@@ -276,7 +279,7 @@ void		test_close_reader(void)
 {
 	int ret;
 
-	ret = closeReader();
+	ret = closeReader(gnCom);
 	if(ret)
 	{
 		PRINTK("\n读卡器关闭失败：%d",ret);
@@ -309,7 +312,7 @@ void		test_search_card(void)
 	memset(szATS,0x00,64);
 	memset(szSNO,0x00,4);
 
-	ret = cpuATS(szSNO,bLen,szATS);
+	ret = cpuATS(szSNO,bLen,szATS,gnCom);
 	if(ret)
 	{
 		PRINTK("\n没找到卡片");
@@ -343,7 +346,7 @@ void		test_cpucard_read(void)
 	memset(elf16,0x00,55);
 	dwRemain = 0;
 
-	ret =cpuReadCardFiles(elf15,elf16,dwRemain);
+	ret =cpuReadCardFiles(elf15,elf16,dwRemain,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读用户卡失败:%d",ret);
@@ -437,7 +440,7 @@ void		test_cpucard_init(void)
 		elf15[i/2] = ascToUC(p15[i])*0x10 + ascToUC(p15[i+1]);
 	}
 
-	ret = cpuInit(elf15);
+	ret = cpuInit(elf15,gnCom);
 	if(ret)
 	{
 		PRINTK("\n一发失败：%4X",ret);
@@ -470,7 +473,7 @@ void		test_cpucard_personize(void)
 	memset(elf16,0x00,55);
 	dwRemain = 0;
 
-	ret =cpuReadCardFiles(elf15,elf16,dwRemain);
+	ret =cpuReadCardFiles(elf15,elf16,dwRemain,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读用户卡失败:%d",ret);
@@ -481,7 +484,7 @@ void		test_cpucard_personize(void)
 	memcpy(szAPPID,elf15+12,8);
 
 	//	更新0015文件
-	ret = cpuUpdateIssueFile(bVer,szAPPID,elf15);
+	ret = cpuUpdateIssueFile(bVer,szAPPID,elf15,gnCom);
 	if(ret)
 	{
 		PRINTK("\n更新 0015 文件失败:%d",ret);
@@ -489,7 +492,7 @@ void		test_cpucard_personize(void)
 	}
 
 	//	更新0016文件
-	ret = cpuUpdateUserFile(bVer,szAPPID,elf16);
+	ret = cpuUpdateUserFile(bVer,szAPPID,elf16,gnCom);
 	if(ret)
 	{
 		PRINTK("\n更新 0016 文件失败:%d",ret);
@@ -497,7 +500,7 @@ void		test_cpucard_personize(void)
 	}
 
 	//	更新有效日期
-	ret = cpuUpdateValidDate(bVer,szAPPID,(BYTE *)"\x20\x20\x12\x01");
+	ret = cpuUpdateValidDate(bVer,szAPPID,(BYTE *)"\x20\x20\x12\x01",gnCom);
 	if(ret)
 	{
 		PRINTK("\n更新用户卡有效日期:%d",ret);
@@ -532,7 +535,7 @@ void		test_cpucard_credit(void)
 	memset(elf16,0x00,55);
 	dwRemain = 0;
 
-	ret =cpuReadCardFiles(elf15,elf16,dwRemain);
+	ret =cpuReadCardFiles(elf15,elf16,dwRemain,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读用户卡失败:%d",ret);
@@ -544,7 +547,7 @@ void		test_cpucard_credit(void)
 
 	memset(szDeviceNo,0x00,6);
 
-	ret = cpuCredit(bVer,szAPPID,10000,szTransTime,szDeviceNo,wSeqNo,szTAC);
+	ret = cpuCredit(bVer,szAPPID,10000,szTransTime,szDeviceNo,wSeqNo,szTAC,gnCom);
 	if(ret)
 	{
 		PRINTK("\n圈存失败：%4X",ret);
@@ -589,7 +592,7 @@ void		test_obu_read(void)
 	memset(elf01_mk,0x00,100);
 	memset(elf01_adf01,0x00,80);
 
-	ret = obuGetUID(szAPPID);
+	ret = obuGetUID(szAPPID,gnCom);
 	if(ret)
 	{
 		PRINTK("\n获取OBUUID失败:%d",ret);
@@ -599,7 +602,7 @@ void		test_obu_read(void)
 		PRINTK("\nOBU UID:%02X%02X%02X%02X",szAPPID[0],szAPPID[1],szAPPID[2],szAPPID[3]);
 	}
 
-	ret = obuRead(elf01_mk);
+	ret = obuRead(elf01_mk,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读取OBU 系统信息文件 失败：%d",ret);
@@ -608,7 +611,7 @@ void		test_obu_read(void)
 
 	bVer = elf01_mk[9];
 
-	ret = obuReadVehicleFile(1,bVer,szPlainText);
+	ret = obuReadVehicleFile(1,bVer,szPlainText,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读取OBU 车辆信息文件 失败：%d",ret);
@@ -645,7 +648,7 @@ void		test_obu_init(void)
 	memset(elf01_adf01,0x00,256);
 
 	//	先读出来一个OBU的信息
-	ret = obuRead(elf01_mk);
+	ret = obuRead(elf01_mk,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读取OBU信息失败！");
@@ -658,7 +661,7 @@ void		test_obu_init(void)
 	elf01_adf01[15]=0x00;
 
 	//	然后初始化
-	ret= obuInit(elf01_mk,elf01_adf01);
+	ret= obuInit(elf01_mk,elf01_adf01,gnCom);
 	if(ret)
 	{
 		PRINTK("\nOBU初始化失败！");
@@ -687,7 +690,7 @@ void		test_obu_personize(void)
 	memset(elf01_mk,0x00,100);
 	memset(elf01_adf01,0x00,80);
 
-	ret = obuRead(elf01_mk);
+	ret = obuRead(elf01_mk,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读取OBU信息失败！");
@@ -698,7 +701,7 @@ void		test_obu_personize(void)
 	memcpy(szAPPID,elf01_mk+10,8);
 
 
-	ret = obuUpdateFile(bVer,szAPPID,1,elf01_mk);
+	ret = obuUpdateFile(bVer,szAPPID,1,elf01_mk,gnCom);
 	if(ret)
 	{
 		PRINTK("\n更新 系统信息文件 失败:%04X",ret);
@@ -710,14 +713,14 @@ void		test_obu_personize(void)
 	elf01_adf01[14]=0x01;
 	elf01_adf01[15]=0x00;
 
-	ret = obuUpdateFile(bVer,szAPPID,2,elf01_adf01);
+	ret = obuUpdateFile(bVer,szAPPID,2,elf01_adf01,gnCom);
 	if(ret)
 	{
 		PRINTK("\n更新 车辆信息文件 失败:%04X",ret);
 		return;
 	}
 
-	ret = obuUpdateLoadFlag(bVer,szAPPID,0x01);
+	ret = obuUpdateLoadFlag(bVer,szAPPID,0x01,gnCom);
 	if(ret)
 	{
 		PRINTK("\n更新 拆卸标志 失败:%04X",ret);
@@ -747,7 +750,7 @@ void		test_obu_unlock_adf(void)
 	memset(elf01_mk,0x00,100);
 	memset(elf01_adf01,0x00,80);
 
-	ret = obuRead(elf01_mk);
+	ret = obuRead(elf01_mk,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读取OBU信息失败！");
@@ -757,7 +760,7 @@ void		test_obu_unlock_adf(void)
 	bVer = elf01_mk[9];
 	memcpy(szAPPID,elf01_mk+10,8);
 
-	ret = obuUnlockApplication(bVer,szAPPID);
+	ret = obuUnlockApplication(bVer,szAPPID,gnCom);
 	if(ret)
 	{
 		PRINTK("\n应用解锁失败！");
@@ -785,7 +788,7 @@ void		test_obu_pre_init(void)
 	memset(elf01_adf01,0x00,256);
 
 	//	先读出来一个OBU的信息
-	ret = obuRead(elf01_mk);
+	ret = obuRead(elf01_mk,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读取OBU信息失败！");
@@ -795,7 +798,7 @@ void		test_obu_pre_init(void)
 	//	然后初始化
 	PRINTK("\n预处理系统主控密钥...");
 	wDFID = 0x3f00;
-	ret= obuPreInit(wDFID,elf01_mk);
+	ret= obuPreInit(wDFID,elf01_mk,gnCom);
 	if(ret)
 	{
 		PRINTK("\nOBU的%04X预初始化失败！",wDFID);
@@ -805,7 +808,7 @@ void		test_obu_pre_init(void)
 
 	wDFID = 0xDF01;
 	PRINTK("\n预处理应用主控密钥...");
-	ret= obuPreInit(wDFID,elf01_mk);
+	ret= obuPreInit(wDFID,elf01_mk,gnCom);
 	if(ret)
 	{
 		PRINTK("\nOBU的%04X预初始化失败！",wDFID);
@@ -835,7 +838,7 @@ void		test_signin(void)
 	int ret;
 	char *strOperator="112233445566";
 
-	ret = signIn(strOperator);
+	ret = signIn(strOperator,gnCom);
 	if(ret)
 	{
 		PRINTK("\n签到失败！");
@@ -871,7 +874,7 @@ void		test_cpucard_update000e(void)
 	memset(elf16,0x00,55);
 	dwRemain = 0;
 
-	ret =cpuReadCardFiles(elf15,elf16,dwRemain);
+	ret =cpuReadCardFiles(elf15,elf16,dwRemain,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读用户卡失败:%d",ret);
@@ -883,7 +886,7 @@ void		test_cpucard_update000e(void)
 
 	memset(szFile000E,0x00,70);
 
-	ret = cpuUpdateFile000E(bVer,szAPPID,szFile000E);
+	ret = cpuUpdateFile000E(bVer,szAPPID,szFile000E,gnCom);
 	if(ret)
 	{
 		PRINTK("\nCPU卡二次发行补充文件认证失败！");
@@ -914,7 +917,7 @@ void		test_cpucard_reload_pin(void)
 	memset(elf16,0x00,55);
 	dwRemain = 0;
 
-	ret =cpuReadCardFiles(elf15,elf16,dwRemain);
+	ret =cpuReadCardFiles(elf15,elf16,dwRemain,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读用户卡失败:%d",ret);
@@ -924,7 +927,7 @@ void		test_cpucard_reload_pin(void)
 	bVer = elf15[9];
 	memcpy(szAPPID,elf15+12,8);
 
-	ret = cpuReloadPIN(bVer,szAPPID,6,(BYTE *)"123456");
+	ret = cpuReloadPIN(bVer,szAPPID,6,(BYTE *)"123456",gnCom);
 	if(ret)
 	{
 		PRINTK("\nPIN解锁失败！");
@@ -947,7 +950,7 @@ void test_cpucard_readadfile(void)
 
 	PRINTK("\n读取000E文件：");
 	memset(elf,0x00,256);
-	ret = cpuReadAdfFile(0x0e,0,0x46,elf);
+	ret = cpuReadAdfFile(0x0e,0,0x46,elf,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读取 000E 文件失败:%04X",ret);
@@ -961,7 +964,7 @@ void test_cpucard_readadfile(void)
 
 	PRINTK("\n读取0008文件：");
 	memset(elf,0x00,256);
-	ret = cpuReadAdfFile(0x08,0,128,elf);
+	ret = cpuReadAdfFile(0x08,0,128,elf,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读取 0008 文件失败:%04X",ret);
@@ -976,7 +979,7 @@ void test_cpucard_readadfile(void)
 
 	PRINTK("\n读取0009文件：");
 	memset(elf,0x00,256);
-	ret = cpuReadAdfFile(0x09,0,128,elf);
+	ret = cpuReadAdfFile(0x09,0,128,elf,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读取 0009 文件失败:%04X",ret);

@@ -24,7 +24,7 @@ Reversion:
 -------------------------------------------------------------------------*/
 CJTReader::CJTReader()
 {
-	m_icom= 0;
+	m_icom= -1;
 
 }
 
@@ -72,7 +72,7 @@ int CJTReader::initDll()
 	lp_jt_closereader = (LPFN_JT_CloseReader)GetProcAddress(m_hDll, "JT_CloseReader");
 	lp_jt_opencard = (LPFN_JT_OpenCard)GetProcAddress(m_hDll, "JT_OpenCard");
 	lp_jt_closecard = (LPFN_JT_CloseCard)GetProcAddress(m_hDll, "JT_CloseCard");
-	lp_jt_cpucommand = (LPFN_JT_CPUCCommand)GetProcAddress(m_hDll, "JT_CPUCommand");
+	lp_jt_cpucommand = (LPFN_JT_CPUCCommand)GetProcAddress(m_hDll, "JT_CPUCCommand");
 
 
 	return 0;
@@ -90,24 +90,21 @@ Reversion:
 UINT CJTReader::Open(char *strAddress, unsigned int iBaud)
 {
 	int ret;
-	char Paras[32];
 
 	ret = initDll();
 	if(ret) return ret;
 
 	if(NULL==lp_jt_openreader) return -1;
+	
 
 	m_icom = atoi(strAddress+3);
 
-	memset(Paras,0x00,32);
-	sprintf(Paras,"%d,n,8,1",iBaud);
-
 	//函数返回值定义： 	0：成功	其他：失败
-	ret = lp_jt_openreader(m_icom,Paras);
+	ret = lp_jt_openreader(m_icom,"EMP5010.ini");
 	if(ret)
 	{
 		m_icom = 0;
-		PRINTK("\n打开(%s)上的深圳雄帝的读卡器失败:%d",Paras,ret);
+		PRINTK("\n打开上的深圳雄帝的读卡器[%d]失败:%d",strAddress,ret);
 		return 0x1A14;
 	}
 	
@@ -131,7 +128,7 @@ void CJTReader::Close()
 		lp_jt_closereader(m_icom);
 	}
 
-	m_icom = 0;
+	m_icom = -1;
 }
 
 
@@ -154,12 +151,21 @@ UINT CJTReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 	memset(szATR,0x00,128);
 
 	if(lp_jt_opencard==NULL) return -1;
+	if(NULL!=lp_jt_closecard) lp_jt_closecard(m_icom);
 
-	if(m_icom<1) return -1;
+	if(m_icom<0) 
+	{
+		PRINTK("\n无效的COM口：%d",m_icom);
+		return -1;
+	}
 
+	nlen = 128;
 	ret = lp_jt_opencard(m_icom,szATR,&nlen);
-	if(ret<0) return ret;
-
+	if(ret<0) 
+	{
+		PRINTK("\njt_opencard失败:%d",ret);
+		return ret;
+	}
 	// 	0：无卡
 	// 	1：卡片类型为S50卡块格式
 	// 	2：卡片类型为S50卡MAD 格式
@@ -169,6 +175,7 @@ UINT CJTReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 	// 	其他正值：预留的卡片类型定义值
 	// 	其他负值：失败
 
+	PRINTK("\njt_opencard返回:%d",ret);
 	if(3==ret)
 	{
 		memcpy(strsno,szATR,4);
@@ -196,8 +203,12 @@ UINT CJTReader::RunCmd(char *strCmd, char *strResult)
 	int ilen,bCmdLen;
 	BYTE sw1,sw2;
 
-	if(lp_jt_cpucommand==NULL) return -1;
-	if(m_icom<1) return -1;
+	if(lp_jt_cpucommand==NULL)
+	{
+		PRINTK("\n无效的JT_CPUCCommand函数");
+		return -1;
+	}
+	if(m_icom<0) return -1;
 
 	memset(pszCmd,0x00,256);
 #ifdef DEBUG_PRINT
@@ -210,9 +221,13 @@ UINT CJTReader::RunCmd(char *strCmd, char *strResult)
 
 	ilen = 0;
 	memset(pszBuf,0x00,256);
+	ilen = 256;
 	ret = lp_jt_cpucommand(m_icom,pszCmd,bCmdLen,pszBuf,&ilen);
-	if(ret) return ret;
-
+	if(ret)
+	{
+		PRINTK("\nJT_CPUCCommand函数失败:%d",ret);
+		return ret;
+	}
 	sw1 = pszBuf[0];
 	sw2 = pszBuf[1];
 	if(sw1==0x61)
@@ -260,7 +275,7 @@ UINT CJTReader::Halt()
 {
 	if(lp_jt_closecard==NULL) return -1;
 
-	if(m_icom>0) lp_jt_closecard(m_icom);
+	if(m_icom>=0) lp_jt_closecard(m_icom);
 
 	return 0;
 }

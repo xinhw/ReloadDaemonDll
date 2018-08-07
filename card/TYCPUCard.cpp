@@ -138,7 +138,7 @@ int CTYCPUCard::init(BYTE *elf15)
 		WritePrivateProfileString("ENCODER","INITKEY",strCmd,".\\key.ini");
 	}
 	CMisc::StringToByte(strCmd,ENCODER_INIT_KEY);
-	PRINTK("\nENCODER INIT KEY: %s",strCmd);
+	//PRINTK("\nENCODER INIT KEY: %s",strCmd);
 
 	//	空白用户卡缺省主控密钥
 	memset(strCmd,0x00,512);
@@ -149,7 +149,7 @@ int CTYCPUCard::init(BYTE *elf15)
 		WritePrivateProfileString("CARD","INITKEY",strCmd,".\\key.ini");
 	}
 	CMisc::StringToByte(strCmd,CARD_INIT_KEY);
-	PRINTK("\nCARD INIT KEY: %s",strCmd);
+	//PRINTK("\nCARD INIT KEY: %s",strCmd);
 
 	//	MF下的密钥
 	CARDKEY arr_mf_keys[] = 

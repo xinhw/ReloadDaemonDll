@@ -6,6 +6,7 @@
 	#define     ERR_SOCKET_CREATE			0x200
 	#define     ERR_SOCKET_CONNECT			0x201
 	#define		ERR_SOCKET_CONN_OVERTIME	0x202     
+	#define		ERR_OVER_MAX_COM			0x203
 
 	//          发送和接受错误
 	#define     ERR_SOCKET_INVALID			0x300
@@ -27,5 +28,7 @@
 
 	#define ERR_M1_KEY_NUM					0x0402;
 	#define ERR_M1_CARD_MAC					0x0403
+
+
 
 #endif
