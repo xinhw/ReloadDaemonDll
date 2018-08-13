@@ -195,7 +195,7 @@ int COBUCard::preInit(WORD wDFID,BYTE *elf01_mf)
 								sRnd,
 								(BYTE *)"\x84\xD4\x01\x00\x24",
 								3,(BYTE *)"\x00\x40\x00",
-								szAPPID,
+								szOBUID,
 								szEncKey,
 								szMAC);
 		if(ret)
@@ -256,7 +256,7 @@ int COBUCard::preInit(WORD wDFID,BYTE *elf01_mf)
 								sRnd,
 								(BYTE *)"\x84\xD4\x01\x00\x24",
 								3,(BYTE *)"\x00\x40\x00",
-								szAPPID,
+								szOBUID,
 								szEncKey,
 								szMAC);
 		if(ret)
@@ -523,7 +523,6 @@ int COBUCard::init(BYTE *elf01_mf,BYTE *elf01_adf)
 		return ret;
 	}
 
-
 	/*
 	应用维护密钥：	84D401FF1C	2101FE	010100（密钥头）	分散因子是合同号，保护密钥因子是OBUUID两遍
 	装载认证密钥：	84D401FF1C	2201FE	010200（密钥头）	分散因子是合同号，保护密钥因子是OBUUID两遍
@@ -547,7 +546,7 @@ int COBUCard::init(BYTE *elf01_mf,BYTE *elf01_adf)
 
 	//回到主目录：	00A4000002 3F00
 	//更新	系统信息文件：	04D681001F	C4FECFC4C4FECFC400FF strID 200811282013112800
-	callbackMessage("更新	系统信息文件");
+	callbackMessage("更新 系统信息文件");
 
 	ret = update_mf_elf01(bVer,szAPPID,elf01_mf);
 	if(ret)
@@ -609,7 +608,7 @@ int COBUCard::read_obu(BYTE *elf01_mk)
 	ret = m_pReader->RunCmd("00A40000023F00",strresp);
 	if(ret) return ret;
 
-	//	1. 读取EF01文件：	系统信息文件
+	//	1. 读取EF01文件：系统信息文件
 	memset(strresp,0x00,256);
 	ret = m_pReader->RunCmd("00B081002B",strresp);
 	if(ret) return ret;
@@ -829,6 +828,17 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 
 	if(!validation()) return -1;
 	
+	//	DID1
+	memset(strCmd,0x00,512);
+	GetPrivateProfileString("OBU","DID1","",strCmd,17,".\\key.ini");
+	if(strlen(strCmd)==0)
+	{
+		strcpy(strCmd,"C7E0BAA3C7E0BAA3");
+		WritePrivateProfileString("OBU","DID1",strCmd,".\\key.ini");
+	}
+	CMisc::StringToByte(strCmd,sDID1);
+
+
 	bLen = 0x00;
 	memset(szATR,0x00,256);
 
@@ -841,7 +851,6 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 	{
 		if((bVer>>4)<5) bSM4OBU = FALSE;
 	}
-
 
 	//	0. 复位
 	ret = m_pReader->PSAM_Atr(bNode,bLen,(char *)szATR);
@@ -892,7 +901,6 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 	memset(szATR,0x00,256);
 	CMisc::StringToByte(strresp,szATR);
 
-
 	bKeyIndex = szATR[26];
 	PRINTK("\nKEY INDEX: %02X",bKeyIndex);
 	if((bVer==0xff)||((bVer>>4)<5))
@@ -906,15 +914,16 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 
 	//	分散因子1
 	//	s_DID1 = SUBSTR(LAST,18,8) SUBSTR(LAST,18,8)
+	/*
 	memset(sDID1,0x00,8);
 	memset(strCmd,0x00,512);
 	memcpy(strCmd,strresp+18,8);
 	memcpy(strCmd+8,strresp+18,8);
 	CMisc::StringToByte(strCmd,sDID1);
-	
+	*/
+
 	PRINTK("\nDID1:");
 	for(i=0;i<8;i++) PRINTK("%02X",sDID1[i]);
-
 
 	//s_SKEY = SM4_DIVERSIFY(DF_UK2,s_DID1)
 	memset(szATR,0x00,256);
@@ -977,7 +986,6 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 		PRINTK("\nSecure Read Failure:%d",ret);
 		return ret;
 	}
-
 
 	//801A594310 00000000000000000000000000000000
 	memset(strCmd,0x00,512);

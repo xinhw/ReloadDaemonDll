@@ -277,7 +277,10 @@ UINT CJYRsuReader::RunCmd(char *strCmd, char *strResult)
 	CMisc::ByteToString(&btData[1], btData[0],strResult);
 
 #ifdef DEBUG_PRINT
-	PRINTK("\nOBU-RSP:%s",strResult);
+	//PRINTK("\nOBU-RSP:%s",strResult);
+	PRINTK("\nOBU-RSP:");
+	BYTE i;
+	for(i=0;i<btData[0];i++) PRINTK("%02X",btData[1+i]);
 #endif
 
 	if(strlen(strResult) < 4)

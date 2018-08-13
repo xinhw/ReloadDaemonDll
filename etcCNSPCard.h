@@ -19,7 +19,7 @@
 #define MAX_READER_NUM	32
 
 
-#define DLL_VERSION		"V0.15 多串口（测试版）动态库"
+#define DLL_VERSION		"V0.17 多串口（测试版）动态库"
 
 //	读卡器类型
 #define READER_TYPE_CPU_CARD		0x00			//	航天金卡用户卡读卡器

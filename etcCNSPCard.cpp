@@ -747,7 +747,11 @@ int __stdcall cpuVerifyTAC(BYTE bVer,BYTE *szAPPID,
 
 	int n = ncom%MAX_READER_NUM;
 
-	if(!validation(1,n)) return -1;
+	if(NULL==pcmd[n])
+	{
+		PRINTK("\nCOM[%d]未连接到前置！",n);
+		return ERR_SOCKET_INVALID;
+	}
 
 	ret = pcmd[n]->cmd_1037(bVer,szAPPID,dwAmount,bTransFlag,szDeviceNo,dwAuditNo,szDateTime,szTAC);
 
