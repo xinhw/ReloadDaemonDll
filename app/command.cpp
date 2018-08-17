@@ -725,6 +725,7 @@ int		ClsCommand::cmd_1037(BYTE bVer,BYTE *szAPPID,
 
 	//4	交易类型标识	B	1
 	szBuf[nLen] = bTransFlag;
+	nLen++;
 
 	//5	终端机编号	B	6
 	memcpy(szBuf+nLen,szDeviceNo,6);

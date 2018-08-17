@@ -829,6 +829,7 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 	if(!validation()) return -1;
 	
 	//	DID1
+	/*
 	memset(strCmd,0x00,512);
 	GetPrivateProfileString("OBU","DID1","",strCmd,17,".\\key.ini");
 	if(strlen(strCmd)==0)
@@ -837,7 +838,7 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 		WritePrivateProfileString("OBU","DID1",strCmd,".\\key.ini");
 	}
 	CMisc::StringToByte(strCmd,sDID1);
-
+	*/
 
 	bLen = 0x00;
 	memset(szATR,0x00,256);
@@ -914,13 +915,13 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 
 	//	·ÖÉ¢Òò×Ó1
 	//	s_DID1 = SUBSTR(LAST,18,8) SUBSTR(LAST,18,8)
-	/*
+
 	memset(sDID1,0x00,8);
 	memset(strCmd,0x00,512);
 	memcpy(strCmd,strresp+18,8);
 	memcpy(strCmd+8,strresp+18,8);
 	CMisc::StringToByte(strCmd,sDID1);
-	*/
+	/*	*/
 
 	PRINTK("\nDID1:");
 	for(i=0;i<8;i++) PRINTK("%02X",sDID1[i]);

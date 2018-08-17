@@ -32,8 +32,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 				ptransfer[i] = NULL;					
 				pcmd[i] = NULL;				
 				preader[i] = NULL;
-			}
-			
+			}		
 			break;
 		case DLL_THREAD_ATTACH:
 			break;
