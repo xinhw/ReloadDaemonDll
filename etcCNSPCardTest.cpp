@@ -15,10 +15,11 @@
 #define DEBUG_TEST
 #define	DEBUG_ICMD
 #define DEBUG_PRINT
+//#define DEBUG_TCP_PRINT
 
 /*
 //	还需要把：WS2_32.lib EncodeDLL.lib etcCNSPCard.lib 加入到连接中
-  #include "etcCNSPCard.hpp"
+#include "etcCNSPCard.hpp"
 */
 
 #ifndef PRINTK
@@ -61,6 +62,9 @@ void		test_obu_unlock_adf(void);
 
 void		test_signin(void);
 
+void		test_obu_decode_plate(void);
+void		test_psam_auth(void);
+
 /*	功能列表*/
 CMD_FUNC cmd_func_tab[] =
 {
@@ -87,6 +91,9 @@ CMD_FUNC cmd_func_tab[] =
 	{'1',"测试：OBU一发",test_obu_init},
 	{'2',"测试：OBU二发",test_obu_personize},
 	{'3',"测试：OBU解锁应用",test_obu_unlock_adf},
+	{'4',"测试：OBU车辆信息解密",test_obu_decode_plate},
+
+	{'5',"测试：PSAM卡授权",test_psam_auth},
 
 	{'N',"测试：操作员签到",test_signin},
 
@@ -942,6 +949,15 @@ void		test_cpucard_reload_pin(void)
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		test_cpucard_readadfile
+Created:		2018-08-27 11:34:10
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void test_cpucard_readadfile(void)
 {
 	int ret,i;
@@ -991,6 +1007,111 @@ void test_cpucard_readadfile(void)
 		PRINTK("%02X ",elf[i]);
 	}
 	
+
+	return;
+}
+
+
+
+
+
+
+
+
+/*-------------------------------------------------------------------------
+Function:		test_obu_decode_plate
+Created:		2018-08-27 11:34:05
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+void		test_obu_decode_plate(void)
+{
+	int ret;
+	BYTE szAPPID[8],bLen,i;
+	BYTE szData[128];
+
+	BYTE *szEncData=(BYTE*)"\xD2\xC8\x46\x8E\x9B\xDE\xBA\xA4\xBF\xBC\x18\xB5\x10\x83\x91\x1D" \
+					 "\x9E\x4E\xED\x41\x4D\x54\xD7\xA9\x4F\x63\x74\xD3\x4F\x1C\xA1\x7F" \
+					 "\xB1\x3B\xE7\xEE\xA1\xC0\x67\xF3\xA5\x88\x7A\x05\xFA\x45\xF1\xDA" \
+					 "\xB1\x3B\xE7\xEE\xA1\xC0\x67\xF3\xA5\x88\x7A\x05\xFA\x45\xF1\xDA" \
+					 "\x02\x6E\x43\xCA\x8A\xA9\x89\x1D\x6C\x67\x26\xC3\xD7\xEF\xB6\x2A";
+	
+	memset(szAPPID,0x00,8);
+	
+	bLen = 0x00;
+	memset(szData,0x00,128);
+
+	ret = obuOnlineDecodePlate(0x51,szAPPID,0x43,0x50,szEncData,&bLen,szData,gnCom);
+	if(ret)
+	{
+		PRINTK("\nOBU在线解密车辆信息文件失败：%d",ret);
+		return;
+	}
+
+	PRINTK("\n明文[%d]：",bLen);
+	for(i=0;i<bLen;i++) PRINTK("%02X",szData[i]);
+	return;
+}
+
+
+
+
+/*-------------------------------------------------------------------------
+Function:		test_psam_auth
+Created:		2018-08-27 11:34:02
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+void		test_psam_auth(void)
+{
+	int ret;
+	BYTE szSAMNo[10],szRnd[8],i;
+	BYTE bAPDULen,szAPDU[128];
+	char strListNo[40];
+
+	setTimeout(10,gnCom);
+
+	memcpy(szSAMNo,"\x11\x01\x01\x01\x00\x00\x00\x00\x00\x01",10);
+	memcpy(szRnd,"\x25\xFC\xBC\x35\x66\x8B\xBD\xD2",8);
+
+
+	ret = psamOnlineSignIn(szSAMNo,szSAMNo+4,0x183,"福银高速",0x63,"镇北收费站",0x01,0x02,0x10,(BYTE *)"\x20\x18\x09\x04\x07\x38\x12",gnCom);
+	if(ret)
+	{
+		PRINTK("\nPSAM在线签到失败：%d",ret);
+		return;
+	}
+
+	bAPDULen = 0x00;
+	memset(szAPDU,0x00,128);
+
+	//	在线授权申请
+	memset(strListNo,0x00,40);
+	ret = psamOnlineAuth(szSAMNo,szRnd,0x183,"福银高速",0x63,"镇北收费站",0x01,0x02,0x10,&bAPDULen,szAPDU,strListNo,gnCom);
+	if(ret)
+	{
+		PRINTK("\nPSAM在线认证失败：%d",ret);
+		return;
+	}
+
+	PRINTK("\nLISTNO:%s",strListNo);
+
+	PRINTK("\n命令[%d]：",bAPDULen);
+	for(i=0;i<bAPDULen;i++) PRINTK("%02X ",szAPDU[i]);
+
+
+	ret = psamOnlineAuthConfirm(szSAMNo,strListNo,0x9000,0x00,gnCom);
+	if(ret)
+	{
+		PRINTK("\nPSAM在线授权确认失败：%d",ret);
+		return;
+	}
 
 	return;
 }

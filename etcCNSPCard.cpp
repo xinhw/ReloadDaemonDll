@@ -13,7 +13,6 @@
 // etcCNSPCard.cpp : Defines the entry point for the DLL application.
 //
 
-
 #include "dllinclude.hpp"
 
 BOOL APIENTRY DllMain( HANDLE hModule, 
@@ -345,8 +344,6 @@ int __stdcall signIn(char *strOperator,int ncom)
 	memset(szBuf,0x00,6);
 	for(i=0;i<n;i=i+2) szBuf[i/2] = CMisc::ascToUC(strOperator[i])*0x10 + CMisc::ascToUC(strOperator[i+1]);
 
-	pcmd[icom]->setTCPTransfer(ptransfer[icom]);
-
 	ret = pcmd[icom]->cmd_1031(szBuf);
 	return ret;
 }
@@ -442,7 +439,6 @@ int __stdcall cpuReadAdfFile(BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE *szFile
 	delete pcard;
 
 	return ret;
-
 }
 
 
@@ -1084,6 +1080,181 @@ int __stdcall obuUnlockApplication(BYTE bVer,BYTE *szAPPID,int ncom)
 	ret = pcard->unlockapp(bVer,szAPPID);
 
 	delete pcard;
+
+	return ret;
+}
+
+
+
+
+
+
+
+/*-------------------------------------------------------------------------
+Function:		setTimeout
+Created:		2018-08-27 10:23:14
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+void __stdcall setTimeout(DWORD dwTimeout,int ncom)
+{
+	PRINTK("\r\n¶Á¿¨Æ÷¶Ë¿Ú(setTimeout)£º%d",ncom);
+
+	int n = ncom%MAX_READER_NUM;
+
+	if(NULL==pcmd[n])
+	{
+		PRINTK("\nCOM[%d]Î´Á¬½Óµ½Ç°ÖÃ£¡",n);
+		return;
+	}
+	pcmd[n]->setWaitTimeout(dwTimeout);
+	return;
+}
+
+
+
+
+/*-------------------------------------------------------------------------
+Function:		getTimeout
+Created:		2018-08-27 10:23:18
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+DWORD __stdcall getTimeout(int ncom)
+{
+	PRINTK("\r\n¶Á¿¨Æ÷¶Ë¿Ú(getTimeout)£º%d",ncom);
+
+	int n = ncom%MAX_READER_NUM;
+
+	if(NULL==pcmd[n])
+	{
+		PRINTK("\nCOM[%d]Î´Á¬½Óµ½Ç°ÖÃ£¡",n);
+		return 0;
+	}
+	return pcmd[n]->getWaitTimeout();
+}
+
+
+
+/*-------------------------------------------------------------------------
+Function:		obuOnlineDecodePlate
+Created:		2018-08-27 11:33:25
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int __stdcall obuOnlineDecodePlate(BYTE bVer,BYTE *szAPPID,
+								    BYTE bKeyIndex,
+									BYTE bLenIn,BYTE *szEncData,
+									BYTE *bLenOut,BYTE *szData,
+									int ncom)
+{
+	int ret;
+
+	PRINTK("\r\n¶Á¿¨Æ÷¶Ë¿Ú(obuOnlineDecodePlate)£º%d",ncom);
+
+	int icom = ncom%MAX_READER_NUM;
+	if(NULL==pcmd[icom]) return -3;
+
+	ret = pcmd[icom]->cmd_1043(bVer,szAPPID,bKeyIndex,bLenIn,szEncData,bLenOut,szData);
+
+	return ret;
+}
+
+
+/*-------------------------------------------------------------------------
+Function:		psamOnlineAuth
+Created:		2018-08-27 11:33:23
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int __stdcall psamOnlineAuth(BYTE *szSAMNo,BYTE *szRnd,
+							DWORD dwRoadID,char *strRoadName,
+							DWORD dwStationID, char *strStationName,BYTE bStationType,
+							BYTE bLaneType,BYTE bLaneID,
+							BYTE *bAPDULen,BYTE *szAPDU,
+							char *strListNo,
+							int ncom)
+{
+	int ret;
+	
+	PRINTK("\r\n¶Á¿¨Æ÷¶Ë¿Ú(psamOnlineAuth)£º%d",ncom);
+
+	int icom = ncom%MAX_READER_NUM;
+	if(NULL==pcmd[icom]) return -3;
+
+	ret = pcmd[icom]->cmd_1044(szSAMNo,szRnd,dwRoadID,strRoadName,dwStationID,strStationName,bStationType,bLaneType,bLaneID,bAPDULen,szAPDU,strListNo);
+
+	return ret;
+}
+
+
+
+
+
+
+/*-------------------------------------------------------------------------
+Function:		psamOnlineSignIn
+Created:		2018-08-27 11:33:23
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int __stdcall psamOnlineSignIn(BYTE *szSAMNo,BYTE *szTerminalNo,
+							DWORD dwRoadID,char *strRoadName,
+							DWORD dwStationID, char *strStationName,BYTE bStationType,
+							BYTE bLaneType,BYTE bLaneID,
+							BYTE *szTerminalTime,
+							int ncom)
+{
+	int ret;
+	char strListNo[40];
+
+	PRINTK("\r\n¶Á¿¨Æ÷¶Ë¿Ú(psamOnlineSignIn)£º%d",ncom);
+
+	int icom = ncom%MAX_READER_NUM;
+	if(NULL==pcmd[icom]) return -3;
+
+	ret = pcmd[icom]->cmd_1046(szSAMNo,szTerminalNo,dwRoadID,strRoadName,dwStationID,strStationName,bStationType,bLaneType,bLaneID,szTerminalTime,strListNo);
+
+	return ret;
+}
+
+
+/*-------------------------------------------------------------------------
+Function:		psamOnlineAuthConfirm
+Created:		2018-08-27 11:33:23
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int	__stdcall psamOnlineAuthConfirm(BYTE *szSAMNo,char *strListNo,
+							WORD wSW1SW2,BYTE bResult,
+							int ncom)
+{
+	int ret;
+
+	PRINTK("\r\n¶Á¿¨Æ÷¶Ë¿Ú(psamOnlineAuthConfirm)£º%d",ncom);
+
+	int icom = ncom%MAX_READER_NUM;
+	if(NULL==pcmd[icom]) return -3;
+
+	ret = pcmd[icom]->cmd_1045(szSAMNo,strListNo,wSW1SW2,bResult);
 
 	return ret;
 }

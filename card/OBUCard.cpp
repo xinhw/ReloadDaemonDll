@@ -793,6 +793,8 @@ int COBUCard::getOBUUID(BYTE *szUID)
 
 	char	strResp[128];
 
+	if(!validation()) return -1;
+	
 	memset(strResp,0x00,128);
 	ret = m_pReader->RunCmd("80F6000304",strResp);
 	if(ret)
@@ -818,205 +820,41 @@ Reversion:
 int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 {
 	int ret;
-	BYTE i,bLen,szATR[256];
-	char strresp[256],strCmd[512];
-	BYTE sDID2[8],sDID1[8];
-	BYTE DF_UK2[16]={0xE0,0x02,0x1F,0xE5,0x30,0x08,0x3C,0xE2,0xEB,0x95,0xB5,0x2A,0xB4,0xB4,0xE1,0x1C};
-	BYTE sKey[16],sRnd[16];
-	BYTE bKeyIndex;
-	BOOL bSM4OBU = TRUE;
+	BYTE szAPPID[8],szEncFile[128];
+	BYTE rLen = 0,bKeyIndex=0x40;
+	char strELF01[256];
 
 	if(!validation()) return -1;
 	
-	//	DID1
-	/*
-	memset(strCmd,0x00,512);
-	GetPrivateProfileString("OBU","DID1","",strCmd,17,".\\key.ini");
-	if(strlen(strCmd)==0)
-	{
-		strcpy(strCmd,"C7E0BAA3C7E0BAA3");
-		WritePrivateProfileString("OBU","DID1",strCmd,".\\key.ini");
-	}
-	CMisc::StringToByte(strCmd,sDID1);
-	*/
+	memcpy(szAPPID,m_pReader->m_szApplication,8);
 
-	bLen = 0x00;
-	memset(szATR,0x00,256);
-
-	//	“合同版本”等于FF或高4位小于5？
-	if(0xFF==bVer)
-	{
-		bSM4OBU = FALSE;
-	}
-	else
-	{
-		if((bVer>>4)<5) bSM4OBU = FALSE;
-	}
-
-	//	0. 复位
-	ret = m_pReader->PSAM_Atr(bNode,bLen,(char *)szATR);
-	if(ret)
-	{
-		PRINTK("\nPSAM ATR FAILURE:%d",ret);
-		return ret;
-	}
-	
-	PRINTK("\nATR[%d]:",bLen);
-	for(i=0;i<bLen;i++) PRINTK("%02X",szATR[i]);
-
-	//	1. 选择3F00目录
-	memset(strresp,0x00,256);
-	ret = m_pReader->PSAM_RunCmd("00A40000023F00",strresp);
-	if(ret) 
-	{
-		PRINTK("\nPSAM_RunCmd 返回:%04X",ret);
-		return ret;
-	}
-	//	2. 读取0015文件
-	memset(strresp,0x00,256);
-	ret = m_pReader->PSAM_RunCmd("00B095000E",strresp);
-	if(ret) return ret;
-
-	//	分散因子2
-	//	s_DID2 = SUBSTR(LAST,4,16)
-	memset(sDID2,0x00,8);
-	memset(strCmd,0x00,512);
-	memcpy(strCmd,strresp+4,16);
-	CMisc::StringToByte(strCmd,sDID2);
-	PRINTK("\nDID2:");
-	for(i=0;i<8;i++) PRINTK("%02X",sDID2[i]);
-
-	//	3. 进入DF01
-	//	00B0960006
-	//	00A4000002 DF01
-	memset(strresp,0x00,256);
-	ret = m_pReader->PSAM_RunCmd("00A4000002DF01",strresp);
-	if(ret) return ret;
-
-	//	4. 读取0017文件
-	//	00B097001B
-	memset(strresp,0x00,256);
-	ret = m_pReader->PSAM_RunCmd("00B097001B",strresp);
-	if(ret) return ret;
-
-	memset(szATR,0x00,256);
-	CMisc::StringToByte(strresp,szATR);
-
-	bKeyIndex = szATR[26];
-	PRINTK("\nKEY INDEX: %02X",bKeyIndex);
-	if((bVer==0xff)||((bVer>>4)<5))
-	{
-		bKeyIndex = 0x00;
-	}
-	else
-	{
-		bKeyIndex = bKeyIndex;
-	}
-
-	//	分散因子1
-	//	s_DID1 = SUBSTR(LAST,18,8) SUBSTR(LAST,18,8)
-
-	memset(sDID1,0x00,8);
-	memset(strCmd,0x00,512);
-	memcpy(strCmd,strresp+18,8);
-	memcpy(strCmd+8,strresp+18,8);
-	CMisc::StringToByte(strCmd,sDID1);
-	/*	*/
-
-	PRINTK("\nDID1:");
-	for(i=0;i<8;i++) PRINTK("%02X",sDID1[i]);
-
-	//s_SKEY = SM4_DIVERSIFY(DF_UK2,s_DID1)
-	memset(szATR,0x00,256);
-	sm4_diversify(DF_UK2,sDID1,szATR);
-
-	//s_SKEY = SM4_DIVERSIFY(s_SKEY,s_DID2)
-	memset(sKey,0x00,16);
-	sm4_diversify(szATR,sDID2,sKey);
-	
-	//	5. 选择3F00目录		00A40000023F00
-	memset(strresp,0x00,256);
-	ret = m_pReader->PSAM_RunCmd("00A40000023F00",strresp);
-	if(ret) return ret;
-
-	//0084000008
-	memset(strresp,0x00,256);
-	ret = m_pReader->PSAM_RunCmd("0084000008",strresp);
-	if(ret) return ret;
-	
-	memset(sRnd,0x00,16);
-	CMisc::StringToByte(strresp,sRnd);
-	
-	//	用指定密钥对随机数（后面填充0x00 至8 字节（3DES）或16 字节（SM4）后）做加密运算产生。
-	memset(szATR,0x00,256);
-	sm4_encode(sKey, sRnd, szATR);
-	PRINTK("\n加密结果：");
-	for(i=0;i<16;i++) PRINTK("%02X",szATR[i]);
-
-	memset(sRnd,0x00,16);
-	for(i=0;i<8;i++) sRnd[i] = szATR[i]^szATR[8+i];
-
-	//	0082004108 s_TEMP
-	memset(strCmd,0x00,512);
-	strcpy(strCmd,"0082004108");
-	for(i=0;i<8;i++) sprintf(strCmd+10+2*i,"%02X",sRnd[i]);
-
-	memset(strresp,0x00,256);
-	ret = m_pReader->PSAM_RunCmd(strCmd,strresp);
-	if(ret) return ret;
-
-	//00A4000002DF01
-	memset(strresp,0x00,256);
-	ret = m_pReader->PSAM_RunCmd("00A4000002DF01",strresp);
-	if(ret) return ret;
-
-
-	//	2. 选择DF01 ADF
-	memset(strresp,0x00,256);
-	ret = m_pReader->RunCmd("00A4000002DF01",strresp);
-	if(ret) return ret;
-
-	BYTE rLen = 0;
-	char strELF01[256];
-
+	//	GetSecure函数读取信息
 	memset(strELF01,0x00,256);
-
 	ret = m_pReader->SecureRead(bKeyIndex,0x01,0x00,59,rLen,strELF01);
 	if(ret)
 	{
 		PRINTK("\nSecure Read Failure:%d",ret);
 		return ret;
 	}
+	memset(szEncFile,0x00,128);
+	CMisc::StringToByte(strELF01,szEncFile);
 
-	//801A594310 00000000000000000000000000000000
-	memset(strCmd,0x00,512);
-	if(bSM4OBU)
-	{
-		sprintf(strCmd,"801A59%02X10",bKeyIndex+3);
-		for(i=0;i<16;i++) sprintf(strCmd+10+2*i,"%02X",m_pReader->m_szApplication[i]);
-	}
-	else
-	{
-		sprintf(strCmd,"801A39%02X08",bKeyIndex+3);
-		for(i=0;i<8;i++) sprintf(strCmd+10+2*i,"%02X",m_pReader->m_szApplication[4+i]);
-	}
-	memset(strresp,0x00,256);
-	ret = m_pReader->PSAM_RunCmd(strCmd,strresp);
-	if(ret) return ret;
-
-	//80FA80 00 20 733E11E4DDFB2BCD61EF0A28669CD5BDD67B85307747320602B131A05E6A0C2D
-	memset(strCmd,0x00,512);
-	sprintf(strCmd,"80FA8000%02X%s",strlen(strELF01)/2,strELF01);
-
-	memset(strresp,0x00,256);
-	ret = m_pReader->PSAM_RunCmd(strCmd,strresp);
-	if(ret) return ret;
-	CMisc::StringToByte(strresp+34,szPlainFile);
-
-	return 0;
+	rLen = 0;
+	//	在线解密
+	ret = m_pCmd->cmd_1043(bVer,szAPPID,bKeyIndex,59,szEncFile,&rLen,szPlainFile);
+	return ret;
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		COBUCard.unlockapp
+Created:		2018-07-27 14:07:59
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+				解密 OBU的DF01应用
+-------------------------------------------------------------------------*/
 int COBUCard::unlockapp(BYTE bVer,BYTE *szAPPID)
 {
 	int ret,i;

@@ -69,7 +69,11 @@ void ClsCommand::init()
 	CMisc::getDateTime(m_ph.strTransTime);
 	memset(m_ph.pszMAC,0x00,4);
 	m_ph.bCompressFlag=m_ph.bRFU=0x00;
+
+	m_dwTimeout = 3;
 }
+
+
 /*-------------------------------------------------------------------------
 Function:		ClsCommand.~ClsCommand
 Created:		2018-07-16 17:02:18
@@ -220,6 +224,14 @@ int		ClsCommand::send_recv(WORD wTransType,
 	WORD			nLen,wSize;
 	CProtocol		pt;
 
+	//	清空输入缓冲
+	while(1)
+	{
+		ret = m_ptransfer->s_recv(&nLen,szBuf,sizeof(szBuf),100);
+		if(ret!=sizeof(szBuf)) break;
+	}
+
+
 	updateHeader(wTransType,wLenIn);
 
 	memset(szBuf,0x00,256);
@@ -230,6 +242,10 @@ int		ClsCommand::send_recv(WORD wTransType,
 		return ret;
 	}
 
+#ifdef DEBUG_TCP_PRINT
+	PRINTK("\nSEND:");
+#endif
+
 	ret = m_ptransfer->s_send(nLen, szBuf);
 	if (ret)
 	{
@@ -237,9 +253,13 @@ int		ClsCommand::send_recv(WORD wTransType,
 		return ret;
 	}
 
+#ifdef DEBUG_TCP_PRINT
+	PRINTK("\nRECV:");
+#endif
+
 	memset(szBuf,0x00,256);
-	ret = m_ptransfer->s_recv(&nLen,szBuf,NHEADDATALEN,3000);
-		if(ret<NHEADDATALEN)
+	ret = m_ptransfer->s_recv(&nLen,szBuf,NHEADDATALEN,m_dwTimeout*1000);
+	if(ret<NHEADDATALEN)
 	{
 		PRINTK("\n报文接收失败1：%d",ret);
 		return ret;
@@ -256,7 +276,7 @@ int		ClsCommand::send_recv(WORD wTransType,
 
 	memset(szBuf,0x00,256);
 	nLen = 0;
-	ret = m_ptransfer->s_recv(&nLen,pszBufOut,m_ph.dwDataLen,3);
+	ret = m_ptransfer->s_recv(&nLen,pszBufOut,m_ph.dwDataLen,m_dwTimeout*1000);
 	if(ret<m_ph.dwDataLen)
 	{
 		PRINTK("\n报文接收失败2：%d",ret);
@@ -297,7 +317,7 @@ int		ClsCommand::cmd_1031(BYTE *szOperatorNo)
 	memcpy(szBuf+nLen,szOperatorNo,6);
 	nLen = nLen + 6;
 
-	ret = send_recv(0x1031,21,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1031,nLen,szBuf,&nLen,szBuf);
 	if(ret) return ret;
 
 	ret = szBuf[0];
@@ -1158,11 +1178,352 @@ int		ClsCommand::cmd_2011(BYTE *szCityCode,BYTE *szSerialNo,BYTE *szAuditNo,BYTE
 	return 0;
 }
 
-
-void	ClsCommand::setTCPTransfer(CTcpTransfer *pt)
+//4.14	OBU车辆信息文件解密 1043
+/*-------------------------------------------------------------------------
+Function:		ClsCommand.cmd_1043
+Created:		2018-08-27 10:52:54
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int		ClsCommand::cmd_1043(BYTE bVer,BYTE *szAPPID,BYTE bKeyIndex,BYTE bInLen,BYTE *szEncData,
+							BYTE *bOutLen,BYTE *szData)
 {
-	m_ptransfer = pt;
+	int ret;
+	WORD nLen;
+	BYTE szBuf[256];
+
+	nLen = 0;
+	memset(szBuf,0x00,256);
+
+	//1	银行网点编码	B	15
+	memcpy(szBuf+nLen,m_strBankID,15);
+	nLen = nLen + 15;
+
+	//2	OBU合同号	B	8
+	memcpy(szBuf+nLen,szAPPID,8);
+	nLen = nLen + 8;
+
+	//3	加密密钥索引	B	1
+	szBuf[nLen] = bKeyIndex;
+	nLen++;
+
+	//4	文件密文长度	B	1
+	szBuf[nLen] = bInLen;
+	nLen++;
+
+	//5	文件密文数据	B	L
+	memcpy(szBuf+nLen,szEncData,bInLen);
+	nLen = nLen + bInLen;
+
+	//6	RFU	B	4
+	memset(szBuf+nLen,0x00,4);
+	nLen = nLen + 4;
+
+	//7	合同版本	B	1
+	szBuf[nLen] = bVer;
+	nLen++;
+
+	ret = send_recv(0x1043,nLen,szBuf,&nLen,szBuf);
+	if(ret) return ret;
+
+	
+	//1	返回代码	US	2		0     成功其他  失败
+	ret = szBuf[0];
+	ret = ret * 0x100 + szBuf[1];
+	if(ret) return ret;
+	
+	//2	明文数据长度	B	1		
+	nLen = szBuf[2];
+	*bOutLen = nLen;
+
+	//3	车辆信息文件明文	B	L
+	memcpy(szData,szBuf+3,nLen);
+
+	//4	剩余交易次数	US	2		
+	m_wRemainCount = szBuf[3+nLen];
+	m_wRemainCount = m_wRemainCount *0x100 + szBuf[4+nLen];
+
+	return 0;
+}
+
+
+//4.15	PSAM卡授权 1044
+/*-------------------------------------------------------------------------
+Function:		ClsCommand.cmd_1044
+Created:		2018-08-27 10:52:49
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int		ClsCommand::cmd_1044(BYTE *szSAMNo,BYTE *szRnd,
+				DWORD dwRoadID,char *strRoadName,
+				DWORD dwStationID, char *strStationName,BYTE bStationType,
+				BYTE bLaneType,BYTE bLaneID,
+				BYTE *bAPDULen,BYTE *szAPDU,char *strListNo)
+{
+	int ret;
+	WORD nLen,n;
+	BYTE szBuf[256];
+
+	nLen = 0;
+	memset(szBuf,0x00,256);
+
+	//1	银行网点编码	B	15
+	memcpy(szBuf+nLen,m_strBankID,15);
+	nLen = nLen + 15;
+
+	//2	PSAM卡号	B	10	
+	memcpy(szBuf+nLen,szSAMNo,10);
+	nLen = nLen + 10;
+
+	//3	随机数	B	8	
+	memcpy(szBuf+nLen,szRnd,8);
+	nLen = nLen + 8;
+
+	//4	路段编码	B	4	
+	CMisc::Int2Bytes(dwRoadID,szBuf+nLen);
+	nLen = nLen + 4;
+
+	//5	路段名称	ASC	50	
+	n = strlen(strRoadName);
+	if(n>50) n = 50;
+	memcpy(szBuf+nLen,strRoadName,n);
+	nLen = nLen + 50;
+
+	//6	收费站编码	B	4	
+	CMisc::Int2Bytes(dwStationID,szBuf+nLen);
+	nLen = nLen + 4;
+
+	//7	收费站名称	ASC	50	
+	n = strlen(strStationName);
+	if(n>50) n = 50;
+	memcpy(szBuf+nLen,strStationName,n);
+	nLen = nLen + 50;
+
+	//8	收费站类型	B	1	
+	szBuf[nLen] = bStationType;
+	nLen++;
+
+	//9	车道类型	B	1	
+	szBuf[nLen] = bLaneType;
+	nLen++;
+
+	//10	车道号	B	1	
+	szBuf[nLen] = bLaneID;
+	nLen++;
+
+	ret = send_recv(0x1044,nLen,szBuf,&nLen,szBuf);
+	if(ret) return ret;
+	if(nLen<52) return -24;
+
+	//1	返回代码	US	2	
+	ret = szBuf[0];
+	ret = ret * 0x100 + szBuf[1];
+	if(ret) return ret;
+
+	//2	认证命令长度	B	1	
+	nLen = szBuf[2];
+	*bAPDULen = nLen;
+
+	//3	认证命令	B	L	
+	memcpy(szAPDU,szBuf+3,nLen);
+	//4	中心业务流水号	A	36		listNo
+	memcpy(strListNo,szBuf+3+nLen,36);
+
+	//5	剩余交易次数	US	2	
+	m_wRemainCount = szBuf[39+nLen];
+	m_wRemainCount = m_wRemainCount *0x100 + szBuf[40+nLen];
+
+	return 0;
 }
 
 
 
+
+/*-------------------------------------------------------------------------
+Function:		ClsCommand.setWaitTimeout
+Created:		2018-08-27 10:22:52
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+void	ClsCommand::setWaitTimeout(DWORD dwtm)
+{
+	m_dwTimeout = dwtm;
+}
+
+/*-------------------------------------------------------------------------
+Function:		ClsCommand.getWaitTimeout
+Created:		2018-08-27 10:22:55
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+DWORD	ClsCommand::getWaitTimeout()
+{
+	return m_dwTimeout;
+}
+
+
+
+
+
+
+
+
+
+//4.16	PSAM卡在线授权确认 1045
+/*-------------------------------------------------------------------------
+Function:		ClsCommand.cmd_1045
+Created:		2018-08-27 10:22:55
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int		ClsCommand::cmd_1045(BYTE *szSAMNo,char *strListNo,
+				WORD wSW1SW2,BYTE bResult)
+{
+	int ret;
+	WORD nLen;
+	BYTE szBuf[256];
+
+	nLen = 0;
+	memset(szBuf,0x00,256);
+
+	//1	银行网点编码	B	15
+	memcpy(szBuf+nLen,m_strBankID,15);
+	nLen = nLen + 15;
+
+	//2	PSAM卡号	B	10	
+	memcpy(szBuf+nLen,szSAMNo,10);
+	nLen = nLen + 10;
+
+	//3	申请时中心业务流水号	A	36		申请时的listNo
+	memcpy(szBuf+nLen,strListNo,36);
+	nLen = nLen + 36;
+
+	//4	指令结果	B	2	
+	szBuf[nLen] = (BYTE)(wSW1SW2>>8);
+	szBuf[nLen+1] = (BYTE)(wSW1SW2&0xff);
+	nLen = nLen + 2;
+
+	//5	指令结果码	B	1	
+	szBuf[nLen] = bResult;
+	nLen++;
+
+	ret = send_recv(0x1045,nLen,szBuf,&nLen,szBuf);
+	if(ret) return ret;
+	if(nLen<4) return -24;
+
+	//1	返回代码	US	2	
+	ret = szBuf[0];
+	ret = ret * 0x100 + szBuf[1];
+	if(ret) return ret;
+
+	//2	剩余交易次数	US	2	
+	m_wRemainCount = szBuf[2];
+	m_wRemainCount = m_wRemainCount *0x100 + szBuf[3];
+
+
+	return 0;
+}
+
+//4.17	PSAM卡在线签到 1046
+/*-------------------------------------------------------------------------
+Function:		ClsCommand.cmd_1046
+Created:		2018-08-27 10:22:55
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int		ClsCommand::cmd_1046(BYTE *szSAMNo,BYTE *szTerminalNo,
+				DWORD dwRoadID,char *strRoadName,
+				DWORD dwStationID, char *strStationName,BYTE bStationType,
+				BYTE bLaneType,BYTE bLaneID,
+				BYTE *szTerminalTime,
+				char *strListNo)
+{
+	int ret;
+	WORD nLen,n;
+	BYTE szBuf[256];
+
+	nLen = 0;
+	memset(szBuf,0x00,256);
+
+	//1	银行网点编码	B	15
+	memcpy(szBuf+nLen,m_strBankID,15);
+	nLen = nLen + 15;
+
+	//2	PSAM卡号	B	10	
+	memcpy(szBuf+nLen,szSAMNo,10);
+	nLen = nLen + 10;
+
+	//3	终端号	B	6		PSAM MF下0016文件1~6字节。
+	memcpy(szBuf+nLen,szTerminalNo,6);
+	nLen = nLen + 6;
+
+	//4	路段编码	B	4	
+	CMisc::Int2Bytes(dwRoadID,szBuf+nLen);
+	nLen = nLen + 4;
+
+	//5	路段名称	ASC	50	
+	n = strlen(strRoadName);
+	if(n>50) n = 50;
+	memcpy(szBuf+nLen,strRoadName,n);
+	nLen = nLen + 50;
+
+	//6	收费站编码	B	4	
+	CMisc::Int2Bytes(dwStationID,szBuf+nLen);
+	nLen = nLen + 4;
+
+	//7	收费站名称	ASC	50	
+	n = strlen(strStationName);
+	if(n>50) n = 50;
+	memcpy(szBuf+nLen,strStationName,n);
+	nLen = nLen + 50;
+
+	//8	收费站类型	B	1	
+	szBuf[nLen] = bStationType;
+	nLen++;
+
+	//9	车道类型	B	1	
+	szBuf[nLen] = bLaneType;
+	nLen++;
+
+	//10	车道号	B	1	
+	szBuf[nLen] = bLaneID;
+	nLen++;
+
+	//11	终端日期时间	B	7		BCD码日期时间
+	memcpy(szBuf+nLen,szTerminalTime,7);
+	nLen = nLen + 7;
+
+	ret = send_recv(0x1046,nLen,szBuf,&nLen,szBuf);
+	if(ret) return ret;
+	if(nLen<4) return -24;
+
+	//1	返回代码	US	2	
+	ret = szBuf[0];
+	ret = ret * 0x100 + szBuf[1];
+	if(ret) return ret;
+
+	//2	剩余交易次数	US	2	
+	m_wRemainCount = szBuf[2];
+	m_wRemainCount = m_wRemainCount *0x100 + szBuf[3];
+
+
+	return 0;
+}

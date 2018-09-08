@@ -18,8 +18,15 @@
 
 #define MAX_READER_NUM	32
 
+/*
 
-#define DLL_VERSION		"V0.17 多串口（测试版）动态库"
+	V0.17	增加了多串口支持
+	V0.18	增加前置通信超时设置
+			删除TcpTransfer类中的send_recv函数
+	V0.19	增加PSAM卡签到、PSAM卡授权确认的接口
+			1045,1046报文
+*/
+#define DLL_VERSION		"V0.19 多串口国密算法动态库"
 
 //	读卡器类型
 #define READER_TYPE_CPU_CARD		0x00			//	航天金卡用户卡读卡器
@@ -230,4 +237,40 @@ extern "C"
 	*/
 	int __stdcall obuUpdateLoadFlag(BYTE bVer,BYTE *szAPPID,BYTE bFlag,int ncom = gnDefaultCom);
 	int __stdcall obuUnlockApplication(BYTE bVer,BYTE *szAPPID,int ncom = gnDefaultCom);
+
+	/*22. 设置和获取前置通信超时
+		dwTimeout:	超时时间（秒）
+	*/
+	void __stdcall setTimeout(DWORD dwTimeout,int ncom = gnDefaultCom);
+	DWORD __stdcall getTimeout(int ncom = gnDefaultCom);
+
+	/*23. 车辆信息在线解密
+		dwTimeout:	超时时间（秒）
+	*/
+	int __stdcall obuOnlineDecodePlate(BYTE bVer,BYTE *szAPPID,
+										BYTE bKeyIndex,
+										BYTE bLenIn,BYTE *szEncData,
+										BYTE *bLenOut,BYTE *szData,
+										int ncom = gnDefaultCom);
+	/*24. PSAM卡在线授权*/
+	int __stdcall psamOnlineAuth(BYTE *szSAMNo,BYTE *szRnd,
+								DWORD dwRoadID,char *strRoadName,
+								DWORD dwStationID, char *strStationName,BYTE bStationType,
+								BYTE bLaneType,BYTE bLaneID,
+								BYTE *bAPDULen,BYTE *szAPDU,
+								char *strListNo,
+								int ncom = gnDefaultCom);
+
+	int __stdcall psamOnlineSignIn(BYTE *szSAMNo,BYTE *szTerminalNo,
+								DWORD dwRoadID,char *strRoadName,
+								DWORD dwStationID, char *strStationName,BYTE bStationType,
+								BYTE bLaneType,BYTE bLaneID,
+								BYTE *szTerminalTime,
+								int ncom = gnDefaultCom);
+
+	int	__stdcall psamOnlineAuthConfirm(BYTE *szSAMNo,char *strListNo,
+								WORD wSW1SW2,BYTE bResult,
+								int ncom = gnDefaultCom);
+
+
 };

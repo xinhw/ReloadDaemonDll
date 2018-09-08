@@ -32,21 +32,13 @@ public:
 	int		disconnect();
 
 	int		s_send(WORD	rBytes,UCHAR	*pszBuf);
-	int		s_recv(WORD	*rBytes,UCHAR	*pszBuf,UINT	nWaitMaxTime = 3);
 
 	//		2016-10-11
-	int		s_recv(WORD *rBytes, UCHAR	*pszBuf, WORD wMaxBytes, UINT	nWaitMaxTime = 3);
-
-	int		send_recv(WORD	wLenIn,UCHAR	*pszBufIn,
-					  WORD	*wLenOut,UCHAR	*pszBufOut,UINT	nWaitMaxTime = 3);
-
-	int		send_recv_max(WORD	wLenIn, UCHAR	*pszBufIn,
-						WORD	*wLenOut, UCHAR	*pszBufOut, WORD wMaxBytes,UINT	nWaitMaxTime = 3);
+	int		s_recv(WORD *rBytes, UCHAR	*pszBuf, WORD wMaxBytes, UINT	nWaitMaxTime = 3000);
 
 public:
 	BOOL bConnected;
 
-	
 };
 
 #endif

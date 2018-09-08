@@ -13,6 +13,10 @@ connectOKS
 ;关闭到在线密钥服务前置的连接
 disconnectOKS
 
+;和前置程序通信最大等待时间
+setTimeout
+getTimeout
+	
 ;打开读卡器
 openReader
 
@@ -68,3 +72,11 @@ obuUpdateFile
 
 ;更改拆卸标志
 obuUpdateLoadFlag
+
+;2018-08-28
+;车辆信息在线解密
+obuOnlineDecodePlate
+
+;PSAM卡在线授权
+psamOnlineAuth
+

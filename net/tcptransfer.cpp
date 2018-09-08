@@ -167,7 +167,12 @@ int		CTcpTransfer::s_send(WORD	rBytes,UCHAR	*pszBuf)
 	fd_set	fd;
 	
 	if(sLocal ==INVALID_SOCKET) return -108;
-	
+
+#ifdef DEBUG_TCP_PRINT
+	WORD i;
+	for(i=0;i<rBytes;i++) PRINTK("%02X ",pszBuf[i]);
+#endif	
+
 	//	设置检测的最大时间
 	waittm.tv_sec = 1;
 	waittm.tv_usec = 0;
@@ -192,25 +197,6 @@ int		CTcpTransfer::s_send(WORD	rBytes,UCHAR	*pszBuf)
 }
 
 
-/*-------------------------------------------------------------------------
-	Function Name: 	s_recv
-	Time:			2005-7-21 9:28:25
-	Author:			Hsin Honway(xinhongwei@sina.com)
-	Parameters:
-					*rBytes			[out]	接收到的字节数
-					pszBuf			[out]	接收到的信息
-					nWaitMaxTime	[in]	等待的最长时间(秒)
-	Return:
-	
-	Remarks:
-	
--------------------------------------------------------------------------*/
-int		CTcpTransfer::s_recv(WORD	*rBytes,UCHAR	*pszBuf,UINT	nWaitMaxTime)
-{
-	return s_recv(rBytes, pszBuf, 256, nWaitMaxTime);
-}
-
-
 
 
 /*-------------------------------------------------------------------------
@@ -220,7 +206,7 @@ Author:		Xin Hongwei(xinhw@huahongjt.com)
 Parameters: 
         
 Reversion:
-        
+			nWaitMaxTime	最长延时（毫秒）        
 -------------------------------------------------------------------------*/
 int		CTcpTransfer::s_recv(WORD *rBytes, UCHAR	*pszBuf, WORD wMaxBytes, UINT	nWaitMaxTime)
 {
@@ -232,8 +218,8 @@ int		CTcpTransfer::s_recv(WORD *rBytes, UCHAR	*pszBuf, WORD wMaxBytes, UINT	nWai
 	if (sLocal == INVALID_SOCKET) return -108;
 
 	//	设置检测的最大时间
-	waittm.tv_sec = nWaitMaxTime;
-	waittm.tv_usec = 0;
+	waittm.tv_sec = nWaitMaxTime/1000;
+	waittm.tv_usec = nWaitMaxTime%1000;
 
 	FD_ZERO(&fd);
 	FD_SET(sLocal, &fd);
@@ -251,6 +237,11 @@ int		CTcpTransfer::s_recv(WORD *rBytes, UCHAR	*pszBuf, WORD wMaxBytes, UINT	nWai
 	}
 	if (ret<0) return -22;
 	if (ret == 0) return -23;
+
+#ifdef DEBUG_TCP_PRINT
+	int i;
+	for(i=0;i<ret;i++) PRINTK("%02X ",pszBuf[i]);
+#endif
 
 	*rBytes = (WORD)ret;
 	return ret;
@@ -277,74 +268,3 @@ void	CTcpTransfer::ShowWSAErrorMsg(int nErrNo)
 	return;
 }
 
-
-/*-------------------------------------------------------------------------
-Function:		CTcpTransfer.send_recv
-Created:		2016-08-23 10:17:33
-Author:		Xin Hongwei(xinhw@huahongjt.com)
-Parameters: 
-        
-Reversion:
-        
--------------------------------------------------------------------------*/
-int		CTcpTransfer::send_recv(WORD	wLenIn,UCHAR	*pszBufIn,
-					  WORD	*wLenOut,UCHAR	*pszBufOut,UINT	nWaitMaxTime)
-{
-	return send_recv_max(wLenIn, pszBufIn, wLenOut, pszBufOut, 256, nWaitMaxTime);
-}
-
-
-
-
-
-
-
-/*-------------------------------------------------------------------------
-Function:		CTcpTransfer.send_recv_max
-Created:		2016-10-13 17:26:23
-Author:		Xin Hongwei(xinhw@huahongjt.com)
-Parameters: 
-        
-Reversion:
-        
--------------------------------------------------------------------------*/
-int		CTcpTransfer::send_recv_max(WORD	wLenIn, UCHAR	*pszBufIn,
-						WORD	*wLenOut, UCHAR	*pszBufOut, WORD wMaxBytes, UINT	nTimeOut)
-{
-	int ret;
-	WORD	rBytes;
-
-#ifdef	__DEBUG_PRINT__	
-	WORD	i;
-	
-	PRINTK("\n\t-->发送[%04X]: ", wLenIn);
-	for (i = 0; i<(wLenIn); i++) PRINTK("%02X", pszBufIn[i]);
-#endif
-
-	ret = s_send(wLenIn, pszBufIn);
-	if (ret)
-	{
-		goto endl;
-	}
-
-	ret = s_recv(&rBytes, pszBufOut, wMaxBytes, nTimeOut);
-	if (ret <= 0)
-	{
-		#ifdef	__DEBUG_PRINT__	
-		PRINTK("\n\t-->接收失败: %d", ret);
-		#endif
-		ret = -23;
-		goto endl;
-	}
-
-	#ifdef	__DEBUG_PRINT__	
-		PRINTK("\n\t-->接收[%04X]: ", rBytes);
-		for (i = 0; i<rBytes; i++) PRINTK("%02X", pszBufOut[i]);
-	#endif
-
-
-	*wLenOut = rBytes;
-	ret = 0;
-endl:
-	return ret;
-}

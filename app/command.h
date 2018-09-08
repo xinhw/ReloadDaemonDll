@@ -110,7 +110,28 @@ public:
 	int		cmd_2011(BYTE *szCityCode,BYTE *szSerialNo,BYTE *szAuditNo,BYTE *szCardMAC,BYTE bKeyNum,BYTE *szSectorID,
 					BYTE *szKey);
 	
+	//4.14	OBU车辆信息文件解密 1043
+	int		cmd_1043(BYTE bVer,BYTE *szAPPID,BYTE bKeyIndex,BYTE bInLen,BYTE *szEncData,
+					BYTE *bOutLen,BYTE *szData);
 
+	//4.15	PSAM卡授权 1044
+	int		cmd_1044(BYTE *szSAMNo,BYTE *szRnd,
+					DWORD dwRoadID,char *strRoadName,
+					DWORD dwStationID, char *strStationName,BYTE bStationType,
+					BYTE bLaneType,BYTE bLaneID,
+					BYTE *bAPDULen,BYTE *szAPDU,char *strListNo);
+
+	//4.16	PSAM卡在线授权确认 1045
+	int		cmd_1045(BYTE *szSAMNo,char *strListNo,
+					WORD wSW1SW2,BYTE bResult);
+
+	//4.17	PSAM卡在线签到 1046
+	int		cmd_1046(BYTE *szSAMNo,BYTE *szTerminalNo,
+					DWORD dwRoadID,char *strRoadName,
+					DWORD dwStationID, char *strStationName,BYTE bStationType,
+					BYTE bLaneType,BYTE bLaneID,
+					BYTE *szTerminalTime,
+					char *strListNo);
 private:
 	PACKAGEHEADER	m_ph;
 	void	updateHeader(WORD wType,DWORD wDataLen);
@@ -134,6 +155,8 @@ private:
 	CTcpTransfer *m_ptransfer;
 	void	init();
 
+	DWORD	m_dwTimeout;
+
 public:
 	char	*getAgentCode();
 	void	setAgentCode(char *s);
@@ -146,17 +169,10 @@ public:
 	PPACKAGEHEADER getHeader();
 
 public:
-	void	setTCPTransfer(CTcpTransfer *pt);
-
+	//	2018-08-27: 设置通信超时
+	void	setWaitTimeout(DWORD dwtm);
+	DWORD	getWaitTimeout();
 };
-
-
-
-
-
-
-
-
 
 #endif
 
