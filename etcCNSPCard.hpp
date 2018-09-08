@@ -198,6 +198,46 @@ int __stdcall obuUpdateFile(BYTE bVer,BYTE *szAPPID,BYTE bFileType,BYTE *szFile)
 */
 int __stdcall obuUpdateLoadFlag(BYTE bVer,BYTE *szAPPID,BYTE bFlag);
 
+	/*21. OBU拆卸标志修改
+		bVer	[in]	OBU合同版本号
+		szAPPID	[in]	OBU合同序列号
+		bFlag	[in]	OBU拆卸标志
+	*/
+	int __stdcall obuUpdateLoadFlag(BYTE bVer,BYTE *szAPPID,BYTE bFlag,int ncom = gnDefaultCom);
+	int __stdcall obuUnlockApplication(BYTE bVer,BYTE *szAPPID,int ncom = gnDefaultCom);
 
+	/*22. 设置和获取前置通信超时
+		dwTimeout:	超时时间（秒）
+	*/
+	void __stdcall setTimeout(DWORD dwTimeout,int ncom = gnDefaultCom);
+	DWORD __stdcall getTimeout(int ncom = gnDefaultCom);
+
+	/*23. 车辆信息在线解密
+		dwTimeout:	超时时间（秒）
+	*/
+	int __stdcall obuOnlineDecodePlate(BYTE bVer,BYTE *szAPPID,
+										BYTE bKeyIndex,
+										BYTE bLenIn,BYTE *szEncData,
+										BYTE *bLenOut,BYTE *szData,
+										int ncom = gnDefaultCom);
+	/*24. PSAM卡在线授权申请*/
+	int __stdcall psamOnlineAuth(BYTE *szSAMNo,BYTE *szRnd,
+								DWORD dwRoadID,char *strRoadName,
+								DWORD dwStationID, char *strStationName,BYTE bStationType,
+								BYTE bLaneType,BYTE bLaneID,
+								BYTE *bAPDULen,BYTE *szAPDU,
+								char *strListNo,
+								int ncom = gnDefaultCom);
+	/*25. PSAM卡在线签到*/
+	int __stdcall psamOnlineSignIn(BYTE *szSAMNo,BYTE *szTerminalNo,
+								DWORD dwRoadID,char *strRoadName,
+								DWORD dwStationID, char *strStationName,BYTE bStationType,
+								BYTE bLaneType,BYTE bLaneID,
+								BYTE *szTerminalTime,
+								int ncom = gnDefaultCom);
+	/*26. PSAM卡在线授权确认*/
+	int	__stdcall psamOnlineAuthConfirm(BYTE *szSAMNo,char *strListNo,
+								WORD wSW1SW2,BYTE bResult,
+								int ncom = gnDefaultCom);
 
 };

@@ -252,7 +252,7 @@ extern "C"
 										BYTE bLenIn,BYTE *szEncData,
 										BYTE *bLenOut,BYTE *szData,
 										int ncom = gnDefaultCom);
-	/*24. PSAM卡在线授权*/
+	/*24. PSAM卡在线授权申请*/
 	int __stdcall psamOnlineAuth(BYTE *szSAMNo,BYTE *szRnd,
 								DWORD dwRoadID,char *strRoadName,
 								DWORD dwStationID, char *strStationName,BYTE bStationType,
@@ -260,14 +260,14 @@ extern "C"
 								BYTE *bAPDULen,BYTE *szAPDU,
 								char *strListNo,
 								int ncom = gnDefaultCom);
-
+	/*25. PSAM卡在线签到*/
 	int __stdcall psamOnlineSignIn(BYTE *szSAMNo,BYTE *szTerminalNo,
 								DWORD dwRoadID,char *strRoadName,
 								DWORD dwStationID, char *strStationName,BYTE bStationType,
 								BYTE bLaneType,BYTE bLaneID,
 								BYTE *szTerminalTime,
 								int ncom = gnDefaultCom);
-
+	/*26. PSAM卡在线授权确认*/
 	int	__stdcall psamOnlineAuthConfirm(BYTE *szSAMNo,char *strListNo,
 								WORD wSW1SW2,BYTE bResult,
 								int ncom = gnDefaultCom);

@@ -51,8 +51,9 @@ cpuPurchase
 cpuVerifyTAC
 ;CPU卡重装密钥
 cpuReloadPIN
-;
+;更新000E文件
 cpuUpdateFile000E
+;用户卡重装PIN
 cpuReloadPIN
 
 
@@ -79,4 +80,12 @@ obuOnlineDecodePlate
 
 ;PSAM卡在线授权
 psamOnlineAuth
+psamOnlineSignIn
+psamOnlineAuthConfirm
 
+;通信超时设置，秒
+setTimeout
+getTimeout
+
+;在线解密车辆信息文件
+obuOnlineDecodePlate
