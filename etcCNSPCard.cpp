@@ -31,7 +31,11 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 				ptransfer[i] = NULL;					
 				pcmd[i] = NULL;				
 				preader[i] = NULL;
-			}		
+			}
+			
+			memset(strBankID,0x00,20);
+			memset(strAgentCode,0x00,7);
+
 			break;
 		case DLL_THREAD_ATTACH:
 			break;
@@ -170,8 +174,12 @@ int __stdcall connectOKS(char *strip,WORD wport,int ncom)
 	}
 	pcmd[ncom] = new ClsCommand(ptransfer[ncom]);
 
-	pcmd[ncom]->setBankID("520130110151206");
-	pcmd[ncom]->setAgentCode("668801");
+
+	if(strlen(strBankID)==0) strcpy(strBankID,"5201301101512061652");
+	pcmd[ncom]->setBankID(strBankID);
+	
+	if(strlen(strAgentCode)==0) strcpy(strAgentCode,"668801");
+	pcmd[ncom]->setAgentCode(strAgentCode);
 
 	return 0;
 }
@@ -948,7 +956,7 @@ int __stdcall obuReadVehicleFile(BYTE bNode,BYTE bVer,BYTE *szPlainFile,int ncom
 
 	delete pcard;
 
-	return 0;
+	return ret;
 }
 
 /*20. OBU更新文件
@@ -1257,4 +1265,80 @@ int	__stdcall psamOnlineAuthConfirm(BYTE *szSAMNo,char *strListNo,
 	ret = pcmd[icom]->cmd_1045(szSAMNo,strListNo,wSW1SW2,bResult);
 
 	return ret;
+}
+
+
+
+
+/*-------------------------------------------------------------------------
+Function:		setBankID
+Created:		2018-11-07 09:58:23
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+void __stdcall setBankID(char *s,int ncom)
+{
+	if(NULL==s) return;
+
+	PRINTK("\r\n读卡器端口(setAgentCode)：%d",ncom);
+	
+	int icom = ncom%MAX_READER_NUM;
+
+	memset(strBankID,0x00,20);
+	if(strlen(s)>19) 
+	{
+		memcpy(strBankID,s,19);
+	}
+	else
+	{
+		strcpy(strBankID,s);
+	}
+
+	if(NULL!=pcmd[icom])
+	{
+		pcmd[icom]->setBankID(strBankID);
+	}
+
+	return;
+
+}
+
+
+/*-------------------------------------------------------------------------
+Function:		setAgentCode
+Created:		2018-11-07 09:58:57
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+void __stdcall setAgentCode(char *s,int ncom)
+{
+	if(NULL==s) return;
+
+	PRINTK("\r\n读卡器端口(setAgentCode)：%d",ncom);
+
+	int icom = ncom%MAX_READER_NUM;
+
+	memset(strAgentCode,0x00,7);
+
+	if(strlen(s)>6) 
+	{
+		memcpy(strAgentCode,s,6);
+	}
+	else
+	{
+		strcpy(strAgentCode,s);
+	}
+
+	if(NULL!=pcmd[icom])
+	{
+		pcmd[icom]->setAgentCode(strAgentCode);
+	}
+
+	return;
 }

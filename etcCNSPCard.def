@@ -89,3 +89,12 @@ getTimeout
 
 ;在线解密车辆信息文件
 obuOnlineDecodePlate
+
+;2018-11-01，增加银行网点编码、代理商编码
+setBankID
+setAgentCode
+
+
+
+
+	

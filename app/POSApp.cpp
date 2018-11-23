@@ -162,10 +162,10 @@ int		ClsReload::cmd_1032(PPACKAGEHEADER pph ,WORD wLenIn,BYTE *pszData,WORD &wSi
 	nIndex =0;
 
 	//////////////////////////////////////////////////////////////////////////
-	//银行网点唯一编号	B	15		银行网点提供
-	memset(m_strBankID,0x00,16);
-	memcpy(m_strBankID,pszData,nIndex+15);
-	nIndex=nIndex+15;
+	//银行网点唯一编号	B	19		银行网点提供
+	memset(m_strBankID,0x00,20);
+	memcpy(m_strBankID,pszData,19);
+	nIndex=nIndex+19;
 	//用户卡卡号	B	8		用户卡中获得
 	memcpy(m_pszAPPID,pszData+nIndex,8); 
 	nIndex=nIndex+8;
@@ -273,10 +273,10 @@ int		ClsReload::cmd_1033(PPACKAGEHEADER pph ,WORD wLenIn,BYTE *pszData,WORD &wSi
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	//银行网点唯一编号	B	15		银行网点提供
-	memset(m_strBankID,0x00,16);
-	memcpy(m_strBankID,pszData,nIndex+15);
-	nIndex=nIndex+15;
+	//银行网点唯一编号	B	19		银行网点提供
+	memset(m_strBankID,0x00,20);
+	memcpy(m_strBankID,pszData,19);
+	nIndex=nIndex+19;
 
 	//用户卡卡号	B	8		用户卡中获得
 	memcpy(m_pszAPPID,pszData+nIndex,8); 
@@ -355,10 +355,10 @@ int		ClsReload::cmd_1034(PPACKAGEHEADER pph ,WORD wLenIn,BYTE *pszData,WORD &wSi
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	//银行网点唯一编号	B	15		银行网点提供
-	memset(m_strBankID,0x00,16);
-	memcpy(m_strBankID,pszData,nIndex+15);
-	nIndex=nIndex+15;
+	//银行网点唯一编号	B	19		银行网点提供
+	memset(m_strBankID,0x00,20);
+	memcpy(m_strBankID,pszData,19);
+	nIndex=nIndex+19;
 	
 	//用户卡卡号	B	8		用户卡中获得
 	memcpy(m_pszAPPID,pszData+nIndex,8); 
@@ -442,10 +442,10 @@ int		ClsReload::cmd_1035(PPACKAGEHEADER pph ,WORD wLenIn,BYTE *pszData,WORD &wSi
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	//银行网点唯一编号	B	15		银行网点提供
-	memset(m_strBankID,0x00,16);
-	memcpy(m_strBankID,pszData,nIndex+15);
-	nIndex=nIndex+15;
+	//银行网点唯一编号	B	19		银行网点提供
+	memset(m_strBankID,0x00,20);
+	memcpy(m_strBankID,pszData,19);
+	nIndex=nIndex+19;
 	
 	//用户卡卡号	B	8		用户卡中获得
 	memcpy(m_pszAPPID,pszData+nIndex,8); 
@@ -543,10 +543,10 @@ int		ClsReload::cmd_1036(PPACKAGEHEADER pph ,WORD wLenIn,BYTE *pszData,WORD &wSi
 
 
 	//////////////////////////////////////////////////////////////////////////
-	//银行网点唯一编号	B	15		银行网点提供
-	memset(m_strBankID,0x00,16);
-	memcpy(m_strBankID,pszData,nIndex+15);
-	nIndex=nIndex+15;
+	//银行网点唯一编号	B	19		银行网点提供
+	memset(m_strBankID,0x00,20);
+	memcpy(m_strBankID,pszData,19);
+	nIndex=nIndex+19;
 
 	//用户卡卡号	B	8		用户卡中获得
 	memcpy(m_pszAPPID,pszData+nIndex,8); 
@@ -690,10 +690,10 @@ int		ClsReload::cmd_1037(WORD wLenIn,BYTE *pszData,WORD &wSize,BYTE *pszResult)
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	//银行网点唯一编号	B	15
-	memset(m_strBankID,0x00,16);
-	memcpy(m_strBankID,pszData,nIndex+15);
-	nIndex=nIndex+15; 
+	//银行网点唯一编号	B	19
+	memset(m_strBankID,0x00,20);
+	memcpy(m_strBankID,pszData,19);
+	nIndex=nIndex+19; 
 
 	//用户卡卡号	B	8		用户卡中获得
 	memcpy(m_pszAPPID,pszData+nIndex,8); 
@@ -807,10 +807,10 @@ int		ClsReload::cmd_1038(PPACKAGEHEADER pph ,WORD wLenIn,BYTE *pszData,WORD &wSi
 	BYTE  MAC[4];
 
 	//////////////////////////////////////////////////////////////////////////
-	//1.银行网点唯一编号	B	15
-	memset(m_strBankID,0x00,16);
-	memcpy(m_strBankID,pszData,nIndex+15);
-	nIndex=nIndex+15;
+	//1.银行网点唯一编号	B	19
+	memset(m_strBankID,0x00,20);
+	memcpy(m_strBankID,pszData,19);
+	nIndex=nIndex+19;
 
 	//2.OBU卡号	B	8
 	memcpy(m_pszAPPID,pszData+nIndex,8); 
@@ -874,10 +874,10 @@ int		ClsReload::cmd_1039(PPACKAGEHEADER pph ,WORD wLenIn,BYTE *pszData,WORD &wSi
 	BYTE  MAC[4];
 
 	//////////////////////////////////////////////////////////////////////////
-	//1.银行网点唯一编号	B	15
-	memset(m_strBankID,0x00,16);
-	memcpy(m_strBankID,pszData,nIndex+15);
-	nIndex=nIndex+15; 	 
+	//1.银行网点唯一编号	B	19
+	memset(m_strBankID,0x00,20);
+	memcpy(m_strBankID,pszData,19);
+	nIndex=nIndex+19; 	 
 
 	//2.OBU卡号	B	8
 	memcpy(m_pszAPPID,pszData+nIndex,8); 
@@ -944,15 +944,16 @@ int		ClsReload::cmd_1040(PPACKAGEHEADER pph ,WORD wLenIn,BYTE *pszData,WORD &wSi
 
 	//////////////////////////////////////////////////////////////////////////
 	//	输入内容
-	//1.		银行网点唯一编号	B	15
-	memset(m_strBankID,0x00,16);
-	memcpy(m_strBankID,pszData,15);
+	//1.		银行网点唯一编号	B	19
+	memset(m_strBankID,0x00,20);
+	memcpy(m_strBankID,pszData,19);
+
 	//2.		分散因子			B	8	
-	memcpy(m_pszAPPID,pszData+15,8);
+	memcpy(m_pszAPPID,pszData+19,8);
 	//3.		密钥编号			B	1
-	bKeyID = pszData[23];
+	bKeyID = pszData[27];
 	//4.		认证MAC				B	4
-	memcpy(pszMAC,pszData+24,4);
+	memcpy(pszMAC,pszData+28,4);
 	//////////////////////////////////////////////////////////////////////////
 
 	memset(pszSubKey,0x00,16);
@@ -1012,10 +1013,10 @@ int		ClsReload::cmd_2011(WORD wLenIn,BYTE *pszData,WORD &wSize,BYTE *pszResult)
 	nIndex = 0x00;
 	//////////////////////////////////////////////////////////////////////////
 	//	输入内容
-	//银行网点唯一编号	B	15
-	memset(m_strBankID,0x00,16);
-	memcpy(m_strBankID,pszData,15);
-	nIndex=nIndex+15; 
+	//银行网点唯一编号	B	19
+	memset(m_strBankID,0x00,20);
+	memcpy(m_strBankID,pszData,19);
+	nIndex=nIndex+19; 
 
 	//城市代码	B	2	
 	memset(szCityCode,0x00,2);

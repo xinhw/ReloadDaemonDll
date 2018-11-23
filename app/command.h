@@ -148,7 +148,7 @@ private:
 						BYTE *szMAC);
 
 private:
-	char	m_strBankID[16];		//	银行网点唯一编号
+	char	m_strBankID[20];		//	银行网点唯一编号
 	WORD	m_wRemainCount;			//	针对本设备的剩余次数；
 	char	m_strAgentCode[7];		//	代理商代码，由高速公路管理单位统一分配 
 

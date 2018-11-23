@@ -55,7 +55,7 @@ Reversion:
 -------------------------------------------------------------------------*/
 void ClsCommand::init()
 {
-	memset(m_strBankID,0x00,17);
+	memset(m_strBankID,0x00,20);
 	m_wRemainCount = 0x0000;
 	memset(m_strAgentCode,0x00,7);
 
@@ -113,10 +113,16 @@ Reversion:
 void	ClsCommand::setAgentCode(char *s)
 {
 	if(NULL==s) return;
+	
+	memset(m_strAgentCode,0x00,7);
 	if(strlen(s)>6) 
+	{
 		memcpy(m_strAgentCode,s,6);
+	}
 	else
+	{
 		strcpy(m_strAgentCode,s);
+	}
 	return;
 }
 
@@ -149,10 +155,16 @@ Reversion:
 void	ClsCommand::setBankID(char *s)
 {
 	if(NULL==s) return;
-	if(strlen(s)>16) 
-		memcpy(m_strBankID,s,16);
+	
+	memset(m_strBankID,0x00,20);
+	if(strlen(s)>19) 
+	{
+		memcpy(m_strBankID,s,19);
+	}
 	else
+	{
 		strcpy(m_strBankID,s);
+	}
 	return;
 }
 
@@ -310,9 +322,10 @@ int		ClsCommand::cmd_1031(BYTE *szOperatorNo)
 	nLen = 0;
 	memset(szBuf,0x00,32);
 	
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
+
 	//2. 操作员编号
 	memcpy(szBuf+nLen,szOperatorNo,6);
 	nLen = nLen + 6;
@@ -351,9 +364,9 @@ int		ClsCommand::cmd_1032(BYTE bVer,BYTE *szAPPID,
 
 	nLen = 0;
 	memset(szBuf,0x00,64);
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	用户卡应用序列号	B	8
 	memcpy(szBuf+nLen,szAPPID,8);
@@ -438,9 +451,9 @@ int		ClsCommand::cmd_1033(BYTE bVer,BYTE *szAPPID,
 	nLen = 0;
 	memset(szBuf,0x00,256);
 
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	用户卡应用序列号	B	8
 	memcpy(szBuf+nLen,szAPPID,8);
@@ -510,9 +523,9 @@ int		ClsCommand::cmd_1034(BYTE bVer,BYTE *szAPPID,
 	nLen = 0;
 	memset(szBuf,0x00,256);
 
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2 OBU合同号	B	8
 	memcpy(szBuf+nLen,szAPPID,8);
@@ -581,9 +594,9 @@ int		ClsCommand::cmd_1035(BYTE bVer,BYTE *szAPPID,
 	nLen = 0;
 	memset(szBuf,0x00,64);
 
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	用户卡应用序列号	B	8
 	memcpy(szBuf+nLen,szAPPID,8);
@@ -646,9 +659,9 @@ int		ClsCommand::cmd_1036(BYTE bVer,BYTE *szAPPID,
 
 	nLen = 0;
 	memset(szBuf,0x00,64);
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	用户卡应用序列号	B	8
 	memcpy(szBuf+nLen,szAPPID,8);
@@ -731,9 +744,9 @@ int		ClsCommand::cmd_1037(BYTE bVer,BYTE *szAPPID,
 	nLen = 0;
 	memset(szBuf,0x00,64);
 
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	用户卡应用序列号	B	8
 	memcpy(szBuf+nLen,szAPPID,8);
@@ -801,9 +814,9 @@ int		ClsCommand::cmd_1038(BYTE bVer,BYTE *szAPPID,
 	nLen = 0;
 	memset(szBuf,0x00,64);
 
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	OBU合同号	B	8
 	memcpy(szBuf+nLen,szAPPID,8);
@@ -867,9 +880,9 @@ int		ClsCommand::cmd_1039(BYTE bVer,BYTE *szAPPID,
 	nLen = 0;
 	memset(szBuf,0x00,64);
 
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	用户卡应用序列号	B	8
 	memcpy(szBuf+nLen,szAPPID,8);
@@ -935,9 +948,9 @@ int		ClsCommand::getKey(WORD wType,BYTE bVer,BYTE *szAPPID,
 	nLen = 0;
 	memset(szBuf,0x00,64);
 
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	用户卡应用序列号	B	8
 	memcpy(szBuf+nLen,szAPPID,8);
@@ -1071,9 +1084,9 @@ int		ClsCommand::cmd_1041(BYTE bVer,BYTE *szAPPID,
 	nLen = 0;
 	memset(szBuf,0x00,64);
 
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	用户卡应用序列号	B	8
 	memcpy(szBuf+nLen,szAPPID,8);
@@ -1135,9 +1148,9 @@ int		ClsCommand::cmd_2011(BYTE *szCityCode,BYTE *szSerialNo,BYTE *szAuditNo,BYTE
 	nLen = 0;
 	memset(szBuf,0x00,64);
 
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	城市代码	B	2
 	memcpy(szBuf+nLen,szCityCode,2);
@@ -1198,9 +1211,9 @@ int		ClsCommand::cmd_1043(BYTE bVer,BYTE *szAPPID,BYTE bKeyIndex,BYTE bInLen,BYT
 	nLen = 0;
 	memset(szBuf,0x00,256);
 
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	OBU合同号	B	8
 	memcpy(szBuf+nLen,szAPPID,8);
@@ -1273,9 +1286,9 @@ int		ClsCommand::cmd_1044(BYTE *szSAMNo,BYTE *szRnd,
 	nLen = 0;
 	memset(szBuf,0x00,256);
 
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	PSAM卡号	B	10	
 	memcpy(szBuf+nLen,szSAMNo,10);
@@ -1401,9 +1414,9 @@ int		ClsCommand::cmd_1045(BYTE *szSAMNo,char *strListNo,
 	nLen = 0;
 	memset(szBuf,0x00,256);
 
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	PSAM卡号	B	10	
 	memcpy(szBuf+nLen,szSAMNo,10);
@@ -1463,9 +1476,9 @@ int		ClsCommand::cmd_1046(BYTE *szSAMNo,BYTE *szTerminalNo,
 	nLen = 0;
 	memset(szBuf,0x00,256);
 
-	//1	银行网点编码	B	15
-	memcpy(szBuf+nLen,m_strBankID,15);
-	nLen = nLen + 15;
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
 
 	//2	PSAM卡号	B	10	
 	memcpy(szBuf+nLen,szSAMNo,10);

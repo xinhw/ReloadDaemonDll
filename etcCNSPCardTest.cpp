@@ -603,11 +603,10 @@ void		test_obu_read(void)
 	if(ret)
 	{
 		PRINTK("\n获取OBUUID失败:%d",ret);
+		return;
 	}
-	else
-	{
-		PRINTK("\nOBU UID:%02X%02X%02X%02X",szAPPID[0],szAPPID[1],szAPPID[2],szAPPID[3]);
-	}
+
+	PRINTK("\nOBU UID:%02X%02X%02X%02X",szAPPID[0],szAPPID[1],szAPPID[2],szAPPID[3]);
 
 	ret = obuRead(elf01_mk,gnCom);
 	if(ret)
@@ -618,6 +617,7 @@ void		test_obu_read(void)
 
 	bVer = elf01_mk[9];
 
+	memset(szPlainText,0x00,128);
 	ret = obuReadVehicleFile(1,bVer,szPlainText,gnCom);
 	if(ret)
 	{
@@ -707,7 +707,7 @@ void		test_obu_personize(void)
 	bVer = elf01_mk[9];
 	memcpy(szAPPID,elf01_mk+10,8);
 
-
+	PRINTK("\n开始更新 系统信息文件");
 	ret = obuUpdateFile(bVer,szAPPID,1,elf01_mk,gnCom);
 	if(ret)
 	{
@@ -720,6 +720,7 @@ void		test_obu_personize(void)
 	elf01_adf01[14]=0x01;
 	elf01_adf01[15]=0x00;
 
+	PRINTK("\n开始更新 车辆信息文件");
 	ret = obuUpdateFile(bVer,szAPPID,2,elf01_adf01,gnCom);
 	if(ret)
 	{
@@ -727,6 +728,8 @@ void		test_obu_personize(void)
 		return;
 	}
 
+	
+	PRINTK("\n开始更新 拆卸标志");
 	ret = obuUpdateLoadFlag(bVer,szAPPID,0x01,gnCom);
 	if(ret)
 	{
@@ -1033,6 +1036,7 @@ void		test_obu_decode_plate(void)
 	BYTE szAPPID[8],bLen,i;
 	BYTE szData[128];
 
+	//	车辆信息文件，密文
 	BYTE *szEncData=(BYTE*)"\xD2\xC8\x46\x8E\x9B\xDE\xBA\xA4\xBF\xBC\x18\xB5\x10\x83\x91\x1D" \
 					 "\x9E\x4E\xED\x41\x4D\x54\xD7\xA9\x4F\x63\x74\xD3\x4F\x1C\xA1\x7F" \
 					 "\xB1\x3B\xE7\xEE\xA1\xC0\x67\xF3\xA5\x88\x7A\x05\xFA\x45\xF1\xDA" \
@@ -1077,11 +1081,11 @@ void		test_psam_auth(void)
 
 	setTimeout(10,gnCom);
 
-	memcpy(szSAMNo,"\x11\x01\x01\x01\x00\x00\x00\x00\x00\x01",10);
+	memcpy(szSAMNo,"\x64\x01\x01\x01\x00\x00\x00\x00\x00\x01",10);
 	memcpy(szRnd,"\x25\xFC\xBC\x35\x66\x8B\xBD\xD2",8);
 
-
-	ret = psamOnlineSignIn(szSAMNo,szSAMNo+4,0x183,"福银高速",0x63,"镇北收费站",0x01,0x02,0x10,(BYTE *)"\x20\x18\x09\x04\x07\x38\x12",gnCom);
+	//	0. PSAM在线签到
+	ret = psamOnlineSignIn(szSAMNo,szSAMNo+4,0x183,"福银高速",0x63,"镇北收费站",0x01,0x02,0x10,(BYTE *)"\x20\x18\x11\x14\x16\x08\x12",gnCom);
 	if(ret)
 	{
 		PRINTK("\nPSAM在线签到失败：%d",ret);
@@ -1091,7 +1095,7 @@ void		test_psam_auth(void)
 	bAPDULen = 0x00;
 	memset(szAPDU,0x00,128);
 
-	//	在线授权申请
+	//	1. PSAM在线授权申请
 	memset(strListNo,0x00,40);
 	ret = psamOnlineAuth(szSAMNo,szRnd,0x183,"福银高速",0x63,"镇北收费站",0x01,0x02,0x10,&bAPDULen,szAPDU,strListNo,gnCom);
 	if(ret)
@@ -1105,7 +1109,7 @@ void		test_psam_auth(void)
 	PRINTK("\n命令[%d]：",bAPDULen);
 	for(i=0;i<bAPDULen;i++) PRINTK("%02X ",szAPDU[i]);
 
-
+	//	2. PSAM在线授权确认
 	ret = psamOnlineAuthConfirm(szSAMNo,strListNo,0x9000,0x00,gnCom);
 	if(ret)
 	{

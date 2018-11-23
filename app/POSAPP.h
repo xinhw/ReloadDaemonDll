@@ -48,7 +48,7 @@ private:
 
 
 private:
-	char	m_strBankID[16];		//	银行网点唯一编号
+	char	m_strBankID[20];		//	银行网点唯一编号
 	BYTE	m_pszAPPID[8];			//	用户卡卡号orOBU卡号；
 	WORD	m_wRemainCount;			//	针对本设备的剩余次数；
 

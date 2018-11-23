@@ -26,7 +26,7 @@
 	V0.19	增加PSAM卡签到、PSAM卡授权确认的接口
 			1045,1046报文
 */
-#define DLL_VERSION		"V0.19 多串口国密算法动态库"
+#define DLL_VERSION		"V0.21 多串口国密算法动态库"
 
 //	读卡器类型
 #define READER_TYPE_CPU_CARD		0x00			//	航天金卡用户卡读卡器
@@ -51,6 +51,9 @@ ClsCommand *pcmd[MAX_READER_NUM];
 CCardReader *preader[MAX_READER_NUM];
 
 bool validation(int nlevel,int ncom = gnDefaultCom);
+
+char strBankID[20];
+char strAgentCode[7];
 
 
 extern "C"
@@ -272,5 +275,9 @@ extern "C"
 								WORD wSW1SW2,BYTE bResult,
 								int ncom = gnDefaultCom);
 
-
+	
+	/*27. 设置银行网点编号*/
+	void __stdcall setBankID(char *s,int ncom);
+	/*28. 设置代理商编号*/
+	void __stdcall setAgentCode(char *s,int ncom);
 };

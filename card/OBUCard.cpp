@@ -583,7 +583,7 @@ Reversion:
 -------------------------------------------------------------------------*/
 int COBUCard::clear()
 {
-	return 0;
+	return -1;
 }
 
 
@@ -830,7 +830,7 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 
 	//	GetSecure函数读取信息
 	memset(strELF01,0x00,256);
-	ret = m_pReader->SecureRead(bKeyIndex,0x01,0x00,59,rLen,strELF01);
+	ret = m_pReader->SecureRead(bKeyIndex,0x01,0x00,64,rLen,strELF01);
 	if(ret)
 	{
 		PRINTK("\nSecure Read Failure:%d",ret);
@@ -841,7 +841,7 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 
 	rLen = 0;
 	//	在线解密
-	ret = m_pCmd->cmd_1043(bVer,szAPPID,bKeyIndex,59,szEncFile,&rLen,szPlainFile);
+	ret = m_pCmd->cmd_1043(bVer,szAPPID,bKeyIndex,64,szEncFile,&rLen,szPlainFile);
 	return ret;
 }
 

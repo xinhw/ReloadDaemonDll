@@ -234,6 +234,7 @@ int		CTcpTransfer::s_recv(WORD *rBytes, UCHAR	*pszBuf, WORD wMaxBytes, UINT	nWai
 	{
 		ret = WSAGetLastError();
 		//ShowWSAErrorMsg(ret);
+		return -20;
 	}
 	if (ret<0) return -22;
 	if (ret == 0) return -23;
