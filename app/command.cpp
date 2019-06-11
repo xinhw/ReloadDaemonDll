@@ -693,8 +693,8 @@ int		ClsCommand::cmd_1036(BYTE bVer,BYTE *szAPPID,
 	nLen++;
 
 	//9	终端机编号	B	6
-	memcpy(szBuf+nLen,szRnd,4);
-	nLen = nLen + 4;
+	memcpy(szBuf+nLen,szDeviceNo,6);
+	nLen = nLen + 6;
 
 	//10	主机交易日期	B	4
 	//11	主机交易时间	B	3
@@ -712,14 +712,21 @@ int		ClsCommand::cmd_1036(BYTE bVer,BYTE *szAPPID,
 	ret = send_recv(0x1036,nLen,szBuf,&nLen,szBuf);
 	if(ret) return ret;
 
+
+	//1	返回代码	US	2	必填	0     成功其他  失败
 	ret = szBuf[0];
 	ret = ret * 0x100 + szBuf[1];
 	if(ret) return ret;
-	
-	memcpy(szMAC,szBuf+2,4);
 
-	m_wRemainCount = szBuf[6];
-	m_wRemainCount = m_wRemainCount *0x100 + szBuf[7];
+	//2	主机交易日期	B	4	必填	ETC系统日期
+	//3	主机交易时间	B	3	必填	ETC系统时间
+	memcpy(szDateTime,szBuf+2,7);
+
+	//4	MAC1	B	4	必填	用于执行消费
+	memcpy(szMAC,szBuf+9,4);
+
+	//m_wRemainCount = szBuf[6];
+	//m_wRemainCount = m_wRemainCount *0x100 + szBuf[7];
 
 	return 0;
 }

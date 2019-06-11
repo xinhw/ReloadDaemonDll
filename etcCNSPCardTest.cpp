@@ -573,10 +573,46 @@ Author:			Xin Hongwei(hongwei.xin@avantport.com)
 Parameters: 
         
 Reversion:
-        
+       int __stdcall cpuPurchase(BYTE bVer,BYTE *szAPPID,DWORD dwAmount,DWORD dwAuditNo,BYTE *szDateTime,BYTE *szDeviceNo,
+						WORD &wSeqNo,BYTE *szTAC,int ncom) 
 -------------------------------------------------------------------------*/
 void		test_cpucard_debit(void)
 {
+	int ret;
+	BYTE elf15[50],elf16[55];
+	BYTE szTransTime[7],szTAC[4];
+	WORD wSeqNo;
+	DWORD dwRemain;
+	BYTE bVer,szAPPID[8];
+	BYTE szDeviceNo[6];
+
+	memset(elf15,0x00,50);
+	memset(elf16,0x00,55);
+	dwRemain = 0;
+
+	ret =cpuReadCardFiles(elf15,elf16,dwRemain,gnCom);
+	if(ret)
+	{
+		PRINTK("\n读用户卡失败:%d",ret);
+		return;
+	}
+
+	bVer= elf15[9];
+	memcpy(szAPPID,elf15+12,8);
+
+	memset(szDeviceNo,0x00,6);
+
+	CMisc::getBCDDateTime(szTransTime);
+	
+	ret = cpuPurchase(bVer,szAPPID,100,1838,szTransTime,szDeviceNo,wSeqNo,szTAC,gnCom);
+	if(ret)
+	{
+		PRINTK("\n消费失败：%4X",ret);
+		return;
+	}
+
+	PRINTK("\n消费成功！");	
+
 	return;
 }
 

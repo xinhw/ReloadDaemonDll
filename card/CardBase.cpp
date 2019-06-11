@@ -260,9 +260,12 @@ int CCPUCardBase::credit(BYTE bVer,BYTE *szAPPID,BYTE *szDeviceNo,DWORD dwAmount
 	char	strCmd[128],strResp[64];
 	BYTE	szBuf[32],szRnd[4],szMAC1[4],szMAC2[4],szDateTime[7];
 	DWORD	dwRemain;
+	BYTE	bKeyIndex;
 
 	if(!validation()) return -1;
 
+	bKeyIndex = 0x01;
+	if((bVer>>4)==0x05) bKeyIndex = 0x41;
 	
 	memset(strResp,0x00,64);
 	ret = m_pReader->RunCmd("0020000006313233343536",strResp);
@@ -271,7 +274,7 @@ int CCPUCardBase::credit(BYTE bVer,BYTE *szAPPID,BYTE *szDeviceNo,DWORD dwAmount
 
 	//	Initialize for Credit
 	memset(strCmd,0x00,128);
-	sprintf(strCmd,"805000020B41%08X%02X%02X%02X%02X%02X%02X",dwAmount,
+	sprintf(strCmd,"805000020B%02X%08X%02X%02X%02X%02X%02X%02X",bKeyIndex,dwAmount,
 					szDeviceNo[0],szDeviceNo[1],szDeviceNo[2],
 					szDeviceNo[3],szDeviceNo[4],szDeviceNo[5]);
 	
@@ -331,16 +334,20 @@ int CCPUCardBase::debit(BYTE bVer,BYTE *szAPPID,BYTE *szDeviceNo,DWORD dwAmount,
 				WORD &wSeqNo,				
 				BYTE *szTAC)
 {
-	int		ret,i;
+	int		ret;
 	char	strCmd[128],strResp[64];
 	BYTE	szBuf[32],szRnd[4],szMAC1[4],szMAC2[4];
 	DWORD	dwRemain;
+	BYTE	bKeyIndex;
 
 	if(!validation()) return -1;
 
+	bKeyIndex = 0x01;
+	if((bVer>>4)==0x05) bKeyIndex = 0x41;
+
 	//	Initialize for Credit
 	memset(strCmd,0x00,128);
-	sprintf(strCmd,"805001020B41%08X%02X%02X%02X%02X%02X%02X",dwAmount,
+	sprintf(strCmd,"805001020B%02X%08X%02X%02X%02X%02X%02X%02X",bKeyIndex,dwAmount,
 					szDeviceNo[0],szDeviceNo[1],szDeviceNo[2],
 					szDeviceNo[3],szDeviceNo[4],szDeviceNo[5]);
 	
@@ -351,12 +358,17 @@ int CCPUCardBase::debit(BYTE bVer,BYTE *szAPPID,BYTE *szDeviceNo,DWORD dwAmount,
 	memset(szBuf,0x00,32);
 	CMisc::StringToByte(strResp,szBuf);
 
-	//	余额
+	//电子存折或电子钱包旧余额						4
 	CMisc::Bytes2Int(szBuf,(int *)&dwRemain);
-	//	脱机交易序号
+
+	//电子存折或电子钱包脱机交易序号				2
 	wSeqNo = szBuf[4];
 	wSeqNo = wSeqNo*0x100 + szBuf[5];
-	//	随机数
+
+	//透支限额										3
+	//密钥版本号（DATA中第一字节指定的消费密钥）	1
+	//算法标识（DATA中第一字节指定的消费密钥）		1
+	//伪随机数（IC卡）								4
 	memcpy(szRnd,szBuf+11,4);
 
 	ret = m_pCmd->cmd_1036(bVer,szAPPID,
@@ -365,10 +377,16 @@ int CCPUCardBase::debit(BYTE bVer,BYTE *szAPPID,BYTE *szDeviceNo,DWORD dwAmount,
 						szMAC1);
 	if(ret) return ret;
 
+	//终端交易序号		4
+	//交易日期（终端）	4
+	//交易时间（终端）	3
+	//MAC1	4
+	sprintf(strCmd,"805401000F%08X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+					dwAuditNo,
+					szTransTime[0],szTransTime[1],szTransTime[2],szTransTime[3],
+					szTransTime[4],szTransTime[5],szTransTime[6],
+					szMAC1[0],szMAC1[1],szMAC1[2],szMAC1[3]);
 
-	sprintf(strCmd,"805401000F%08X",dwAuditNo);
-	for(i=0;i<7;i++) sprintf(strCmd+14+2*i,"%02X",szTransTime[i]);
-	for(i=0;i<4;i++) sprintf(strCmd+28+2*i,"%02X",szMAC1[i]);
 	strcat(strCmd,"08");
 
 	memset(strResp,0x00,64);

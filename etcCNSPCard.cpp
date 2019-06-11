@@ -174,7 +174,6 @@ int __stdcall connectOKS(char *strip,WORD wport,int ncom)
 	}
 	pcmd[ncom] = new ClsCommand(ptransfer[ncom]);
 
-
 	if(strlen(strBankID)==0) strcpy(strBankID,"5201301101512061652");
 	pcmd[ncom]->setBankID(strBankID);
 	
