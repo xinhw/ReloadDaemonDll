@@ -15,7 +15,7 @@
 #define DEBUG_TEST
 #define	DEBUG_ICMD
 #define DEBUG_PRINT
-//#define DEBUG_TCP_PRINT
+#define DEBUG_TCP_PRINT
 
 /*
 //	还需要把：WS2_32.lib EncodeDLL.lib etcCNSPCard.lib 加入到连接中
@@ -52,7 +52,8 @@ void		test_cpucard_debit(void);
 void		test_cpucard_update000e(void);
 void		test_cpucard_reload_pin(void);
 void		test_cpucard_readadfile(void);
-
+void		test_cpucard_clear(void);
+void		test_verify_tac(void);
 
 void		test_obu_read(void);
 void		test_obu_init(void);
@@ -84,6 +85,8 @@ CMD_FUNC cmd_func_tab[] =
 	{'A',"测试：用户卡更新000E文件",test_cpucard_update000e},
 	{'J',"测试：用户卡PIN重装",test_cpucard_reload_pin},
 	{'E',"测试：用户卡读取ADF文件",test_cpucard_readadfile},
+	{'F',"测试：用户卡清除",test_cpucard_clear},
+	{'V',"测试：用户卡TAC验证",test_verify_tac},
 
 	{'Y',"测试：OBU卡预处理",test_obu_pre_init},
 
@@ -435,11 +438,21 @@ void		test_cpucard_init(void)
 {
 	int ret,i,n;
 	BYTE elf15[50];
+	int ntype;
 
-	//	C4FECFC4C4FECFC4 01 50 6401 6666660018474415 2018010120181231C4FE4144353337320000000001030000000000000000
-	char *p15 = "C4FECFC4C4FECFC40150640166666612184744152018010120181231C4FE4144353337320000000001030000000000000000";
+	PRINTK("\n卡片类型：0--天喻SM4卡，1--握奇3DES卡");
+	scanf("%d",&ntype);
+
+	if(ntype)
+		setCardType(CARD_TYPE_WD_3DES);
+	else
+		setCardType(CARD_TYPE_TY_SM4);
+
+	//	C4FECFC464010001 01 40 6401 6666660018474415 2018010120181231C4FE4144353337320000000001030000000000000000
+	char *p15 = "C4FECFC4640100010140640166666612184744152018010120181231C4FE4144353337320000000001030000000000000000";
 
 	memset(elf15,0x00,50);
+
 
 	n = strlen(p15);
 	for(i=0;i<n;i=i+2)
@@ -459,6 +472,52 @@ void		test_cpucard_init(void)
 	return;
 }
 
+
+void		test_cpucard_clear(void)
+{
+	int ret;
+	BYTE elf15[50],elf16[55];
+	DWORD dwRemain;
+
+	memset(elf15,0x00,50);
+	memset(elf16,0x00,55);
+	dwRemain = 0;
+
+	ret =cpuReadCardFiles(elf15,elf16,dwRemain,gnCom);
+	if(ret)
+	{
+		PRINTK("\n读用户卡失败:%d",ret);
+		return;
+	}
+
+	ret = cpuClear(elf15,gnCom);
+	if(ret)
+	{
+		PRINTK("\n用户卡清除失败:%d",ret);
+		return;
+	}
+	PRINTK("用户卡清除成功！");
+
+}
+
+void		test_verify_tac(void)
+{
+	int ret;
+
+	ret = cpuVerifyTAC(0x40,(BYTE *)"\x66\x66\x66\x12\x18\x47\x44\x15",
+					100,6,
+					(BYTE *)"\x00\x00\x00\x00\x00\x00",
+					1838,
+					(BYTE *)"\x20\x19\x06\x20\x19\x05\x12",
+					(BYTE *)"\xF3\xC5\x61\x50",
+					gnCom);
+	if(ret)
+	{
+		PRINTK("\n用户卡验证TAC失败:%d",ret);
+		return;
+	}
+	PRINTK("用户卡验证TAC成功！");
+}
 
 /*-------------------------------------------------------------------------
 Function:		test_cpucard_personize

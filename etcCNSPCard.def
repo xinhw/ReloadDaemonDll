@@ -95,6 +95,10 @@ setBankID
 setAgentCode
 
 
+;2019-06-21
+cpuClear
+setCardType
+getCardType
 
 
 	

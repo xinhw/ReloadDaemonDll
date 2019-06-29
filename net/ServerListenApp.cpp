@@ -233,9 +233,6 @@ DWORD	WINAPI	AcceptWorkItem(PVOID pvContext)
 		//////////////////////////////////////////////////////////////////////////	
 		if(NULL==theProc) continue;
 
-		//	typedef int (CALLBACK *processCallback)(PPACKAGEHEADER,WORD,BYTE *,WORD *,BYTE *); 
-		//ret = process_request(&ph,wSize,pszData,wSize,pszData);
-
 		wRecv = 0;
 		ret = theProc(&ph,wSize,pszData,wRecv,pszData);
 		if(ret)

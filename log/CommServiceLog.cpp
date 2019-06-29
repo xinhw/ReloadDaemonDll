@@ -66,7 +66,7 @@ void CCommServiceLog::init()
 
 	//	日志文件
 	memset(COMM_SERVICE_LOG,0x00,0xff);
-	sprintf(COMM_SERVICE_LOG,"%s\\ICService%04d%02d%02d.log",strCurDir,st.wYear,st.wMonth,st.wDay);
+	sprintf(COMM_SERVICE_LOG,"%s\\log\\ICService%04d%02d%02d.log",strCurDir,st.wYear,st.wMonth,st.wDay);
 	return;
 }
 

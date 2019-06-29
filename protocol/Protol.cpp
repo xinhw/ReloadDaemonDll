@@ -65,9 +65,17 @@ int		CProtocol::parse_a_block(WORD nSize,BYTE *pszBuf,
 	memset(pph,0x00,sizeof(PACKAGEHEADER));
 
 	nLen = 0;
+
 	//1	报文特征码		MessageNote		C	4
 	memcpy(pph->strMessageNote,pszBuf+nLen,4);
+	if((!memcmp(pszBuf+nLen,"BANK",4))&&(!memcmp(pszBuf+nLen,"WEBT",4)))
+	{
+		PRINTK("\nHeader Error:%s",pph->strMessageNote);
+		return -1;
+	}
 	nLen = nLen + 4;
+
+
 
 	//2	消息类型		TranType		US	2
 	pph->wTransType = pszBuf[nLen];

@@ -1012,6 +1012,7 @@ int		ClsCommand::getKey(WORD wType,BYTE bVer,BYTE *szAPPID,
 
 	m_wRemainCount = szBuf[nLen];
 	m_wRemainCount = m_wRemainCount *0x100 + szBuf[nLen+1];
+	nLen = nLen + 2;
 
 	return 0;
 }

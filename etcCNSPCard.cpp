@@ -500,7 +500,13 @@ int __stdcall cpuInit(BYTE *szFile0015,int ncom)
 
 	if(!validation(1,n)) return -1;
 
-	CTYCPUCard *pcard = new CTYCPUCard(preader[n],pcmd[n]);
+	CCPUCardBase *pcard;
+
+	ret = getCardType();
+	if(ret == CARD_TYPE_TY_SM4)
+		pcard = new CTYCPUCard(preader[n],pcmd[n]);
+	else
+		pcard = new CWD3DESCard(preader[n],pcmd[n]);
 
 	ret = pcard->init(szFile0015);
 
@@ -510,6 +516,31 @@ int __stdcall cpuInit(BYTE *szFile0015,int ncom)
 
 }
 
+
+int __stdcall cpuClear(BYTE *szFile0015,int ncom )
+{
+	int ret;
+
+	PRINTK("\r\n读卡器端口(cpuClear)：%d",ncom);
+
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	CCPUCardBase *pcard;
+
+	ret = getCardType();
+	if(ret == CARD_TYPE_TY_SM4)
+		pcard = new CTYCPUCard(preader[n],pcmd[n]);
+	else
+		pcard = new CWD3DESCard(preader[n],pcmd[n]);
+
+	ret = pcard->clear(szFile0015);
+
+	delete pcard;
+
+	return ret;
+}
 
 /*10. 更新持卡人基本数据文件
 	bVer		[in]	卡片版本号
@@ -1340,4 +1371,10 @@ void __stdcall setAgentCode(char *s,int ncom)
 	}
 
 	return;
+}
+
+
+void	__stdcall	setCardType(int ntype)
+{
+	gnCardType = ntype;
 }

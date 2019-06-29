@@ -25,8 +25,10 @@
 			删除TcpTransfer类中的send_recv函数
 	V0.19	增加PSAM卡签到、PSAM卡授权确认的接口
 			1045,1046报文
+	V0.22	增加3DES握奇卡的发行、清除功能
+	
 */
-#define DLL_VERSION		"V0.21 多串口国密算法动态库"
+#define DLL_VERSION		"V0.22 多串口国密算法动态库"
 
 //	读卡器类型
 #define READER_TYPE_CPU_CARD		0x00			//	航天金卡用户卡读卡器
@@ -36,6 +38,10 @@
 
 
 int gnDefaultCom = 0;
+
+#define CARD_TYPE_TY_SM4			54594			//	天喻SM4卡
+#define CARD_TYPE_WD_3DES			57443			//	握奇3DES卡
+int gnCardType = CARD_TYPE_TY_SM4;
 
 
 /*回调函数*/
@@ -130,7 +136,7 @@ extern "C"
 		szFile0015	[in]	0015文件内容
 	*/
 	int __stdcall cpuInit(BYTE *szFile0015,int ncom = gnDefaultCom);
-
+	int __stdcall cpuClear(BYTE *szFile0015,int ncom = gnDefaultCom);
 
 	/*10. 更新持卡人基本数据文件
 		bVer		[in]	卡片版本号
@@ -280,4 +286,8 @@ extern "C"
 	void __stdcall setBankID(char *s,int ncom);
 	/*28. 设置代理商编号*/
 	void __stdcall setAgentCode(char *s,int ncom);
+
+
+	void	__stdcall	setCardType(int ntype);
+	int		__stdcall	getCardType(){return gnCardType;}
 };
