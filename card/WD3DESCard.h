@@ -9,6 +9,10 @@ public:
 	~CWD3DESCard();
 
 private:
+	BYTE m_szPKey[16];
+
+	int wd_secure_update_key(BYTE bKeyType,BYTE bKeyVer,BYTE *szKey);
+
 	int wd_load_key(BYTE bIndex,BYTE *szAPPID,BYTE *szDID,BYTE bKeyNo,BYTE bKeyHeaderLen,BYTE *szKeyHeader,BYTE *szKey=NULL);
 public:
 	//	≥ı ºªØ

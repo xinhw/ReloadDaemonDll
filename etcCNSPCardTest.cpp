@@ -436,8 +436,9 @@ Reversion:
 -------------------------------------------------------------------------*/
 void		test_cpucard_init(void)
 {
-	int ret,i,n;
-	BYTE elf15[50];
+	int ret;
+	BYTE elf15[50],elf16[55];
+	DWORD dwRemain;
 	int ntype;
 
 	PRINTK("\nø®∆¨¿‡–Õ£∫0--ÃÏ”˜SM4ø®£¨1--Œ’∆Ê3DESø®");
@@ -448,16 +449,15 @@ void		test_cpucard_init(void)
 	else
 		setCardType(CARD_TYPE_TY_SM4);
 
-	//	C4FECFC464010001 01 40 6401 6666660018474415 2018010120181231C4FE4144353337320000000001030000000000000000
-	char *p15 = "C4FECFC4640100010140640166666612184744152018010120181231C4FE4144353337320000000001030000000000000000";
-
 	memset(elf15,0x00,50);
+	memset(elf16,0x00,55);
+	dwRemain = 0;
 
-
-	n = strlen(p15);
-	for(i=0;i<n;i=i+2)
+	ret =cpuReadCardFiles(elf15,elf16,dwRemain,gnCom);
+	if(ret)
 	{
-		elf15[i/2] = ascToUC(p15[i])*0x10 + ascToUC(p15[i+1]);
+		PRINTK("\n∂¡”√ªßø® ß∞‹:%d",ret);
+		return;
 	}
 
 	ret = cpuInit(elf15,gnCom);
@@ -478,6 +478,16 @@ void		test_cpucard_clear(void)
 	int ret;
 	BYTE elf15[50],elf16[55];
 	DWORD dwRemain;
+
+	int ntype;
+
+	PRINTK("\nø®∆¨¿‡–Õ£∫0--ÃÏ”˜SM4ø®£¨1--Œ’∆Ê3DESø®");
+	scanf("%d",&ntype);
+	if(ntype)
+		setCardType(CARD_TYPE_WD_3DES);
+	else
+		setCardType(CARD_TYPE_TY_SM4);
+
 
 	memset(elf15,0x00,50);
 	memset(elf16,0x00,55);
