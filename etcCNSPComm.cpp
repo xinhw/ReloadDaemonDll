@@ -47,12 +47,14 @@ int __stdcall connectOKS(char *strip,WORD wport)
 	WSADATA		wsaData;  	
 	char strBankID[20],strAgentCode[7];
 
+	CCommServiceLog::LogEvent("连接前置服务程序:%s:%d",strip,wport);
+
 	//	WinSock2初始化
 	WORD wSockVersion = MAKEWORD(2,1);
 	ret = WSAStartup(wSockVersion,&wsaData);
 	if(ret) 
 	{
-		PRINTK("\nWIN SOCKET2初始化失败！");
+		CCommServiceLog::LogEvent("\nWIN SOCKET2初始化失败！");
 		return ret;
 	}
 
@@ -67,14 +69,14 @@ int __stdcall connectOKS(char *strip,WORD wport)
 	ret = ptransfer->init_socket();
 	if(ret)
 	{
-		PRINTK("\ninit_socket失败:%d",ret);
+		CCommServiceLog::LogEvent("\ninit_socket失败:%d",ret);
 		return ret;
 	}
 
 	ret = ptransfer->connect_server(wport,strip);
 	if(ret)
 	{
-		PRINTK("\nconnect_server连接服务器%s:%d失败:%d",strip,wport,ret);
+		CCommServiceLog::LogEvent("\nconnect_server连接服务器%s:%d失败:%d",strip,wport,ret);
 		delete ptransfer;
 		ptransfer = NULL;
 		return ret;
@@ -140,6 +142,8 @@ int __stdcall disconnectOKS()
 		pcmd = NULL;
 	}
 
+	CCommServiceLog::LogEvent("断开前置服务程序连接");
+
 	return 0;
 }
 
@@ -159,6 +163,8 @@ bool validation()
 	
 	if(NULL==pcmd)
 	{
+		CCommServiceLog::LogEvent("pcmd为空");
+
 		bOk = false;
 	}
 
@@ -180,13 +186,19 @@ int	__stdcall 	cmd_1032(BYTE bVer,BYTE *szAPPID,
 				BYTE *szMAC1,
 				BYTE *szMAC)
 {
+	int ret;
 
 	if(!validation()) return -1;
-	return pcmd->cmd_1032(bVer,szAPPID,
+	ret = pcmd->cmd_1032(bVer,szAPPID,
 					szRnd,wSeqNo,nAmount,bTransFlag,szDeviceNo,szDateTime,dwRemain,
 					szMAC1,
 					szMAC);
 
+	if(ret)
+	{
+		CCommServiceLog::LogEvent("cmd_1032失败:%d",ret);
+	}
+	return ret;
 
 }
 
@@ -198,13 +210,21 @@ int	__stdcall 	cmd_1033(BYTE bVer,BYTE *szAPPID,
 				BYTE *szCmd,
 				BYTE *szMAC)
 {
+	int ret;
+
 	if(!validation()) return -1;
-	return pcmd->cmd_1033(bVer,szAPPID,
+	ret = pcmd->cmd_1033(bVer,szAPPID,
 					szRnd,
 					bFileType,
 					bCmdLen,
 					szCmd,
 					szMAC);
+	if(ret)
+	{
+		CCommServiceLog::LogEvent("cmd_1033失败:%d",ret);
+	}
+	return ret;
+
 }
 
 //4.4	OBU二次发行认证1034
@@ -215,13 +235,20 @@ int	__stdcall 	cmd_1034(BYTE bVer,BYTE *szAPPID,
 				BYTE *szCmd,
 				BYTE *szMAC)
 {
+	int ret;
+
 	if(!validation()) return -1;
-	return pcmd->cmd_1034(bVer,szAPPID,
+	ret = pcmd->cmd_1034(bVer,szAPPID,
 					szRnd,
 					bFileType,
 					bCmdLen,
 					szCmd,
 					szMAC);
+	if(ret)
+	{
+		CCommServiceLog::LogEvent("cmd_1034失败:%d",ret);
+	}
+	return ret;
 }
 
 //4.5	用户卡修改有效期认证1035
@@ -231,12 +258,18 @@ int	__stdcall 	cmd_1035(BYTE bVer,BYTE *szAPPID,
 				BYTE *szCmd,
 				BYTE *szMAC)
 {
+	int ret;
 	if(!validation()) return -1;
-	return pcmd->cmd_1035(bVer,szAPPID,
+	ret = pcmd->cmd_1035(bVer,szAPPID,
 					szRnd,
 					bCmdLen,
 					szCmd,
 					szMAC);
+	if(ret)
+	{
+		CCommServiceLog::LogEvent("cmd_1035失败:%d",ret);
+	}
+	return ret;
 }
 
 //4.6	用户卡消费认证 1036
@@ -245,21 +278,35 @@ int	__stdcall 	cmd_1036(BYTE bVer,BYTE *szAPPID,
 				WORD wSeqNo,DWORD nAuditNo,DWORD nRemain,DWORD nAmount,BYTE bTransFlag,BYTE *szDeviceNo,BYTE *szDateTime,
 				BYTE *szMAC)
 {
+	int ret;
+
 	if(!validation()) return -1;
-	return pcmd->cmd_1036(bVer,szAPPID,
+	ret = pcmd->cmd_1036(bVer,szAPPID,
 				szRnd,
 				wSeqNo,nAuditNo,nRemain,nAmount,bTransFlag,szDeviceNo,szDateTime,
 				szMAC);
+	if(ret)
+	{
+		CCommServiceLog::LogEvent("cmd_1036失败:%d",ret);
+	}
+	return ret;
 }
 
 //4.7	用户卡消费TAC验证 1037
 int	__stdcall 	cmd_1037(BYTE bVer,BYTE *szAPPID,
 				DWORD nAmount,BYTE bTransFlag,BYTE *szDeviceNo,DWORD nAuditNo,BYTE *szDateTime,BYTE *szTAC)
 {
+	int ret;
+
 	if(!validation()) return -1;
-	return pcmd->cmd_1037(bVer,szAPPID,
+	ret = pcmd->cmd_1037(bVer,szAPPID,
 				nAmount,bTransFlag,szDeviceNo,nAuditNo,szDateTime,szTAC);
 
+	if(ret)
+	{
+		CCommServiceLog::LogEvent("cmd_1037失败:%d",ret);
+	}
+	return ret;
 }
 
 //4.8	OBU修改拆卸标志认证1038
@@ -269,12 +316,19 @@ int	__stdcall 	cmd_1038(BYTE bVer,BYTE *szAPPID,
 				BYTE *szCmd,
 				BYTE *szMAC)
 {
+	int ret;
+
 	if(!validation()) return -1;
-	return pcmd->cmd_1038(bVer,szAPPID,
+	ret = pcmd->cmd_1038(bVer,szAPPID,
 					szRnd,
 					bCmdLen,
 					szCmd,
 					szMAC);
+	if(ret)
+	{
+		CCommServiceLog::LogEvent("cmd_1038失败:%d",ret);
+	}
+	return ret;
 }
 
 //4.9	用户卡PIN重装认证1039
@@ -284,12 +338,19 @@ int	__stdcall 	cmd_1039(BYTE bVer,BYTE *szAPPID,
 				BYTE *szCmd,
 				BYTE *szMAC)
 {
+	int ret;
+
 	if(!validation()) return -1;
-	return pcmd->cmd_1039(bVer,szAPPID,
+	ret = pcmd->cmd_1039(bVer,szAPPID,
 					szRnd,
 					bCmdLen,
 					szCmd,
 					szMAC);
+	if(ret)
+	{
+		CCommServiceLog::LogEvent("cmd_1039失败:%d",ret);
+	}
+	return ret;
 }
 
 //4.10	用户卡获取密钥1040
@@ -302,8 +363,10 @@ int	__stdcall 	cmd_1040(BYTE bVer,BYTE *szAPPID,
 					BYTE *szEncKey,
 					BYTE *szMAC)
 {
+	int ret;
+
 	if(!validation()) return -1;
-	return pcmd->cmd_1040(bVer,szAPPID,
+	ret = pcmd->cmd_1040(bVer,szAPPID,
 					bKeyNo,
 					szRnd,
 					szAPDU,
@@ -311,6 +374,11 @@ int	__stdcall 	cmd_1040(BYTE bVer,BYTE *szAPPID,
 					szPDID,
 					szEncKey,
 					szMAC);
+	if(ret)
+	{
+		CCommServiceLog::LogEvent("cmd_1040失败:%d",ret);
+	}
+	return ret;
 }
 
 
@@ -321,12 +389,19 @@ int	__stdcall 	cmd_1041(BYTE bVer,BYTE *szAPPID,
 				BYTE *szCmd,
 				BYTE *szMAC)
 {
+	int ret;
+
 	if(!validation()) return -1;
-	return pcmd->cmd_1041(bVer,szAPPID,
+	ret = pcmd->cmd_1041(bVer,szAPPID,
 					szRnd,
 					bCmdLen,
 					szCmd,
 					szMAC);
+	if(ret)
+	{
+		CCommServiceLog::LogEvent("cmd_1041失败:%d",ret);
+	}
+	return ret;
 }
 
 //4.12	OBU获取密钥1042
@@ -339,8 +414,10 @@ int	__stdcall 	cmd_1042(BYTE bVer,BYTE *szAPPID,
 					BYTE *szEncKey,
 					BYTE *szMAC)
 {
+	int ret;
+
 	if(!validation()) return -1;
-	return pcmd->cmd_1042(bVer,szAPPID,
+	ret = pcmd->cmd_1042(bVer,szAPPID,
 					bKeyNo,
 					szRnd,
 					szAPDU,
@@ -348,6 +425,11 @@ int	__stdcall 	cmd_1042(BYTE bVer,BYTE *szAPPID,
 					szPDID,
 					szEncKey,
 					szMAC);
+	if(ret)
+	{
+		CCommServiceLog::LogEvent("cmd_1042失败:%d",ret);
+	}
+	return ret;
 }
 
 

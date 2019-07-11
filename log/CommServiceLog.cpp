@@ -86,10 +86,10 @@ void CCommServiceLog::LogEvent(LPCTSTR pFormat, ...)
 
 	DWORD		nFileSize;
 	DWORD		wWritten;
-	/*
+	
 	SYSTEMTIME	st;
 	char		pszMsg[1024];	
-	*/
+	
 	va_start(pArg, pFormat);
 	vsprintf(chMsg, pFormat, pArg);
 	va_end(pArg);
@@ -110,14 +110,18 @@ void CCommServiceLog::LogEvent(LPCTSTR pFormat, ...)
 	
 	if(hLogFile)
 	{
-		/*
+		
 		GetLocalTime(&st);
 		
 		sprintf(pszMsg,"%04d-%02d-%02d %02d:%02d:%02d\t\t%s\r\n",
 			st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond,
 			chMsg);
-		*/
+		WriteFile(hLogFile,pszMsg,strlen(pszMsg),&wWritten,NULL);
+		/*
+		strcat(chMsg,"\r\n");		
 		WriteFile(hLogFile,chMsg,strlen(chMsg),&wWritten,NULL);
+		*/
+		
 	}
 	
 	return;

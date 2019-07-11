@@ -23,6 +23,7 @@ public:
 private:
 	SOCKET	sLocal;					//	本地的Socket
 	void	ShowWSAErrorMsg(int nErrNo);
+
 public:
 	int		init_socket();
 	//		初始化连接
