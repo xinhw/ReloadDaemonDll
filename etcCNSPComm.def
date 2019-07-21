@@ -27,4 +27,6 @@ cmd_1046
 setBankID
 setAgentCode
 
-
+;20190714
+setTimeout
+getTimeout

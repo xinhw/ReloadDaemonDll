@@ -529,4 +529,8 @@ UINT CNXRsuReader::SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLen
 
 
 
-
+UINT CNXRsuReader::Beep(BYTE bAct)
+{
+	PRINTK("\n万集读卡器暂时未实现Beep函数");
+	return -1;
+}

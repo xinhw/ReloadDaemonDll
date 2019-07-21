@@ -90,12 +90,7 @@ int CWD3DESCard::wd_secure_update_key(BYTE bKeyType,BYTE bKeyVer,BYTE *szKey)
 	memset(sRnd,0x00,8);
 	CMisc::StringToByte(strResp,sRnd);
 
-	//		84 D4 39 00 Lc 10 + 密钥值
-	/*void __stdcall CmdWatchEncode(UCHAR	nLenIn,UCHAR	*pszBufIn,
-						UCHAR	*pszKey,
-						UCHAR	*pszBufOut,
-						bool 	bTriDes);
-	*/
+
 	PRINTK("PK:");
 	for(i=0;i<16;i++) PRINTK("%02X",m_szPKey[i]);
 
@@ -116,14 +111,6 @@ int CWD3DESCard::wd_secure_update_key(BYTE bKeyType,BYTE bKeyVer,BYTE *szKey)
 	memcpy(szCmd+5,szEncKey,24);
 
 	CmdWatchCalMac(29,szCmd,sRnd,m_szPKey,szCmd+29,true);
-
-	/*
-	void __stdcall CmdWatchCalMac(UINT	nLenIn,UCHAR	*pszBufIn,
-						UCHAR	*pszInitData,
-						UCHAR	*pszKey, 
-						UCHAR	*pszMAC,
-						bool  bTriDes);
-	*/
 
 	memset(strCmd,0x00,512);
 	CMisc::ByteToString(szCmd,33,strCmd);
@@ -150,7 +137,6 @@ int CWD3DESCard::init(BYTE *elf15)
 	BYTE	szCMK[16],szAMK[16];
 	BYTE	sBuf[128];
 	BYTE	INIT_KEY[16];
-
 
 	memcpy(INIT_KEY,"\x57\x41\x54\x43\x48\x44\x41\x54\x41\x54\x69\x6D\x65\x43\x4F\x53",16);
 
@@ -240,25 +226,10 @@ int CWD3DESCard::init(BYTE *elf15)
 		return ret;
 	}
 
-	memcpy(m_szPKey,INIT_KEY,16);
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//	替换（更新）主控密钥
-	callbackMessage("装载（替换）主控密钥");
-
-	memset(sBuf,0x00,64);
-	WatchDiversity(sBuf,szAPPID,szCMK,TRUE);
-
-	ret = wd_secure_update_key(0x39,0x00,szCMK);
-	if(ret) 
-	{
-		sprintf(strCmd,"失败，返回:%04X",ret);
-		callbackMessage(strCmd);	
-		return ret;
-	}
-	memcpy(m_szPKey,szCMK,16);
-
-
-	// 装载MF下的其他密钥
+	// 1.1 装载MF下的其他密钥
+	memcpy(m_szPKey,INIT_KEY,16);
+	
 	memset(szCMK,0x00,16);
 	for(pkey=arr_mf_keys;pkey->szKeyHeader;pkey++)
 	{
@@ -267,7 +238,7 @@ int CWD3DESCard::init(BYTE *elf15)
 		if(ret) return ret;
 	}
 
-	//	写0016文件
+	//	1.2 写0016文件
 	callbackMessage("写0016文件");
 
 	//	取随机数
@@ -302,7 +273,12 @@ int CWD3DESCard::init(BYTE *elf15)
 		callbackMessage(strCmd);
 		return ret;
 	}
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// 选择1001
 	callbackMessage("选择1001目录 ");
 
 	memset(strCmd,0x00,512);
@@ -314,24 +290,8 @@ int CWD3DESCard::init(BYTE *elf15)
 		callbackMessage(strCmd);
 		return ret;
 	}
-
-
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// ADF应用主控密钥
-	memcpy(m_szPKey,INIT_KEY,16);
 	
-	callbackMessage("装载ADF应用主控密钥");
-	memset(szCMK,0x00,16);
-	for(pkey=arr_adf_ack;pkey->szKeyHeader;pkey++)
-	{
-		PRINTK("\n装载密钥：%s",pkey->strDesc);
-		ret = wd_load_key(bVer,szAPPID,szAPPID,pkey->bIndex,pkey->bHeaderLen,pkey->szKeyHeader,szCMK);
-		if(ret) return ret;
-	}
-	memcpy(m_szPKey,szCMK,16);
-	
-
-	//	装载ADF下所有的密钥
+	//	2.1 替换ADF应用下的其他密钥
 	callbackMessage("装载ADF下其他密钥");
 	for(pkey=arr_adf_keys;pkey->szKeyHeader;pkey++)
 	{
@@ -340,7 +300,7 @@ int CWD3DESCard::init(BYTE *elf15)
 		if(ret) return ret;
 	}
 
-	//	装载维护密钥
+	//	2.2 装载维护密钥
 	memset(szAMK,0x00,16);
 	for(pkey=arr_adf_amk;pkey->szKeyHeader;pkey++)
 	{
@@ -349,9 +309,7 @@ int CWD3DESCard::init(BYTE *elf15)
 		if(ret) return ret;
 	}
 
-
-
-	//	写0015文件 
+	//	2.3 写0015文件 
 	callbackMessage("写0015文件");
 
 	memset(strCmd,0x00,512);
@@ -385,7 +343,45 @@ int CWD3DESCard::init(BYTE *elf15)
 		return ret;
 	}
 
+	//	2.4 替换应用主控密钥
+	callbackMessage("替换ADF应用主控密钥");
+	memset(szCMK,0x00,16);
+	for(pkey=arr_adf_ack;pkey->szKeyHeader;pkey++)
+	{
+		PRINTK("\n装载密钥：%s",pkey->strDesc);
+		ret = wd_load_key(bVer,szAPPID,szAPPID,pkey->bIndex,pkey->bHeaderLen,pkey->szKeyHeader,szCMK);
+		if(ret) return ret;
+	}
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//	选择3F00
+	callbackMessage("选择1PAY.SYS.DDF01");
+
+	memset(strCmd,0x00,512);
+	memset(strResp,0x00,128);
+	ret = m_pReader->RunCmd("00A404000E315041592E5359532E4444463031",strResp);
+	if(ret)
+	{
+		sprintf(strCmd,"失败，返回:%04X",ret);
+		callbackMessage(strCmd);
+		return ret;
+	}
+
+	//	3.1 替换（更新）卡片主控密钥
+	callbackMessage("装载（替换）卡片主控密钥");
+
+	memset(sBuf,0x00,64);
+	WatchDiversity(sBuf,szAPPID,szCMK,TRUE);
+
+	ret = wd_secure_update_key(0x39,0x00,szCMK);
+	if(ret) 
+	{
+		sprintf(strCmd,"失败，返回:%04X",ret);
+		callbackMessage(strCmd);	
+		return ret;
+	}
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//	建立ADF结束
 	callbackMessage("建立ADF结束");
@@ -515,8 +511,8 @@ endl:
  
 	memcpy(m_szPKey,INIT_KEY,16);
  	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//	装载主控密钥
-	callbackMessage("装载主控密钥");
+	//	装载卡片主控密钥
+	callbackMessage("装载卡片主控密钥");
  
 	memset(strCmd,0x00,128);
 	memcpy(strCmd,"80D4010015F9F0F0AA33",20);

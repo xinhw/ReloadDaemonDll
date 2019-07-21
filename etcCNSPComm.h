@@ -150,4 +150,9 @@ extern "C"
 					BYTE *szTerminalTime,
 					char *strListNo);
 
+	/*22. 设置和获取前置通信超时
+		dwTimeout:	超时时间（秒）
+	*/
+	void __stdcall setTimeout(DWORD dwTimeout);
+	DWORD __stdcall getTimeout();
 };

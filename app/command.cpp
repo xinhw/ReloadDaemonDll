@@ -70,7 +70,13 @@ void ClsCommand::init()
 	memset(m_ph.pszMAC,0x00,4);
 	m_ph.bCompressFlag=m_ph.bRFU=0x00;
 
-	m_dwTimeout = 3;
+	int ret = GetPrivateProfileInt("COMM","TIMEOUT",-1,"./config.ini");
+	if(ret==-1)
+	{
+		ret = 3;
+		WritePrivateProfileString("COMM","TIMEOUT","3","./config.ini");
+	}
+	m_dwTimeout = ret;
 }
 
 
@@ -218,16 +224,9 @@ void	ClsCommand::updateHeader(WORD wType,DWORD wDataLen)
 
 	return;
 }
-/*-------------------------------------------------------------------------
-Function:		ClsCommand.send_recv
-Created:		2018-07-16 17:02:42
-Author:			Xin Hongwei(hongwei.xin@avantport.com)
-Parameters: 
-        
-Reversion:
-        
--------------------------------------------------------------------------*/
-int		ClsCommand::send_recv(WORD wTransType,
+
+
+int		ClsCommand::__send_recv(WORD wTransType,
 				  WORD	wLenIn,UCHAR	*pszBufIn,
 				  WORD	*wLenOut,UCHAR	*pszBufOut,UINT	nWaitMaxTime)
 {
@@ -242,7 +241,6 @@ int		ClsCommand::send_recv(WORD wTransType,
 		ret = m_ptransfer->s_recv(&nLen,szBuf,sizeof(szBuf),100);
 		if(ret!=sizeof(szBuf)) break;
 	}
-
 
 	updateHeader(wTransType,wLenIn);
 
@@ -270,7 +268,7 @@ int		ClsCommand::send_recv(WORD wTransType,
 #endif
 
 	memset(szBuf,0x00,256);
-	ret = m_ptransfer->s_recv(&nLen,szBuf,NHEADDATALEN,m_dwTimeout*1000);
+	ret = m_ptransfer->s_recv(&nLen,szBuf,NHEADDATALEN,nWaitMaxTime*1000);
 	if(ret<NHEADDATALEN)
 	{
 		PRINTK("\n报文接收失败1：%d",ret);
@@ -288,7 +286,7 @@ int		ClsCommand::send_recv(WORD wTransType,
 
 	memset(szBuf,0x00,256);
 	nLen = 0;
-	ret = m_ptransfer->s_recv(&nLen,pszBufOut,m_ph.dwDataLen,m_dwTimeout*1000);
+	ret = m_ptransfer->s_recv(&nLen,pszBufOut,m_ph.dwDataLen,nWaitMaxTime*1000);
 	if(ret<m_ph.dwDataLen)
 	{
 		PRINTK("\n报文接收失败2：%d",ret);
@@ -299,6 +297,31 @@ int		ClsCommand::send_recv(WORD wTransType,
 	*wLenOut = m_ph.dwDataLen;
 
 	return 0;
+}
+/*-------------------------------------------------------------------------
+Function:		ClsCommand.send_recv
+Created:		2018-07-16 17:02:42
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int		ClsCommand::send_recv(WORD wTransType,
+				  WORD	wLenIn,UCHAR	*pszBufIn,
+				  WORD	*wLenOut,UCHAR	*pszBufOut,UINT	nWaitMaxTime)
+{
+	int i,ret;
+
+	for(i=0;i<3;i++)
+	{
+		ret = __send_recv(wTransType,wLenIn,pszBufIn,wLenOut,pszBufOut,nWaitMaxTime);
+		if(!ret) break;
+
+		Sleep(100);
+	}
+
+	return ret;
 }
 
 
@@ -330,7 +353,7 @@ int		ClsCommand::cmd_1031(BYTE *szOperatorNo)
 	memcpy(szBuf+nLen,szOperatorNo,6);
 	nLen = nLen + 6;
 
-	ret = send_recv(0x1031,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1031,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 
 	ret = szBuf[0];
@@ -411,7 +434,7 @@ int		ClsCommand::cmd_1032(BYTE bVer,BYTE *szAPPID,
 
 
 
-	ret = send_recv(0x1032,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1032,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 
 	ret = szBuf[0];
@@ -483,7 +506,7 @@ int		ClsCommand::cmd_1033(BYTE bVer,BYTE *szAPPID,
 	szBuf[nLen]=bVer;
 	nLen++;
 
-	ret = send_recv(0x1033,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1033,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 
 	ret = szBuf[0];
@@ -555,7 +578,7 @@ int		ClsCommand::cmd_1034(BYTE bVer,BYTE *szAPPID,
 	szBuf[nLen]=bVer;
 	nLen++;
 
-	ret = send_recv(0x1034,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1034,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 
 	ret = szBuf[0];
@@ -622,7 +645,7 @@ int		ClsCommand::cmd_1035(BYTE bVer,BYTE *szAPPID,
 	szBuf[nLen]=bVer;
 	nLen++;
 
-	ret = send_recv(0x1035,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1035,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 
 	ret = szBuf[0];
@@ -709,7 +732,7 @@ int		ClsCommand::cmd_1036(BYTE bVer,BYTE *szAPPID,
 	szBuf[nLen]=bVer;
 	nLen++;
 
-	ret = send_recv(0x1036,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1036,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 
 
@@ -787,7 +810,7 @@ int		ClsCommand::cmd_1037(BYTE bVer,BYTE *szAPPID,
 	szBuf[nLen]=bVer;
 	nLen++;
 
-	ret = send_recv(0x1037,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1037,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 
 	ret = szBuf[0];
@@ -849,7 +872,7 @@ int		ClsCommand::cmd_1038(BYTE bVer,BYTE *szAPPID,
 	szBuf[nLen]=bVer;
 	nLen++;
 
-	ret = send_recv(0x1038,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1038,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 
 	ret = szBuf[0];
@@ -915,7 +938,7 @@ int		ClsCommand::cmd_1039(BYTE bVer,BYTE *szAPPID,
 	szBuf[nLen]=bVer;
 	nLen++;
 
-	ret = send_recv(0x1039,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1039,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 
 	ret = szBuf[0];
@@ -995,7 +1018,7 @@ int		ClsCommand::getKey(WORD wType,BYTE bVer,BYTE *szAPPID,
 	memcpy(szBuf+nLen,szPDID,8);
 	nLen = nLen + 8;
 
-	ret = send_recv(wType,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(wType,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 
 	ret = szBuf[0];
@@ -1120,7 +1143,7 @@ int		ClsCommand::cmd_1041(BYTE bVer,BYTE *szAPPID,
 	szBuf[nLen]=bVer;
 	nLen++;
 
-	ret = send_recv(0x1041,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1041,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 
 	ret = szBuf[0];
@@ -1187,7 +1210,7 @@ int		ClsCommand::cmd_2011(BYTE *szCityCode,BYTE *szSerialNo,BYTE *szAuditNo,BYTE
 	memset(szBuf+nLen,0x00,4);
 	nLen = nLen +4;
 
-	ret = send_recv(0x2011,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x2011,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 
 	ret = szBuf[0];
@@ -1247,7 +1270,7 @@ int		ClsCommand::cmd_1043(BYTE bVer,BYTE *szAPPID,BYTE bKeyIndex,BYTE bInLen,BYT
 	szBuf[nLen] = bVer;
 	nLen++;
 
-	ret = send_recv(0x1043,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1043,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 
 	
@@ -1338,7 +1361,7 @@ int		ClsCommand::cmd_1044(BYTE *szSAMNo,BYTE *szRnd,
 	szBuf[nLen] = bLaneID;
 	nLen++;
 
-	ret = send_recv(0x1044,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1044,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 	if(nLen<52) return -24;
 
@@ -1443,7 +1466,7 @@ int		ClsCommand::cmd_1045(BYTE *szSAMNo,char *strListNo,
 	szBuf[nLen] = bResult;
 	nLen++;
 
-	ret = send_recv(0x1045,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1045,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 	if(nLen<4) return -24;
 
@@ -1532,7 +1555,7 @@ int		ClsCommand::cmd_1046(BYTE *szSAMNo,BYTE *szTerminalNo,
 	memcpy(szBuf+nLen,szTerminalTime,7);
 	nLen = nLen + 7;
 
-	ret = send_recv(0x1046,nLen,szBuf,&nLen,szBuf);
+	ret = send_recv(0x1046,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
 	if(ret) return ret;
 	if(nLen<4) return -24;
 

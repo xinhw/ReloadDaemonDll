@@ -536,5 +536,11 @@ UINT CJYRsuReader::SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLen
 }
 
 
+UINT CJYRsuReader::Beep(BYTE bAct)
+{
+	PRINTK("\n金溢读卡器暂时未实现Beep函数");
+	return -1;
+}
+
 
 

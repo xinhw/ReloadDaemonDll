@@ -9,12 +9,29 @@ BOOL APIENTRY DllMain( HANDLE hModule,
                        LPVOID lpReserved
 					 )
 {
-    switch (ul_reason_for_call)
+	int			ret;
+	WSADATA		wsaData;  	
+	WORD wSockVersion;
+
+	switch (ul_reason_for_call)
 	{
 		case DLL_PROCESS_ATTACH:
+			//	WinSock2初始化
+			wSockVersion = MAKEWORD(2,1);
+			ret = WSAStartup(wSockVersion,&wsaData);
+			if(ret) 
+			{
+				CCommServiceLog::LogEvent("\nWIN SOCKET2初始化失败！");
+				return ret;
+			}
+
+			break;
 		case DLL_THREAD_ATTACH:
+			break;
 		case DLL_THREAD_DETACH:
+			break;
 		case DLL_PROCESS_DETACH:
+			WSACleanup();
 			break;
     }
     return TRUE;
@@ -44,19 +61,9 @@ Reversion:
 int __stdcall connectOKS(char *strip,WORD wport)
 {
 	int			ret;
-	WSADATA		wsaData;  	
 	char strBankID[20],strAgentCode[7];
 
 	CCommServiceLog::LogEvent("连接前置服务程序:%s:%d",strip,wport);
-
-	//	WinSock2初始化
-	WORD wSockVersion = MAKEWORD(2,1);
-	ret = WSAStartup(wSockVersion,&wsaData);
-	if(ret) 
-	{
-		CCommServiceLog::LogEvent("\nWIN SOCKET2初始化失败！");
-		return ret;
-	}
 
 	if(NULL!=ptransfer)
 	{
@@ -496,4 +503,41 @@ int	__stdcall	cmd_1046(BYTE *szSAMNo,BYTE *szTerminalNo,
 }
 
 
+
+
+
+
+/*-------------------------------------------------------------------------
+Function:		setTimeout
+Created:		2018-08-27 10:23:14
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+void __stdcall setTimeout(DWORD dwTimeout)
+{
+	if(!validation()) return;
+	pcmd->setWaitTimeout(dwTimeout);
+	return;
+}
+
+
+
+
+/*-------------------------------------------------------------------------
+Function:		getTimeout
+Created:		2018-08-27 10:23:18
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+DWORD __stdcall getTimeout()
+{
+	if(!validation()) return -1;
+	return pcmd->getWaitTimeout();
+}
 

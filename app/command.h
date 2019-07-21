@@ -137,7 +137,12 @@ private:
 	void	updateHeader(WORD wType,DWORD wDataLen);
 	int		send_recv(WORD wTransType,
 					  WORD	wLenIn,UCHAR	*pszBufIn,
-					  WORD	*wLenOut,UCHAR	*pszBufOut,UINT	nWaitMaxTime = 3);
+					  WORD	*wLenOut,UCHAR	*pszBufOut,UINT	nWaitMaxTime);
+
+	int		__send_recv(WORD wTransType,
+					  WORD	wLenIn,UCHAR	*pszBufIn,
+					  WORD	*wLenOut,UCHAR	*pszBufOut,UINT	nWaitMaxTime);
+
 	int		getKey(WORD wType,BYTE bVer,BYTE *szAPPID,
 						BYTE bKeyNo,
 						BYTE *szRnd,

@@ -83,4 +83,15 @@
 	}CARDKEY;
 	#define PCARDKEY CARDKEY *
 
+
+	typedef struct tagwritefilerec
+	{
+		char *p1;					/*	写记录文件 P1*/
+		char *p2;					/*	写记录文件 P2*/
+		BYTE bLen;					/*	写记录文件 的长度*/
+		char *applabel;				/*	复合应用标志（长度为6）*/
+	}WRITEFILEREC;
+	#define PWRITEFILEREC WRITEFILEREC *
+
+
 #endif

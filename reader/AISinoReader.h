@@ -52,4 +52,5 @@ public:
 	virtual UINT PSAM_RunCmd(char *strCmd, char *strResult);
 	virtual UINT PSAM_Atr(BYTE bNode,BYTE &brLen,char *strATR);
 	virtual UINT SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE &bRetFileLen,char *strResp);
+	virtual UINT Beep(BYTE bAct);
 };

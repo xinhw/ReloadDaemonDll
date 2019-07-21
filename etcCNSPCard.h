@@ -26,9 +26,9 @@
 	V0.19	增加PSAM卡签到、PSAM卡授权确认的接口
 			1045,1046报文
 	V0.22	增加3DES握奇卡的发行、清除功能
-	
+	V0.23	增加3DES捷德卡的发行、清除功能
 */
-#define DLL_VERSION		"V0.22 多串口国密算法动态库"
+#define DLL_VERSION		"V0.23 多串口国密(3DES)算法动态库"
 
 //	读卡器类型
 #define READER_TYPE_CPU_CARD		0x00			//	航天金卡用户卡读卡器
@@ -41,6 +41,7 @@ int gnDefaultCom = 0;
 
 #define CARD_TYPE_TY_SM4			54594			//	天喻SM4卡
 #define CARD_TYPE_WD_3DES			57443			//	握奇3DES卡
+#define CARD_TYPE_JD_3DES			0x4A443			//	捷德3DES卡	
 int gnCardType = CARD_TYPE_TY_SM4;
 
 
@@ -290,4 +291,7 @@ extern "C"
 
 	void	__stdcall	setCardType(int ntype);
 	int		__stdcall	getCardType(){return gnCardType;}
+
+
+	void __stdcall readerBeep(int ncom,BYTE bAct);
 };

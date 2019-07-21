@@ -298,3 +298,9 @@ UINT CJTReader::SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLength
 	PRINTK("\n深圳雄帝读卡器暂时未实现SecureRead函数");
 	return -1;
 }
+
+UINT CJTReader::Beep(BYTE bAct)
+{
+	PRINTK("\n深圳雄帝读卡器暂时未实现Beep函数");
+	return -1;
+}

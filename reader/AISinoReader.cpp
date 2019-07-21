@@ -260,3 +260,20 @@ UINT CAISINOReader::SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLe
 	PRINTK("\n航天金卡读卡器暂时未实现SecureRead函数");
 	return -1;
 }
+
+
+UINT CAISINOReader::Beep(BYTE bAct)
+{
+	if(lp_jt_audiocontrol==NULL) return -1;
+
+	if(bAct==0)
+	{
+		lp_jt_audiocontrol(m_hDevice,1,3);
+	}
+	else
+	{
+		lp_jt_audiocontrol(m_hDevice,3,3);
+	}
+
+	return 0;
+}

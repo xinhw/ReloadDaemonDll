@@ -21,6 +21,9 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 					 )
 {
 	int i;
+	int			ret;
+	WSADATA		wsaData;  	
+	WORD wSockVersion;
 
     switch (ul_reason_for_call)
 	{
@@ -36,6 +39,15 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 			memset(strBankID,0x00,20);
 			memset(strAgentCode,0x00,7);
 
+			//	WinSock2³õÊ¼»¯
+			wSockVersion = MAKEWORD(2,1);
+			ret = WSAStartup(wSockVersion,&wsaData);
+			if(ret) 
+			{
+				CCommServiceLog::LogEvent("\nWIN SOCKET2³õÊ¼»¯Ê§°Ü£¡");
+				return ret;
+			}
+
 			break;
 		case DLL_THREAD_ATTACH:
 			break;
@@ -50,6 +62,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 				disconnectOKS(i);
 			}
 			
+			WSACleanup();
 			break;
     }
     return TRUE;
@@ -128,20 +141,10 @@ Reversion:
 int __stdcall connectOKS(char *strip,WORD wport,int ncom)
 {
 	int			ret;
-	WSADATA		wsaData;  	
 
 	PRINTK("\r\n¶Á¿¨Æ÷¶Ë¿Ú(connectOKS)£º%d",ncom);
 
 	if(ncom>=MAX_READER_NUM) return ERR_OVER_MAX_COM;
-
-	//	WinSock2³õÊ¼»¯
-	WORD wSockVersion = MAKEWORD(2,1);
-	ret = WSAStartup(wSockVersion,&wsaData);
-	if(ret) 
-	{
-		PRINTK("\nWIN SOCKET2³õÊ¼»¯Ê§°Ü£¡");
-		return ret;
-	}
 
 	if(NULL!=ptransfer[ncom])
 	{
@@ -503,10 +506,19 @@ int __stdcall cpuInit(BYTE *szFile0015,int ncom)
 	CCPUCardBase *pcard;
 
 	ret = getCardType();
-	if(ret == CARD_TYPE_TY_SM4)
-		pcard = new CTYCPUCard(preader[n],pcmd[n]);
-	else
-		pcard = new CWD3DESCard(preader[n],pcmd[n]);
+	switch(ret)
+	{
+		case CARD_TYPE_WD_3DES:
+			pcard = new CWD3DESCard(preader[n],pcmd[n]);
+			break;
+		case CARD_TYPE_JD_3DES:
+			pcard = new CJD3DESCard(preader[n],pcmd[n]);
+			break;
+		default:
+			pcard = new CTYCPUCard(preader[n],pcmd[n]);
+			break;
+	}
+
 
 	ret = pcard->init(szFile0015);
 
@@ -530,10 +542,18 @@ int __stdcall cpuClear(BYTE *szFile0015,int ncom )
 	CCPUCardBase *pcard;
 
 	ret = getCardType();
-	if(ret == CARD_TYPE_TY_SM4)
-		pcard = new CTYCPUCard(preader[n],pcmd[n]);
-	else
-		pcard = new CWD3DESCard(preader[n],pcmd[n]);
+	switch(ret)
+	{
+		case CARD_TYPE_WD_3DES:
+			pcard = new CWD3DESCard(preader[n],pcmd[n]);
+			break;
+		case CARD_TYPE_JD_3DES:
+			pcard = new CJD3DESCard(preader[n],pcmd[n]);
+			break;
+		default:
+			pcard = new CTYCPUCard(preader[n],pcmd[n]);
+			break;
+	}
 
 	ret = pcard->clear(szFile0015);
 
@@ -1377,4 +1397,19 @@ void __stdcall setAgentCode(char *s,int ncom)
 void	__stdcall	setCardType(int ntype)
 {
 	gnCardType = ntype;
+}
+
+
+void __stdcall readerBeep(int ncom,BYTE bAct)
+{
+	PRINTK("\r\n¶Á¿¨Æ÷¶Ë¿Ú(readerBeep)£º%d",ncom);
+
+	int icom = ncom%MAX_READER_NUM;
+
+	if(preader[icom]!=NULL)
+	{
+		preader[icom]->Beep(bAct);
+	}
+
+	return;
 }

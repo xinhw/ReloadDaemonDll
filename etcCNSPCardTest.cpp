@@ -155,6 +155,19 @@ int main(void)
 
 	print_cmd_usage();
 
+	int			ret;
+	WSADATA		wsaData;  	
+	WORD wSockVersion;
+
+	//	WinSock2初始化
+	wSockVersion = MAKEWORD(2,1);
+	ret = WSAStartup(wSockVersion,&wsaData);
+	if(ret) 
+	{
+		CCommServiceLog::LogEvent("\nWIN SOCKET2初始化失败！");
+		return ret;
+	}
+
 	while(1)
 	{
 		ch = getch();
@@ -168,6 +181,8 @@ int main(void)
 	}
 
 	disconnectOKS();
+
+	WSACleanup();
 
 	PRINTK("\n运行结束,Press Any Key to continue...\n");
 	getch();
@@ -441,24 +456,38 @@ void		test_cpucard_init(void)
 	DWORD dwRemain;
 	int ntype;
 
-	PRINTK("\n卡片类型：0--天喻SM4卡，1--握奇3DES卡");
+	PRINTK("\n卡片类型：0--天喻SM4卡 1--握奇3DES卡 2--捷德3DES卡\n");
 	scanf("%d",&ntype);
 
-	if(ntype)
-		setCardType(CARD_TYPE_WD_3DES);
-	else
-		setCardType(CARD_TYPE_TY_SM4);
-
+	switch(ntype)
+	{
+		case 1:
+			PRINTK("\n握奇3DES卡");
+			setCardType(CARD_TYPE_WD_3DES);
+			break;
+		case 2:
+			PRINTK("\n捷德3DES卡");
+			setCardType(CARD_TYPE_JD_3DES);
+			break;
+		default:
+			PRINTK("\n天喻SM4卡");
+			setCardType(CARD_TYPE_TY_SM4);
+			break;
+	}
 	memset(elf15,0x00,50);
 	memset(elf16,0x00,55);
 	dwRemain = 0;
 
+	/*
 	ret =cpuReadCardFiles(elf15,elf16,dwRemain,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读用户卡失败:%d",ret);
 		return;
 	}
+	*/
+
+	memcpy(elf15,"\xc7\xe0\xba\xa3\x63\x01\x00\x01\x17\x40\x63\x01\x19\x15\x23\x01\x09\x00\x34\x50\x20\x19\x04\x30\x20\x09\x04\x30\xff",31);
 
 	ret = cpuInit(elf15,gnCom);
 	if(ret)
@@ -481,24 +510,36 @@ void		test_cpucard_clear(void)
 
 	int ntype;
 
-	PRINTK("\n卡片类型：0--天喻SM4卡，1--握奇3DES卡");
+	PRINTK("\n卡片类型：0--天喻SM4卡 1--握奇3DES卡 2--捷德3DES卡");
 	scanf("%d",&ntype);
-	if(ntype)
-		setCardType(CARD_TYPE_WD_3DES);
-	else
-		setCardType(CARD_TYPE_TY_SM4);
+	switch(ntype)
+	{
+		case 1:
+			setCardType(CARD_TYPE_WD_3DES);
+			break;
+		case 2:
+			setCardType(CARD_TYPE_JD_3DES);
+			break;
+		default:
+			setCardType(CARD_TYPE_TY_SM4);
+			break;
+	}
+
 
 
 	memset(elf15,0x00,50);
 	memset(elf16,0x00,55);
 	dwRemain = 0;
 
+	/*
 	ret =cpuReadCardFiles(elf15,elf16,dwRemain,gnCom);
 	if(ret)
 	{
 		PRINTK("\n读用户卡失败:%d",ret);
 		return;
 	}
+	*/
+	memcpy(elf15,"\xc7\xe0\xba\xa3\x63\x01\x00\x01\x17\x40\x63\x01\x19\x15\x23\x01\x09\x00\x34\x50\x20\x19\x04\x30\x20\x09\x04\x30\xff",31);
 
 	ret = cpuClear(elf15,gnCom);
 	if(ret)

@@ -268,6 +268,10 @@ int CCPUCardBase::credit(BYTE bVer,BYTE *szAPPID,BYTE *szDeviceNo,DWORD dwAmount
 	if((bVer>>4)==0x05) bKeyIndex = 0x41;
 	
 	memset(strResp,0x00,64);
+	ret = m_pReader->RunCmd("00A40000021001",strResp);
+	if(ret) return ret;
+
+	memset(strResp,0x00,64);
 	ret = m_pReader->RunCmd("0020000006313233343536",strResp);
 	if(ret) return ret;
 
@@ -345,7 +349,11 @@ int CCPUCardBase::debit(BYTE bVer,BYTE *szAPPID,BYTE *szDeviceNo,DWORD dwAmount,
 	bKeyIndex = 0x01;
 	if((bVer>>4)==0x05) bKeyIndex = 0x41;
 
-	//	Initialize for Credit
+	memset(strResp,0x00,64);
+	ret = m_pReader->RunCmd("00A40000021001",strResp);
+	if(ret) return ret;
+
+	//	Initialize for Debit
 	memset(strCmd,0x00,128);
 	sprintf(strCmd,"805001020B%02X%08X%02X%02X%02X%02X%02X%02X",bKeyIndex,dwAmount,
 					szDeviceNo[0],szDeviceNo[1],szDeviceNo[2],

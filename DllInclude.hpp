@@ -29,6 +29,7 @@
 #include ".\\card\\tycpucard.h"
 #include ".\\card\\obucard.h"
 #include ".\\card\\wd3descard.h"
+#include ".\\card\\jd3descard.h"
 
 #ifdef __DEBUG__
 #define PRINTK printf
@@ -51,5 +52,6 @@
 #include ".\\card\\tycpucard.cpp"
 #include ".\\card\\obucard.cpp"
 #include ".\\card\\wd3descard.cpp"
+#include ".\\card\\jd3descard.cpp"
 
 #endif

@@ -28,6 +28,7 @@ public:
 	virtual UINT PSAM_RunCmd(char *strCmd, char *strResult) = 0;
 	virtual UINT PSAM_Atr(BYTE bNode,BYTE &brLen,char *strATR) = 0;
 	virtual UINT SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLength,BYTE &bRetFileLen,char *strResp) = 0;
+	virtual UINT Beep(BYTE bAct)=0;
 
 	void WriteReaderLog(char * strText)
 	{

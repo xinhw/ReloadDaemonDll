@@ -100,5 +100,7 @@ cpuClear
 setCardType
 getCardType
 
+;2019-07-15
+readerBeep
 
 	
