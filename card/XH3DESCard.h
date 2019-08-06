@@ -5,23 +5,26 @@
 
     Xin Hongwei(hongwei.xin@avantport.com)
 
-    Created£º2018/07/24 16:12:29
+    Created£º2019/08/01 14:47:37
 
     Reversion:
-			ÌìÓ÷CPU¿¨Àà
+        Öéº£ÐÇºº3DES¿¨Æ¬£¨ÄþÏÄ£©
 -------------------------------------------------------------------------*/
 #pragma once
 
-
-class CTYCPUCard: public CCPUCardBase
+class CXH3DESCard: public CCPUCardBase
 {
 public:
-	CTYCPUCard();
-	CTYCPUCard(CCardReader *preader,ClsCommand *pcmd);
-	~CTYCPUCard();
+	CXH3DESCard();
+	CXH3DESCard(CCardReader *preader,ClsCommand *pcmd);
+	~CXH3DESCard();
 
 private:
-	int ty_load_key(BYTE bVer,BYTE *szAPPID,BYTE *szDID,BYTE bKeyNo,BYTE bKeyHeaderLen,BYTE *szKeyHeader);
+	BYTE m_szPKey[16];
+
+	int xh_load_key(BYTE bIndex,BYTE *szAPPID,BYTE *szDID,BYTE bKeyNo,BYTE bKeyHeaderLen,BYTE *szKeyHeader);
+
+	WORD m_wNetworkID;
 public:
 	//	³õÊ¼»¯
 	int init(BYTE *elf15);

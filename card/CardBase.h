@@ -32,6 +32,8 @@ public:
 	//	¿¨Æ¬Çå³ý
 	virtual int clear(BYTE *elf15);
 
+	virtual int preInit(WORD wDFID,BYTE *elf15);
+
 public:
 
 	int rats(BYTE *szSNO,BYTE &bATSLen,BYTE *szATS);

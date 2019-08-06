@@ -39,9 +39,14 @@
 
 int gnDefaultCom = 0;
 
-#define CARD_TYPE_TY_SM4			54594			//	ÌìÓ÷SM4¿¨
-#define CARD_TYPE_WD_3DES			57443			//	ÎÕÆæ3DES¿¨
-#define CARD_TYPE_JD_3DES			0x4A443			//	½ÝµÂ3DES¿¨	
+#define CARD_TYPE_TY_SM4			54594			//	ÌìÓ÷ SM4¿¨
+#define CARD_TYPE_WD_3DES			57443			//	ÎÕÆæ 3DES¿¨
+#define CARD_TYPE_JD_3DES			0x4A443			//	½ÝµÂ 3DES¿¨
+#define CARD_TYPE_XH_3DES			0x57693			//	ÐÇºº 3DES¿¨
+#define CARD_TYPE_CTD_3DES			0x86843			//	³þÌìÁú 3DES¿¨
+#define CARD_TYPE_TY_3DES			0x54593			//	ÌìÓ÷ 3DES¿¨
+
+
 int gnCardType = CARD_TYPE_TY_SM4;
 
 
@@ -214,6 +219,8 @@ extern "C"
 	int __stdcall cpuReloadPIN(BYTE bVer,BYTE *szAPPID,BYTE bPINLen,BYTE *szPIN,int ncom = gnDefaultCom);
 
 
+	int __stdcall cpuPreInit(BYTE *szFile0015,int ncom = gnDefaultCom);
+
 	/***************************************************************************************/
 	/*				OBUº¯Êý	    														   */
 	/***************************************************************************************/
@@ -291,7 +298,6 @@ extern "C"
 
 	void	__stdcall	setCardType(int ntype);
 	int		__stdcall	getCardType(){return gnCardType;}
-
 
 	void __stdcall readerBeep(int ncom,BYTE bAct);
 };

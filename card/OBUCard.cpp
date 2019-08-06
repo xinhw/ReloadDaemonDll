@@ -332,18 +332,18 @@ int COBUCard::init(BYTE *elf01_mf,BYTE *elf01_adf)
 	//	ADF1下的密钥
 	CARDKEY arr_adf_keys[] = 
 	{
-		{0x04,3,(BYTE *)"\x01\x41\x00","SM4 应用维护密钥 DAMK_DF01"},
+		{0x04,3,(BYTE *)"\x01\x41\x00","SM4 应用维护密钥 DAMK_DF01",NULL},
 		
-		{0x05,3,(BYTE *)"\x00\x01\x00","3DES 外部认证密钥1 UK1_DF01"},
-		{0x06,3,(BYTE *)"\x01\x03\x00","3DES 应用加密密钥1 RK21_DF01"},
-		{0x07,3,(BYTE *)"\x01\x03\x01","3DES 应用加密密钥2 RK22_DF01"},
-		{0x08,3,(BYTE *)"\x01\x03\x02","3DES 应用加密密钥3 RK23_DF01"},
+		{0x05,3,(BYTE *)"\x00\x01\x00","3DES 外部认证密钥1 UK1_DF01",NULL},
+		{0x06,3,(BYTE *)"\x01\x03\x00","3DES 应用加密密钥1 RK21_DF01",NULL},
+		{0x07,3,(BYTE *)"\x01\x03\x01","3DES 应用加密密钥2 RK22_DF01",NULL},
+		{0x08,3,(BYTE *)"\x01\x03\x02","3DES 应用加密密钥3 RK23_DF01",NULL},
 			
-		{0x09,3,(BYTE *)"\x00\x41\x00","SM4 外部认证密钥2 UK2_DF01"},
-		{0x0A,3,(BYTE *)"\x01\x42\x00","SM4 应用认证密钥 RK3_DF01"},
-		{0x0B,3,(BYTE *)"\x01\x43\x40","SM4 应用加密密钥4 RK41_DF01"},
-		{0x0C,3,(BYTE *)"\x01\x43\x41","SM4 应用加密密钥5 RK42_DF01"},
-		{0x0D,3,(BYTE *)"\x01\x43\x42","SM4 应用加密密钥6 RK43_DF01"},
+		{0x09,3,(BYTE *)"\x00\x41\x00","SM4 外部认证密钥2 UK2_DF01",NULL},
+		{0x0A,3,(BYTE *)"\x01\x42\x00","SM4 应用认证密钥 RK3_DF01",NULL},
+		{0x0B,3,(BYTE *)"\x01\x43\x40","SM4 应用加密密钥4 RK41_DF01",NULL},
+		{0x0C,3,(BYTE *)"\x01\x43\x41","SM4 应用加密密钥5 RK42_DF01",NULL},
+		{0x0D,3,(BYTE *)"\x01\x43\x42","SM4 应用加密密钥6 RK43_DF01",NULL},
 
 		{0,0,NULL,NULL}
 	};

@@ -154,34 +154,34 @@ int CTYCPUCard::init(BYTE *elf15)
 	//	MF下的密钥
 	CARDKEY arr_mf_keys[] = 
 	{
-		{0x06,8,(BYTE *)"\x41\x01\x04\x05\x0F\x0F\x0F\x33","SM4 卡片维护密钥 DAMK_DF01"},
+		{0x06,8,(BYTE *)"\x41\x01\x04\x05\x0F\x0F\x0F\x33","SM4 卡片维护密钥 DAMK_DF01",NULL},
 
 		{0,0,NULL,NULL}
 	};
 
 	CARDKEY arr_adf_keys[] = 
 	{
-		{0x07,8,(BYTE *)"\x40\x01\x04\x08\x0F\x0F\x0F\x33","SM4 应用主控密钥 MK_DF01"},
-		{0x08,8,(BYTE *)"\x41\x01\x04\x05\x0F\x0F\x0F\x33","SM4 应用维护密钥 DAMK_DF01"},
+		{0x07,8,(BYTE *)"\x40\x01\x04\x08\x0F\x0F\x0F\x33","SM4 应用主控密钥 MK_DF01",NULL},
+		{0x08,8,(BYTE *)"\x41\x01\x04\x05\x0F\x0F\x0F\x33","SM4 应用维护密钥 DAMK_DF01",NULL},
 		
-		{0x03,8,(BYTE *)"\x01\x01\x00\x08\x0F\x02\x0F\x33","3DES 外部认证子密钥1 UK1_DF01"},
-		{0x10,8,(BYTE *)"\x00\x01\x00\x09\x0F\x00\x0F\xFF","3DES 内部认证子密钥1 IK1_DF01"},
-		{0x01,8,(BYTE *)"\x01\x01\x00\x00\x0F\x00\x0F\xFF","3DES 消费子密钥1 DPK1"},
-		{0x02,8,(BYTE *)"\x02\x01\x00\x00\x0F\x00\x0F\xFF","3DES 消费子密钥2 DPK2"},
-		{0x04,8,(BYTE *)"\x00\x01\x00\x02\x0F\x00\x0F\xFF","3DES TAC子密钥1 DTK1"},
+		{0x03,8,(BYTE *)"\x01\x01\x00\x08\x0F\x02\x0F\x33","3DES 外部认证子密钥1 UK1_DF01",NULL},
+		{0x10,8,(BYTE *)"\x00\x01\x00\x09\x0F\x00\x0F\xFF","3DES 内部认证子密钥1 IK1_DF01",NULL},
+		{0x01,8,(BYTE *)"\x01\x01\x00\x00\x0F\x00\x0F\xFF","3DES 消费子密钥1 DPK1",NULL},
+		{0x02,8,(BYTE *)"\x02\x01\x00\x00\x0F\x00\x0F\xFF","3DES 消费子密钥2 DPK2",NULL},
+		{0x04,8,(BYTE *)"\x00\x01\x00\x02\x0F\x00\x0F\xFF","3DES TAC子密钥1 DTK1",NULL},
 		/*	PIN密钥*/
-		{0x0B,8,(BYTE *)"\x00\x01\x00\x06\x0F\x00\x0F\xFF","3DES 应用PIN解锁子密钥1 DPUK1_DF01"},
-		{0x0C,8,(BYTE *)"\x01\x01\x00\x07\x0F\x00\x0F\xFF","3DES 应用PIN重装子密钥1 DPRK1_DF01"},
+		{0x0B,8,(BYTE *)"\x00\x01\x00\x06\x0F\x00\x0F\xFF","3DES 应用PIN解锁子密钥1 DPUK1_DF01",NULL},
+		{0x0C,8,(BYTE *)"\x01\x01\x00\x07\x0F\x00\x0F\xFF","3DES 应用PIN重装子密钥1 DPRK1_DF01",NULL},
 			
-		{0x21,8,(BYTE *)"\x41\x41\x04\x08\x0F\x02\x0F\x33","SM4 外部认证子密钥2 UK2_DF01"},
-		{0x22,8,(BYTE *)"\x40\x41\x04\x09\x0F\x00\x0F\xFF","SM4 内部认证子密钥2 IK2_DF01"},
-		{0x23,8,(BYTE *)"\x41\x41\x04\x00\x0F\x00\x0F\xFF","SM4 消费子密钥3 DPK3"},
-		{0x24,8,(BYTE *)"\x42\x41\x04\x00\x0F\x00\x0F\xFF","SM4 消费子密钥4 DPK4"},
-		{0x09,8,(BYTE *)"\x41\x41\x04\x01\x0F\x00\x0F\xFF","SM4 圈存子密钥3 DLK3"},
-		{0x0A,8,(BYTE *)"\x42\x41\x04\x01\x0F\x00\x0F\xFF","SM4 圈存子密钥4 DLK4"},
-		{0x27,8,(BYTE *)"\x40\x41\x04\x02\x0F\x00\x0F\xFF","SM4 TAC子密钥2 DTK2"},
-		{0x28,8,(BYTE *)"\x40\x41\x04\x06\x0F\x00\x0F\xFF","SM4 应用PIN解锁子密钥2 DPUK2_DF01"},
-		{0x29,8,(BYTE *)"\x41\x41\x04\x07\x0F\x00\x0F\xFF","SM4 应用PIN重装子密钥2 DPRK2_DF01"},
+		{0x21,8,(BYTE *)"\x41\x41\x04\x08\x0F\x02\x0F\x33","SM4 外部认证子密钥2 UK2_DF01",NULL},
+		{0x22,8,(BYTE *)"\x40\x41\x04\x09\x0F\x00\x0F\xFF","SM4 内部认证子密钥2 IK2_DF01",NULL},
+		{0x23,8,(BYTE *)"\x41\x41\x04\x00\x0F\x00\x0F\xFF","SM4 消费子密钥3 DPK3",NULL},
+		{0x24,8,(BYTE *)"\x42\x41\x04\x00\x0F\x00\x0F\xFF","SM4 消费子密钥4 DPK4",NULL},
+		{0x09,8,(BYTE *)"\x41\x41\x04\x01\x0F\x00\x0F\xFF","SM4 圈存子密钥3 DLK3",NULL},
+		{0x0A,8,(BYTE *)"\x42\x41\x04\x01\x0F\x00\x0F\xFF","SM4 圈存子密钥4 DLK4",NULL},
+		{0x27,8,(BYTE *)"\x40\x41\x04\x02\x0F\x00\x0F\xFF","SM4 TAC子密钥2 DTK2",NULL},
+		{0x28,8,(BYTE *)"\x40\x41\x04\x06\x0F\x00\x0F\xFF","SM4 应用PIN解锁子密钥2 DPUK2_DF01",NULL},
+		{0x29,8,(BYTE *)"\x41\x41\x04\x07\x0F\x00\x0F\xFF","SM4 应用PIN重装子密钥2 DPRK2_DF01",NULL},
 
 		{0,0,NULL,NULL}
 	};
@@ -730,3 +730,7 @@ int CTYCPUCard::clear(BYTE *elf15)
 }
 
 
+int CTYCPUCard::preInit(WORD wDFID,BYTE *elf15)
+{
+	return 0;
+}

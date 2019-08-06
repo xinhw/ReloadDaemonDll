@@ -54,6 +54,7 @@ void		test_cpucard_reload_pin(void);
 void		test_cpucard_readadfile(void);
 void		test_cpucard_clear(void);
 void		test_verify_tac(void);
+void		test_cpucard_preinit(void);
 
 void		test_obu_read(void);
 void		test_obu_init(void);
@@ -87,16 +88,15 @@ CMD_FUNC cmd_func_tab[] =
 	{'E',"测试：用户卡读取ADF文件",test_cpucard_readadfile},
 	{'F',"测试：用户卡清除",test_cpucard_clear},
 	{'V',"测试：用户卡TAC验证",test_verify_tac},
-
-	{'Y',"测试：OBU卡预处理",test_obu_pre_init},
+	{'Y',"测试：用户卡预处理",test_cpucard_preinit},
 
 	{'0',"测试：OBU读卡信息",test_obu_read},
 	{'1',"测试：OBU一发",test_obu_init},
 	{'2',"测试：OBU二发",test_obu_personize},
 	{'3',"测试：OBU解锁应用",test_obu_unlock_adf},
 	{'4',"测试：OBU车辆信息解密",test_obu_decode_plate},
-
 	{'5',"测试：PSAM卡授权",test_psam_auth},
+	{'9',"测试：OBU卡预处理",test_obu_pre_init},
 
 	{'N',"测试：操作员签到",test_signin},
 
@@ -456,7 +456,7 @@ void		test_cpucard_init(void)
 	DWORD dwRemain;
 	int ntype;
 
-	PRINTK("\n卡片类型：0--天喻SM4卡 1--握奇3DES卡 2--捷德3DES卡\n");
+	PRINTK("\n卡片类型：0--天喻SM4卡 1--握奇3DES卡 2--捷德3DES卡 3--星汉3DES卡 4--天喻3DES卡 5--楚天龙3DES卡\n");
 	scanf("%d",&ntype);
 
 	switch(ntype)
@@ -469,11 +469,24 @@ void		test_cpucard_init(void)
 			PRINTK("\n捷德3DES卡");
 			setCardType(CARD_TYPE_JD_3DES);
 			break;
+		case 3:
+			PRINTK("\n星汉3DES卡");
+			setCardType(CARD_TYPE_XH_3DES);
+			break;
+		case 4:
+			PRINTK("\n天喻3DES卡");
+			setCardType(CARD_TYPE_TY_3DES);
+			break;
+		case 5:
+			PRINTK("\n楚天龙3DES卡");
+			setCardType(CARD_TYPE_CTD_3DES);
+			break;
 		default:
 			PRINTK("\n天喻SM4卡");
 			setCardType(CARD_TYPE_TY_SM4);
 			break;
 	}
+
 	memset(elf15,0x00,50);
 	memset(elf16,0x00,55);
 	dwRemain = 0;
@@ -487,7 +500,8 @@ void		test_cpucard_init(void)
 	}
 	*/
 
-	memcpy(elf15,"\xc7\xe0\xba\xa3\x63\x01\x00\x01\x17\x40\x63\x01\x19\x15\x23\x01\x09\x00\x34\x50\x20\x19\x04\x30\x20\x09\x04\x30\xff",31);
+	memset(elf15,0x00,50);
+	memcpy(elf15,"\xc7\xe0\xba\xa3\x64\x01\x00\x01\x17\x40\x64\x01\x19\x15\x23\x01\x09\x00\x34\x50\x20\x19\x04\x30\x20\x09\x04\x30\xff",31);
 
 	ret = cpuInit(elf15,gnCom);
 	if(ret)
@@ -502,6 +516,60 @@ void		test_cpucard_init(void)
 }
 
 
+void		test_cpucard_preinit(void)
+{
+	int ret;
+	BYTE elf15[50];
+	DWORD dwRemain;
+	int ntype;
+
+	PRINTK("\n卡片类型：0--天喻SM4卡 1--握奇3DES卡 2--捷德3DES卡 3--星汉3DES卡 4--天喻3DES卡 5--楚天龙3DES卡\n");
+	scanf("%d",&ntype);
+
+	switch(ntype)
+	{
+		case 1:
+			PRINTK("\n握奇3DES卡");
+			setCardType(CARD_TYPE_WD_3DES);
+			break;
+		case 2:
+			PRINTK("\n捷德3DES卡");
+			setCardType(CARD_TYPE_JD_3DES);
+			break;
+		case 3:
+			PRINTK("\n星汉3DES卡");
+			setCardType(CARD_TYPE_XH_3DES);
+			break;
+		case 4:
+			PRINTK("\n天喻3DES卡");
+			setCardType(CARD_TYPE_TY_3DES);
+			break;
+		case 5:
+			PRINTK("\n楚天龙3DES卡");
+			setCardType(CARD_TYPE_CTD_3DES);
+			break;
+		default:
+			PRINTK("\n天喻SM4卡");
+			setCardType(CARD_TYPE_TY_SM4);
+			break;
+	}
+	memset(elf15,0x00,50);
+	dwRemain = 0;
+
+	memcpy(elf15,"\xc7\xe0\xba\xa3\x63\x01\x00\x01\x17\x40\x63\x01\x19\x15\x23\x01\x09\x00\x34\x50\x20\x19\x04\x30\x20\x09\x04\x30\xff",31);
+
+	ret = cpuPreInit(elf15,gnCom);
+	if(ret)
+	{
+		PRINTK("\n一发失败：%4X",ret);
+		return;
+	}
+
+	PRINTK("\n一发成功！");
+
+	return;
+}
+
 void		test_cpucard_clear(void)
 {
 	int ret;
@@ -510,7 +578,7 @@ void		test_cpucard_clear(void)
 
 	int ntype;
 
-	PRINTK("\n卡片类型：0--天喻SM4卡 1--握奇3DES卡 2--捷德3DES卡");
+	PRINTK("\n卡片类型：0--天喻SM4卡 1--握奇3DES卡 2--捷德3DES卡 3--星汉3DES卡 4--天喻3DES卡 5--楚天龙3DES卡\n");
 	scanf("%d",&ntype);
 	switch(ntype)
 	{
@@ -519,6 +587,17 @@ void		test_cpucard_clear(void)
 			break;
 		case 2:
 			setCardType(CARD_TYPE_JD_3DES);
+			break;
+		case 3:
+			setCardType(CARD_TYPE_XH_3DES);
+			break;
+		case 4:
+			PRINTK("\n天喻3DES卡");
+			setCardType(CARD_TYPE_TY_3DES);
+			break;
+		case 5:
+			PRINTK("\n楚天龙3DES卡");
+			setCardType(CARD_TYPE_CTD_3DES);
 			break;
 		default:
 			setCardType(CARD_TYPE_TY_SM4);

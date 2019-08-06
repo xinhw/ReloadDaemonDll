@@ -80,6 +80,7 @@
 		BYTE bHeaderLen;			/*	密钥头长度*/
 		BYTE *szKeyHeader;			/*	密钥头*/
 		char *strDesc;				/*	密钥描述*/
+		BYTE *P1P2;					/*	P1和P2参数*/
 	}CARDKEY;
 	#define PCARDKEY CARDKEY *
 

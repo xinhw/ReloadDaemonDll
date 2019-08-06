@@ -25,7 +25,7 @@ public:
 	int init(BYTE *elf01_mf,BYTE *elf01_adf);
 	//	¿¨Æ¬Çå³ý
 	int clear();
-
+	
 	int preInit(WORD wDFID,BYTE *elf01_mf);
 
 private:
@@ -39,5 +39,4 @@ public:
 	int read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile);
 	int getOBUUID(BYTE *szUID);
 	int unlockapp(BYTE bVer,BYTE *szAPPID);
-
 };

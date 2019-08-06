@@ -514,6 +514,15 @@ int __stdcall cpuInit(BYTE *szFile0015,int ncom)
 		case CARD_TYPE_JD_3DES:
 			pcard = new CJD3DESCard(preader[n],pcmd[n]);
 			break;
+		case CARD_TYPE_XH_3DES:
+			pcard = new CXH3DESCard(preader[n],pcmd[n]);
+			break;
+		case CARD_TYPE_TY_3DES:
+			pcard = new CTY3DESCard(preader[n],pcmd[n]);
+			break;
+		case CARD_TYPE_CTD_3DES:
+			pcard = new CCTD3DESCard(preader[n],pcmd[n]);
+			break;
 		default:
 			pcard = new CTYCPUCard(preader[n],pcmd[n]);
 			break;
@@ -528,6 +537,50 @@ int __stdcall cpuInit(BYTE *szFile0015,int ncom)
 
 }
 
+
+int __stdcall cpuPreInit(BYTE *szFile0015,int ncom)
+{
+	int ret;
+
+	PRINTK("\r\n¶Á¿¨Æ÷¶Ë¿Ú(cpuInit)£º%d",ncom);
+
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	CCPUCardBase *pcard;
+
+	ret = getCardType();
+	switch(ret)
+	{
+		case CARD_TYPE_WD_3DES:
+			pcard = new CWD3DESCard(preader[n],pcmd[n]);
+			break;
+		case CARD_TYPE_JD_3DES:
+			pcard = new CJD3DESCard(preader[n],pcmd[n]);
+			break;
+		case CARD_TYPE_XH_3DES:
+			pcard = new CXH3DESCard(preader[n],pcmd[n]);
+			break;
+		case CARD_TYPE_TY_3DES:
+			pcard = new CTY3DESCard(preader[n],pcmd[n]);
+			break;
+		case CARD_TYPE_CTD_3DES:
+			pcard = new CCTD3DESCard(preader[n],pcmd[n]);
+			break;
+		default:
+			pcard = new CTYCPUCard(preader[n],pcmd[n]);
+			break;
+	}
+
+
+	ret = pcard->preInit(0x0000,szFile0015);
+
+	delete pcard;
+
+	return ret;
+
+}
 
 int __stdcall cpuClear(BYTE *szFile0015,int ncom )
 {
@@ -549,6 +602,15 @@ int __stdcall cpuClear(BYTE *szFile0015,int ncom )
 			break;
 		case CARD_TYPE_JD_3DES:
 			pcard = new CJD3DESCard(preader[n],pcmd[n]);
+			break;
+		case CARD_TYPE_XH_3DES:
+			pcard = new CXH3DESCard(preader[n],pcmd[n]);
+			break;
+		case CARD_TYPE_TY_3DES:
+			pcard = new CTY3DESCard(preader[n],pcmd[n]);
+			break;
+		case CARD_TYPE_CTD_3DES:
+			pcard = new CCTD3DESCard(preader[n],pcmd[n]);
 			break;
 		default:
 			pcard = new CTYCPUCard(preader[n],pcmd[n]);

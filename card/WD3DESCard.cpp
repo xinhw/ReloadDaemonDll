@@ -1,3 +1,15 @@
+/*-------------------------------------------------------------------------
+    Shanghai AvantPort Information Technology Co., Ltd
+
+    Software Development Division
+
+    Xin Hongwei(hongwei.xin@avantport.com)
+
+    Created：2019/07/31 15:01:46
+
+    Reversion:
+        
+-------------------------------------------------------------------------*/
 
 CWD3DESCard::CWD3DESCard()
 {
@@ -20,6 +32,15 @@ CWD3DESCard::~CWD3DESCard()
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		CWD3DESCard.wd_load_key
+Created:		2019-07-31 15:01:50
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 int CWD3DESCard::wd_load_key(BYTE bVer,
 							 BYTE *szAPPID,
 							 BYTE *szDID,
@@ -33,7 +54,10 @@ int CWD3DESCard::wd_load_key(BYTE bVer,
 
 
 	memset(szKey,0x00,16);
-
+	if(m_wNetworkID==0x6301)		//	青海
+	{
+		memcpy(szKey,"\xC3\xA6\xDE\x06\x3F\xA7\x0E\x58\x0E\x37\x11\xA0\x77\x11\xFB\x84",16);
+	}
 	memset(szSesKey,0x00,16);
 	WatchDiversity(szKey,szAPPID,szSesKey,TRUE);
 
@@ -69,6 +93,15 @@ int CWD3DESCard::wd_load_key(BYTE bVer,
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		CWD3DESCard.wd_secure_update_key
+Created:		2019-07-31 15:01:54
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 int CWD3DESCard::wd_secure_update_key(BYTE bKeyType,BYTE bKeyVer,BYTE *szKey)
 {
 	int		ret,i;
@@ -126,6 +159,15 @@ int CWD3DESCard::wd_secure_update_key(BYTE bKeyType,BYTE bKeyVer,BYTE *szKey)
 
 
 //	初始化
+/*-------------------------------------------------------------------------
+Function:		CWD3DESCard.init
+Created:		2019-07-31 15:01:58
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 int CWD3DESCard::init(BYTE *elf15)
 {
 	int		ret;
@@ -143,29 +185,29 @@ int CWD3DESCard::init(BYTE *elf15)
 	//	MF下的密钥	KeyHeader的第一个字节是P2
 	CARDKEY arr_mf_keys[] = 
 	{
-		{0x06,5,(BYTE *)"\x00\x36\xF0\xF0\xFF\x33","卡片维护密钥 DAMK_CMK"},
+		{0x06,5,(BYTE *)"\x00\x36\xF0\xF0\xFF\x33","卡片维护密钥 DAMK_CMK",NULL},
 
 		{0,0,NULL,NULL}
 	};
 
 	CARDKEY arr_adf_ack[] = 
 	{
-		{0x07,5,(BYTE *)"\x00\x39\xF0\xF0\xAA\x33","应用主控密钥 MK_DF01"},
+		{0x07,5,(BYTE *)"\x00\x39\xF0\xF0\xAA\x33","应用主控密钥 MK_DF01",NULL},
 		{0,0,NULL,NULL}
 	};
 
 	CARDKEY arr_adf_keys[] = 
 	{
-		{0x03,5,(BYTE *)"\x01\x39\xF0\xF0\x02\x33","外部认证子密钥 UK_DF01"},
-		{0x10,5,(BYTE *)"\x00\x30\xF0\xF0\x01\x00","内部认证子密钥 IK_DF01"},
-		{0x01,5,(BYTE *)"\x01\x3E\xF0\xF0\x01\x00","消费子密钥1 DPK1"},
-		{0x02,5,(BYTE *)"\x02\x3E\xF0\xF0\x01\x00","消费子密钥2 DPK2"},
-		{0x04,5,(BYTE *)"\x00\x34\xF0\xF0\x01\x00","TAC子密钥 DTK"},
+		{0x03,5,(BYTE *)"\x01\x39\xF0\xF0\x02\x33","外部认证子密钥 UK_DF01",NULL},
+		{0x10,5,(BYTE *)"\x00\x30\xF0\xF0\x01\x00","内部认证子密钥 IK_DF01",NULL},
+		{0x01,5,(BYTE *)"\x01\x3E\xF0\xF0\x01\x00","消费子密钥1 DPK1",NULL},
+		{0x02,5,(BYTE *)"\x02\x3E\xF0\xF0\x01\x00","消费子密钥2 DPK2",NULL},
+		{0x04,5,(BYTE *)"\x00\x34\xF0\xF0\x01\x00","TAC子密钥 DTK",NULL},
 
-		{0x09,5,(BYTE *)"\x01\x3F\xF0\xF0\x01\x00","圈存子密钥1 DLK1"},
-		{0x0A,5,(BYTE *)"\x02\x3F\xF0\xF0\x01\x00","圈存子密钥2 DLK2"},
-		{0x0B,5,(BYTE *)"\x00\x37\xF0\xF0\xFF\x33","应用PIN解锁子密钥 DPUK_DF01"},
-		{0x0C,5,(BYTE *)"\x00\x38\xF0\xF0\xFF\x33","应用PIN重装子密钥 DPRK_DF01"},
+		{0x09,5,(BYTE *)"\x01\x3F\xF0\xF0\x01\x00","圈存子密钥1 DLK1",NULL},
+		{0x0A,5,(BYTE *)"\x02\x3F\xF0\xF0\x01\x00","圈存子密钥2 DLK2",NULL},
+		{0x0B,5,(BYTE *)"\x00\x37\xF0\xF0\xFF\x33","应用PIN解锁子密钥 DPUK_DF01",NULL},
+		{0x0C,5,(BYTE *)"\x00\x38\xF0\xF0\xFF\x33","应用PIN重装子密钥 DPRK_DF01",NULL},
 
 		{0,0,NULL,NULL}
 	};
@@ -173,7 +215,7 @@ int CWD3DESCard::init(BYTE *elf15)
 	//	应用维护密钥
 	CARDKEY arr_adf_amk[] = 
 	{
-		{0x08,5,(BYTE *)"\x00\x36\xF0\xF0\xFF\x33","应用维护密钥 DAMK_DF01"},
+		{0x08,5,(BYTE *)"\x00\x36\xF0\xF0\xFF\x33","应用维护密钥 DAMK_DF01",NULL},
 		{0,0,NULL,NULL}
 	};
 
@@ -181,6 +223,9 @@ int CWD3DESCard::init(BYTE *elf15)
 	//	卡片版本号和应用序列号
 	bVer = elf15[9];
 	memcpy(szAPPID,elf15+12,8);
+	
+	m_wNetworkID = elf15[7];
+	m_wNetworkID = m_wNetworkID*0x100 + elf15[8];
 
 	//	选择1PAY.SYS.DDF01
 	callbackMessage("选择1PAY.SYS.DDF01");
@@ -393,6 +438,15 @@ int CWD3DESCard::init(BYTE *elf15)
 
 
 //	卡片清除
+/*-------------------------------------------------------------------------
+Function:		CWD3DESCard.clear
+Created:		2019-07-31 15:02:06
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 int CWD3DESCard::clear(BYTE *elf15)
 {
 	int		ret;
@@ -531,4 +585,19 @@ endl:
 
 
 	return ret;
+}
+
+
+/*-------------------------------------------------------------------------
+Function:		CWD3DESCard.preInit
+Created:		2019-07-31 15:02:10
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int CWD3DESCard::preInit(WORD wDFID,BYTE *elf15)
+{
+	return 0;
 }

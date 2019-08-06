@@ -117,6 +117,10 @@ bool CCPUCardBase::validation()
 	return true;
 }
 
+int CCPUCardBase::preInit(WORD wDFID,BYTE *elf15)
+{
+	return 0;
+}
 /*-------------------------------------------------------------------------
 Function:		CCPUCardBase.rats
 Created:		2018-07-24 16:12:24
