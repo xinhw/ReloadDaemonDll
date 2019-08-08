@@ -150,8 +150,13 @@ Reversion:
 int main(void)
 {
 	char ch;
+	char	strver[255];
+
+	memset(strver,0x00,255);
+	getDllVersion(strver);
 
 	PRINTK("\n高速公路在线密钥服务动态库测试：%s",__DATE__);
+	PRINTK("\n版本：%s",strver);
 
 	print_cmd_usage();
 

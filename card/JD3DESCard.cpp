@@ -233,8 +233,8 @@ int CJD3DESCard::init(BYTE *elf15)
 	bVer = elf15[9];
 	memcpy(szAPPID,elf15+12,8);
 
-	m_wNetworkID = elf15[7];
-	m_wNetworkID = m_wNetworkID*0x100 + elf15[8];
+	m_wNetworkID = elf15[10];
+	m_wNetworkID = m_wNetworkID*0x100 + elf15[11];
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// 1001目录下的操作
