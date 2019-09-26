@@ -133,18 +133,12 @@ Reversion:
 int CCPUCardBase::rats(BYTE *szSNO,BYTE &bATSLen,BYTE *szATS)
 {
 	int ret;
-	BYTE strats[256],strsno[10];
 
-	if(!validation()) return -1;
-
-	memset(strats,0x00,256);
-	memset(strsno,0x00,10);
-
-	ret = m_pReader->Initialize(strsno,bATSLen,strats);
+	ret = m_pReader->Initialize(szSNO,bATSLen,szATS);
 	if(0==ret)
 	{
-		memcpy(szSNO,strsno,4);
 		/*
+		memcpy(szSNO,strsno,4);		
 		CMisc::StringToByte(strats,szATS);
 		bATSLen = strlen(strats)/2;
 		*/
@@ -169,8 +163,6 @@ int CCPUCardBase::readCard(BYTE *elf15,BYTE *elf16,DWORD &dwRemain)
 	int ret;
 	char strresp[256];
 	BYTE szbuf[32];
-
-	if(!validation()) return -1;
 
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);
@@ -219,8 +211,6 @@ int CCPUCardBase::readRecord(BYTE bFileID,BYTE bNo,BYTE bLen,BYTE *szRec)
 {
 	int ret;
 	char strresp[256],strcmd[11];
-
-	if(!validation()) return -1;
 
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);
@@ -682,8 +672,6 @@ int CCPUCardBase::readAdfFile(BYTE bFID,BYTE bOffset, BYTE bLength, BYTE *szFile
 	int		ret;
 	char	strCmd[64],strresp[256];
 	BYTE	bFileID;
-
-	if(!validation()) return -1;
 
 	//	0. 选择3F00
 	memset(strresp,0x00,64);

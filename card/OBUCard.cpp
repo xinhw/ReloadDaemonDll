@@ -601,8 +601,6 @@ int COBUCard::read_obu(BYTE *elf01_mk)
 	int ret;
 	char strresp[256];
 
-	if(!validation()) return -1;
-
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);
 	ret = m_pReader->RunCmd("00A40000023F00",strresp);
@@ -632,8 +630,6 @@ int COBUCard::update_mf_elf01(BYTE bVer,BYTE *szAPPID,BYTE *szELF01)
 	int ret,i;
 	char strresp[256],strCmd[512];
 	BYTE szMAC[4],szRnd[16],szCmd[256];
-
-	if(!validation()) return -1;
 
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);
@@ -685,8 +681,6 @@ int COBUCard::update_adf_elf01(BYTE bVer,BYTE *szAPPID,BYTE *szELF01)
 	int ret,i;
 	char strresp[256],strCmd[512];
 	BYTE szMAC[4],szRnd[16],szCmd[256];
-
-	if(!validation()) return -1;
 
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);
@@ -742,8 +736,6 @@ int COBUCard::update_load_flag(BYTE bVer,BYTE *szAPPID,BYTE bFlag)
 	char strresp[256],strCmd[512];
 	BYTE szMAC[4],szRnd[16],szCmd[256];
 
-	if(!validation()) return -1;
-
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);
 	ret = m_pReader->RunCmd("00A40000023F00",strresp);
@@ -793,8 +785,6 @@ int COBUCard::getOBUUID(BYTE *szUID)
 
 	char	strResp[128];
 
-	if(!validation()) return -1;
-	
 	memset(strResp,0x00,128);
 	ret = m_pReader->RunCmd("80F6000304",strResp);
 	if(ret)
@@ -824,8 +814,6 @@ int COBUCard::read_vechile_file(BYTE bNode,BYTE bVer,BYTE *szPlainFile)
 	BYTE rLen = 0,bKeyIndex=0x40;
 	char strELF01[256];
 
-	if(!validation()) return -1;
-	
 	memcpy(szAPPID,m_pReader->m_szApplication,8);
 
 	//	GetSecure函数读取信息
@@ -860,8 +848,6 @@ int COBUCard::unlockapp(BYTE bVer,BYTE *szAPPID)
 	int ret,i;
 	char strresp[256],strCmd[512];
 	BYTE szMAC[4],szRnd[16],szCmd[256];
-
-	if(!validation()) return -1;
 
 	//	0. 选择3F00目录
 	memset(strresp,0x00,256);

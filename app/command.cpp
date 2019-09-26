@@ -1571,3 +1571,245 @@ int		ClsCommand::cmd_1046(BYTE *szSAMNo,BYTE *szTerminalNo,
 
 	return 0;
 }
+
+
+// 4.16.1	CPC卡更新申请1047
+int		ClsCommand::cmd_1047(BYTE bKeyVer,
+				BYTE *szSNO,
+				BYTE *szAPPID,
+				BYTE *szIssuer,
+				BYTE *szStartDate,BYTE *szEndDate,
+				BYTE bCardVer,
+				char *strListNo)
+{
+	int ret;
+	WORD nLen;
+	BYTE szBuf[256];
+
+	nLen = 0;
+	memset(szBuf,0x00,256);
+
+	//1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
+
+	//2	密钥版本号	B	1		取0x51	
+	szBuf[nLen]=bKeyVer;
+	nLen++;
+
+	//3	序列号	B	4	
+	memcpy(szBuf+nLen,szSNO,4);
+	nLen = nLen + 4;
+
+	//4	CPC卡号	B	8			
+	memcpy(szBuf+nLen,szAPPID,8);
+	nLen = nLen + 8;
+
+	//5	发行方标识	B	8	
+	memcpy(szBuf+nLen,szIssuer,8);
+	nLen = nLen + 8;
+
+	//6	起始日期	B	4	
+	memcpy(szBuf+nLen,szStartDate,4);
+	nLen = nLen + 4;
+
+	//7	结束日期	B	4
+	memcpy(szBuf+nLen,szEndDate,4);
+	nLen = nLen + 4;
+
+	//8	合同版本号	B	1	
+	szBuf[nLen] = bCardVer;
+	nLen++;
+
+
+	ret = send_recv(0x1047,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
+	if(ret) return ret;
+	if(nLen<40) return -24;
+
+	//1	返回代码	US	2	
+	ret = szBuf[0];
+	ret = ret * 0x100 + szBuf[1];
+	if(ret) return ret;
+
+	//2	中心业务流水号	C	36		listNo	
+	memcpy(strListNo,szBuf+2,36);
+
+	//3	剩余交易次数	US	2	
+	m_wRemainCount = szBuf[38];
+	m_wRemainCount = m_wRemainCount *0x100 + szBuf[39];
+
+	return 0;
+}
+
+
+// 4.16.2	CPC卡获取密钥1048
+int		ClsCommand::cmd_1048(char *strListNo,
+				BYTE bKeyNo,
+				BYTE *szRand,
+				WORD wSW1SW2,
+				BYTE bResult,
+				BYTE *bLen,BYTE *szEncKey)
+{
+	int ret;
+	WORD nLen;
+	BYTE szBuf[256];
+
+	nLen = 0;
+	memset(szBuf,0x00,256);
+
+	//	1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
+
+	//	2	申请时中心业务流水号	A	36		申请时的listNo
+	memcpy(szBuf+nLen,strListNo,36);
+	nLen = nLen + 36;
+
+	//	3	密钥编号	B	1
+	szBuf[nLen] = bKeyNo;
+	nLen++;
+
+	//	4	随机数	B	4
+	memcpy(szBuf+nLen,szRand,4);
+	nLen = nLen + 4;
+
+	//	5	指令结果	B	2	
+	szBuf[nLen] = (BYTE)(wSW1SW2>>8);
+	szBuf[nLen+1] = (BYTE)(wSW1SW2&0xff);
+	nLen = nLen + 2;
+
+	//	6	指令结果码	B	1	
+	szBuf[nLen] = bResult;
+	nLen++;
+
+	ret = send_recv(0x1048,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
+	if(ret) return ret;
+	if(nLen<21) return -24;
+
+	//1	返回代码	US	2	
+	ret = szBuf[0];
+	ret = ret * 0x100 + szBuf[1];
+	if(ret) return ret;
+
+	//2	密文长度	B	1
+	nLen = szBuf[2];
+	*bLen = nLen;
+
+	//3	密钥头和密钥值加密密文	B	L
+	//4	MAC	B	4
+	memcpy(szEncKey,szBuf+3,nLen);
+	nLen = nLen + 3;
+
+	//5	剩余交易次数	US	2
+	m_wRemainCount = szBuf[nLen];
+	m_wRemainCount = m_wRemainCount *0x100 + szBuf[nLen+1];
+	nLen = nLen + 2;
+
+	return 0;
+}
+
+// 4.16.3	CPC卡更新文件1049
+int		ClsCommand::cmd_1049(char *strListNo,
+				BYTE *szRand,
+				WORD wSW1SW2,
+				BYTE bResult,
+				BYTE *szMAC)
+{
+
+	int ret;
+	WORD nLen;
+	BYTE szBuf[256];
+
+	nLen = 0;
+	memset(szBuf,0x00,256);
+
+	//	1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
+
+	//	2	申请时中心业务流水号	A	36		申请时的listNo
+	memcpy(szBuf+nLen,strListNo,36);
+	nLen = nLen + 36;
+
+	//	3	随机数	B	4
+	memcpy(szBuf+nLen,szRand,4);
+	nLen = nLen + 4;
+
+	//	4	指令结果	B	2	
+	szBuf[nLen] = (BYTE)(wSW1SW2>>8);
+	szBuf[nLen+1] = (BYTE)(wSW1SW2&0xff);
+	nLen = nLen + 2;
+
+	//	5	指令结果码	B	1	
+	szBuf[nLen] = bResult;
+	nLen++;
+
+	ret = send_recv(0x1049,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
+	if(ret) return ret;
+	if(nLen<8) return -24;
+
+	//1	返回代码	US	2	
+	ret = szBuf[0];
+	ret = ret * 0x100 + szBuf[1];
+	if(ret) return ret;
+	nLen = 2;
+
+	//2	MAC	B	4
+	memcpy(szMAC,szBuf+2,4);
+	nLen = nLen + 4;
+
+	//3	剩余交易次数	US	2
+	m_wRemainCount = szBuf[nLen];
+	m_wRemainCount = m_wRemainCount *0x100 + szBuf[nLen+1];
+	nLen = nLen + 2;
+
+	return 0;
+}
+
+// 4.16.4	CPC卡更新结果上送1050
+int		ClsCommand::cmd_1050(char *strListNo,
+				WORD wSW1SW2,
+				BYTE bResult)
+{
+
+	int ret;
+	WORD nLen;
+	BYTE szBuf[256];
+
+	nLen = 0;
+	memset(szBuf,0x00,256);
+
+	//	1	银行网点编码	B	19
+	memcpy(szBuf+nLen,m_strBankID,19);
+	nLen = nLen + 19;
+
+	//	2	申请时中心业务流水号	A	36		申请时的listNo
+	memcpy(szBuf+nLen,strListNo,36);
+	nLen = nLen + 36;
+
+	//	3	指令结果	B	2	
+	szBuf[nLen] = (BYTE)(wSW1SW2>>8);
+	szBuf[nLen+1] = (BYTE)(wSW1SW2&0xff);
+	nLen = nLen + 2;
+
+	//	4	指令结果码	B	1	
+	szBuf[nLen] = bResult;
+	nLen++;
+
+	ret = send_recv(0x1050,nLen,szBuf,&nLen,szBuf,m_dwTimeout*1000);
+	if(ret) return ret;
+	if(nLen<4) return -24;
+
+	//1	返回代码	US	2	
+	ret = szBuf[0];
+	ret = ret * 0x100 + szBuf[1];
+	if(ret) return ret;
+	nLen = 2;
+
+	//2	剩余交易次数	US	2
+	m_wRemainCount = szBuf[nLen];
+	m_wRemainCount = m_wRemainCount *0x100 + szBuf[nLen+1];
+	nLen = nLen + 2;
+
+	return 0;
+}

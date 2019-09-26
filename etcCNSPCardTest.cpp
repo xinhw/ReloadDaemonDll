@@ -67,6 +67,10 @@ void		test_signin(void);
 void		test_obu_decode_plate(void);
 void		test_psam_auth(void);
 
+void		test_cpc_read(void);
+void		test_cpc_init(void);
+void		test_obu_init_bysam(void);
+
 /*	功能列表*/
 CMD_FUNC cmd_func_tab[] =
 {
@@ -97,6 +101,10 @@ CMD_FUNC cmd_func_tab[] =
 	{'4',"测试：OBU车辆信息解密",test_obu_decode_plate},
 	{'5',"测试：PSAM卡授权",test_psam_auth},
 	{'9',"测试：OBU卡预处理",test_obu_pre_init},
+
+	{'7',"测试：CPC卡 初始化",test_cpc_init},
+	{'8',"测试：CPC卡 读信息",test_cpc_read},
+	{'6',"测试：OBU 通过SAM初始化",test_obu_init_bysam},
 
 	{'N',"测试：操作员签到",test_signin},
 
@@ -236,7 +244,7 @@ void		test_open_reader(void)
 	int ret,ntype;
 	int ncom,nbaud;
 
-	PRINTK("\n请输入读卡器类型\n\t0--航天金卡读写器\n\t1--万集OBU读写器\n\t2--深圳雄帝读卡器\n\t3--深圳金溢OBU读写器\n");
+	PRINTK("\n请输入读卡器类型\n\t0--航天金卡读写器\n\t1--万集OBU读写器\n\t2--深圳雄帝读卡器\n\t3--深圳金溢OBU读写器\n\t4--德卡D8读卡器\n");
 	scanf("%d",&ntype);
 
 	PRINTK("\n输入串口号：");
@@ -847,6 +855,7 @@ void		test_obu_read(void)
 
 	bVer = elf01_mk[9];
 
+
 	memset(szPlainText,0x00,128);
 	ret = obuReadVehicleFile(1,bVer,szPlainText,gnCom);
 	if(ret)
@@ -1348,4 +1357,133 @@ void		test_psam_auth(void)
 	}
 
 	return;
+}
+
+
+void		test_cpc_read(void)
+{
+	int ret,i;
+
+	BYTE elf01_mf[30],elf02_mf[64],elf01_df[128];
+
+	ret = cpcGetSNO(elf01_mf,gnCom);
+	if(ret)
+	{
+		PRINTK("\n获取卡唯一号失败：%d",ret);
+		return;
+	}
+
+	PRINTK("\n%02X%02X%02X%02X",elf01_mf[0],elf01_mf[1],elf01_mf[2],elf01_mf[3]);
+
+	memset(elf01_mf,0x00,30);
+	memset(elf02_mf,0x00,64);
+	memset(elf01_df,0x00,128);
+
+	ret = cpcRead(elf01_mf,elf02_mf,elf01_df,gnCom);
+	if(ret)
+	{
+		PRINTK("\n读CPC卡信息失败：%d",ret);
+		return;
+	}
+
+
+	PRINTK("\n系统信息文件：");
+	for(i=0;i<30;i++) PRINTK("%02X ",elf01_mf[i]);
+
+	PRINTK("\n基本信息文件：");
+	for(i=0;i<64;i++) PRINTK("%02X ",elf02_mf[i]);
+
+	PRINTK("\n入/出口信息文件：");
+	for(i=0;i<128;i++) PRINTK("%02X ",elf01_df[i]);
+
+	return;
+}
+
+void		test_cpc_init(void)
+{
+	int ret;
+
+	BYTE elf01_mf[30];
+
+	memset(elf01_mf,0x00,30);
+
+	// 7.1.3 2个汉字[4]+GB/T2260[2]+00+01
+	memcpy(elf01_mf,"\xC4\xFE\xCF\xC4\x64\x01\x00\x01",8);
+	// 7.1.5 行政区域代码[1]+ 运营商序号[1]+卡片提供商标识[2]+卡片序列号[4]
+	memcpy(elf01_mf+8,"\x64\x01\x01\x62\x00\x00\x00\x45",8);
+	//	版本号：当前为0x01
+	elf01_mf[16]=0x01; 
+	//	合同签署日期[4]+合同过期日期[4]
+	memcpy(elf01_mf+17,"\x20\x19\x01\x01\x20\x19\x12\x31",8);
+
+	ret = cpcInit(elf01_mf,gnCom);
+	if(ret)
+	{
+		PRINTK("\nCPC卡 初始化失败：%d",ret);
+		return;
+	}
+
+	PRINTK("\nCPC卡 初始化 成功！");
+	return;
+}
+
+
+
+void		test_obu_init_bysam(void)
+{
+	int ret;
+	BYTE elf01_mk[100],elf01_adf1[59];
+	BYTE bLen,i;
+	BYTE szSNO[10],szATS[64];
+
+
+	int n = gnCom%MAX_READER_NUM;
+
+	PRINTK("\r\n读卡器端口(test_obu_init_bysam)：%d",n);
+
+	if(!validation(0,n)) return;
+
+	PRINTK("\n请输入SAM卡节点：");
+	scanf("%d",&n);
+
+	bLen = 0;
+	memset(szATS,0x00,64);
+	memset(szSNO,0x00,4);
+	ret = cpuATS(szSNO,bLen,szATS,gnCom);
+	if(ret)
+	{
+		PRINTK("\n没找到卡片");
+		return;
+	}
+
+	PRINTK("\n卡唯一号：%02X%02X%02X%02X",szSNO[0],szSNO[1],szSNO[2],szSNO[3]);
+	PRINTK("\n复位信息：");
+	for(i=0;i<bLen;i++) PRINTK("%02X",szATS[i]);
+
+	//	读取OBU的：系统信息文件
+	memset(elf01_mk,0x00,100);
+	ret = obuRead(elf01_mk,gnCom);
+	if(ret)
+	{
+		PRINTK("\n读取OBU信息失败！");
+		return;
+	}
+	PRINTK("\n系统信息文件：");
+	for(i=0;i<27;i++) PRINTK("%02X ",elf01_mk[i]);
+
+	//	然后初始化
+	memset(elf01_adf1,0x00,59);
+	ret= obuInitBySAM((BYTE)n,elf01_mk,elf01_adf1,gnCom);
+	if(ret)
+	{
+		PRINTK("\nOBU初始化失败！");
+	}
+	else
+	{
+		PRINTK("\nOBU初始化成功！");
+	}
+
+	return;
+
+
 }

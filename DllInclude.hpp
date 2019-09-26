@@ -25,6 +25,7 @@
 #include ".\\reader\\AISinoReader.h"
 #include ".\\reader\\JTReader.h"
 #include ".\\reader\\JYRsuReader.h"
+#include ".\\reader\\D8Reader.h"
 #include ".\\card\\cardbase.h"
 #include ".\\card\\tycpucard.h"
 #include ".\\card\\obucard.h"
@@ -33,6 +34,8 @@
 #include ".\\card\\xh3descard.h"
 #include ".\\card\\ctd3descard.h"
 #include ".\\card\\ty3descard.h"
+#include ".\\card\\ccpccard.h"
+#include ".\\card\\cobucardsam.h"
 
 #ifdef __DEBUG__
 #define PRINTK printf
@@ -51,13 +54,15 @@
 #include ".\\reader\\AISinoReader.cpp"
 #include ".\\reader\\JTReader.cpp"
 #include ".\\reader\\JYRsuReader.cpp"
+#include ".\\reader\\D8Reader.cpp"
 #include ".\\card\\cardbase.cpp"
 #include ".\\card\\tycpucard.cpp"
 #include ".\\card\\obucard.cpp"
+#include ".\\card\\cobucardsam.cpp"
 #include ".\\card\\wd3descard.cpp"
 #include ".\\card\\jd3descard.cpp"
 #include ".\\card\\xh3descard.cpp"
 #include ".\\card\\ctd3descard.cpp"
 #include ".\\card\\ty3descard.cpp"
-
+#include ".\\card\\ccpccard.cpp"
 #endif

@@ -107,8 +107,9 @@ private:
 	//					 int KeyIdForEncrypt, int TimeOut )
 
 	typedef int (WINAPI *LPFN_GetSecure_rq)(long fd,int accessCredentialsOp ,int mode, int DID,
-										char * pAccessCredentials,int keyIdForEncryptOp, int FID, int offset, int length, char * pRandRSU, 
-										int KeyIdForAuthen,int KeyIdForEncrypt, int TimeOut);
+										char * pAccessCredentials,int keyIdForEncryptOp, int FID, 
+										int offset, int length, char * pRandRSU, int KeyIdForAuthen,
+										int KeyIdForEncrypt, int TimeOut);
 	//	获取读取OBU文件请求回应(GetSecure_rs)
 	//	int GetSecure_rs(long fd, int * DID, int * FID, int * length, char *File, 
 	//						char *authenticator,int * ReturnStatus, int TimeOut )

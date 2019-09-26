@@ -29,7 +29,7 @@ private:
 	typedef long (WINAPI *LPFN_RSU_Open)(int mode, char *dev, int port);
 	typedef int (WINAPI *LPFN_RSU_Close)(long fd);
 	// RSU初始化
-	typedef int (WINAPI *LPFN_RSU_INIT_rq)(long fd, char *Time, int BSTInterval, int RetryInterval, int TxPower, int PLLChannelID, int TimeOut);
+	typedef int (WINAPI *LPFN_RSU_INIT_rq)(long fd, char *Time, int BSTInterval, int RetryInterval,int TxPower, int PLLChannelID, int TimeOut);
 	// RSU初始化返回
 	typedef int (WINAPI *LPFN_RSU_INIT_rs)(long fd, int * RSUStatus, char *RSUinfo, int TimeOut);
 	// PSAM通道复位

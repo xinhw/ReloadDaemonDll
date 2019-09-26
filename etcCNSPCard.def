@@ -103,4 +103,13 @@ getCardType
 ;2019-07-15
 readerBeep
 
+;2019-08-26
+cpcGetSNO
+cpcInit
+cpcRead
+
+
+;2019-09-24
+obuInitBySAM
+
 	

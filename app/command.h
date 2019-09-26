@@ -132,6 +132,38 @@ public:
 					BYTE bLaneType,BYTE bLaneID,
 					BYTE *szTerminalTime,
 					char *strListNo);
+
+	// 4.16.1	CPC卡更新申请1047
+	int		cmd_1047(BYTE bKeyVer,
+					BYTE *szSNO,
+					BYTE *szAPPID,
+					BYTE *szIssuer,
+					BYTE *szStartDate,BYTE *szEndDate,
+					BYTE bCardVer,
+					char *strListNo);
+
+
+	// 4.16.2	CPC卡获取密钥1048
+	int		cmd_1048(char *strListNo,
+					BYTE bKeyNo,
+					BYTE *szRand,
+					WORD wSW1SW2,
+					BYTE bResult,
+					BYTE *bLen,BYTE *szEncKey);
+
+	// 4.16.3	CPC卡更新文件1049
+	int		cmd_1049(char *strListNo,
+					BYTE *szRand,
+					WORD wSW1SW2,
+					BYTE bResult,
+					BYTE *szMAC);
+
+	// 4.16.4	CPC卡更新结果上送1050
+	int		cmd_1050(char *strListNo,
+					WORD wSW1SW2,
+					BYTE bResul);
+
+
 private:
 	PACKAGEHEADER	m_ph;
 	void	updateHeader(WORD wType,DWORD wDataLen);

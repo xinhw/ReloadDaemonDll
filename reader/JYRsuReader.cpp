@@ -58,12 +58,12 @@ Reversion:
 -------------------------------------------------------------------------*/
 UINT CJYRsuReader::Open(char *strAddress, unsigned int iBaud)
 {
-	m_hDll = LoadLibrary("RSUComm_JY.dll");
+	m_hDll = LoadLibrary("gvObuApi.dll");
 	if(m_hDll == NULL)
 	{
 		DWORD dw = GetLastError();
 		char strError[32];
-		sprintf(strError,"无法加载金溢RSUComm_JY.dll - %08X", dw);
+		sprintf(strError,"无法加载金溢gvObuApi.dll - %08X", dw);
 		PRINTK(strError);
 		return 0x1A13;
 	}
@@ -150,15 +150,15 @@ Reversion:
 UINT CJYRsuReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 {
 	time_t tm;
-	time(&tm);
-	BYTE szTime[4];
+	BYTE szTime[64];
 	int rlen = 0;
 
 	int iResult = 0;
 
 	bATSLen = 0;
 
-	memset(szTime,0x00,4);
+	time(&tm);
+	memset(szTime,0x00,64);
 	CMisc::Int2Bytes(tm,szTime);
 
 	PRINTK("\nlpfn_RSU_INIT_rq");

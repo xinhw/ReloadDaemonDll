@@ -192,7 +192,7 @@ int CXH3DESCard::init(BYTE *elf15)
 
 		{0x09,7,(BYTE *)"\x02\x01\x00\x01\xEE\xB0\x10","圈存子密钥1 DLK1",NULL},
 		{0x0A,7,(BYTE *)"\x02\x02\x00\x01\xEE\xB0\x10","圈存子密钥2 DLK2",NULL},
-		{0x0B,7,(BYTE *)"\x11\x00\x00\x01\x33\xB0\x10","应用PIN解锁子密钥 DPUK_DF01",NULL},
+		{0x0B,7,(BYTE *)"\x04\x00\x00\x01\x33\xB0\x10","应用PIN解锁子密钥 DPUK_DF01",NULL},
 		{0x0C,7,(BYTE *)"\x05\x01\x00\x01\x33\xB0\x10","应用PIN重装子密钥 DPRK_DF01",NULL},
 
 		{0x07,7,(BYTE *)"\x0B\x00\x00\x01\x33\xA0\x01","应用主控密钥 MK_DF01",NULL},

@@ -5,24 +5,26 @@
 
     Xin Hongwei(hongwei.xin@avantport.com)
 
-    Created£º2018/07/24 16:12:29
+    Created£º2019/08/27 13:39:56
 
     Reversion:
-			ÌìÓ÷CPU¿¨(ÄþÏÄ SM4)
+        	CPC¿¨
 -------------------------------------------------------------------------*/
 #pragma once
 
-
-class CTYCPUCard: public CCPUCardBase
+class CCPCCard: public CCPUCardBase
 {
 public:
-	CTYCPUCard();
-	CTYCPUCard(CCardReader *preader,ClsCommand *pcmd);
-	~CTYCPUCard();
+	CCPCCard();
+	CCPCCard(CCardReader *preader,ClsCommand *pcmd);
+	~CCPCCard();
 
 private:
-	int ty_load_key(BYTE bVer,BYTE *szAPPID,BYTE *szDID,BYTE bKeyNo,BYTE bKeyHeaderLen,BYTE *szKeyHeader);
+	int		cpc_load_key(BYTE bKeyNo,BYTE *szAPPID,BYTE *bP1P2);
+
 public:
+	char	m_strListNo[37];
+
 	//	³õÊ¼»¯
 	int init(BYTE *elf15);
 	//	¿¨Æ¬Çå³ý

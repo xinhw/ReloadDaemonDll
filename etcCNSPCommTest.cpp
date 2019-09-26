@@ -31,7 +31,7 @@ CMD_FUNC cmd_func_tab[] =
 	{'Q',"退出",NULL},
 
 	{'L',"测试：连接前置程序",test_connect_kms},
-	{'C',"测试：关闭到前置程序的连接",test_disconnect_kms},
+	{'X',"测试：关闭到前置程序的连接",test_disconnect_kms},
 
 	{'N',"测试：操作员签到",test_signin},
 	{'C',"测试：用户卡充值",test_user_card_credit},	
@@ -110,8 +110,20 @@ void		print_cmd_usage(void)
 int main(void)
 {
 	char ch;
+	int ret;
+	WSADATA		wsaData;  	
+	WORD wSockVersion;
 
 	PRINTK("\n高速公路在线密钥服务动态库测试：%s",__DATE__);
+	
+	//	WinSock2初始化
+	wSockVersion = MAKEWORD(2,1);
+	ret = WSAStartup(wSockVersion,&wsaData);
+	if(ret) 
+	{
+		CCommServiceLog::LogEvent("\nWIN SOCKET2初始化失败！");
+		return ret;
+	}
 
 	print_cmd_usage();
 
@@ -131,6 +143,7 @@ int main(void)
 
 	PRINTK("\n运行结束,Press Any Key to continue...\n");
 	getch();
+	WSACleanup();
 
 	return 0;
 }
@@ -142,6 +155,7 @@ void		test_connect_kms(void)
 
 	char strip[32];
 	int nport;
+
 
 	memset(strip,0x00,32);
 	PRINTK("\n请输入前置IP:");
@@ -182,10 +196,46 @@ void		test_signin(void)
 	return;
 }
 
+/*
+cmd_1032(BYTE bVer,BYTE *szAPPID,
+			BYTE *szRnd,WORD wSeqNo,DWORD nAmount,BYTE bTransFlag,BYTE *szDeviceNo,BYTE *szDateTime,DWORD dwRemain,
+			BYTE *szMAC1,
+			BYTE *szMAC)
+*/
 void		test_user_card_credit(void)
 {
 
+	int ret,i;
+	BYTE bVer;
+	BYTE szAPPID[8];
+	BYTE szRnd[4];
+	BYTE szDeviceNo[6],szDateTime[7],szMAC1[4],szMAC2[4];
 
+	bVer = 0x40;
+
+	memcpy(szAPPID,"\x18\x32\x03\x01\x00\x00\x00\x02",8);
+	memcpy(szRnd,"\xD0\xF4\x66\xC6",4);
+	memcpy(szDeviceNo,"\x64\x01\x00\x00\x01\x02",6);
+	memset(szDateTime,0x00,7);
+	memcpy(szDateTime,"\x20\x19\x09\x04\x21\x01\x32",7);
+
+	memset(szMAC1,0x00,4);
+	memset(szMAC2,0x00,4);
+	ret = cmd_1032(bVer,szAPPID,
+		szRnd,0x0000,0x000003e8,0x02,szDeviceNo,szDateTime,0,
+		szMAC1,
+		szMAC2);
+
+	if(ret)
+	{
+		PRINTK("\n用户卡充值1032 失败:%d",ret);
+		return;
+	}
+
+	PRINTK("\n用户卡充值1032：%02X%02X%02X%02X",szMAC2[0],szMAC2[1],szMAC2[2],szMAC2[3]);
+	PRINTK("\n日期时间：");
+	for(i=0;i<7;i++) PRINTK("%02X",szDateTime[i]);
+	return;
 
 }
 
@@ -248,8 +298,41 @@ void		test_user_card_validdate(void)
 	return;
 }
 
+/*
+int	__stdcall 	cmd_1036(BYTE bVer,BYTE *szAPPID,
+				BYTE *szRnd,
+				WORD wSeqNo,DWORD nAuditNo,DWORD nRemain,DWORD nAmount,BYTE bTransFlag,BYTE *szDeviceNo,BYTE *szDateTime,
+				BYTE *szMAC)
+*/
 void		test_user_card_debit(void)
 {
+	int ret;
+	BYTE bVer;
+	BYTE szAPPID[8];
+	BYTE szRnd[4];
+	BYTE szDeviceNo[6],szDateTime[7],szMAC[8];
+
+	bVer = 0x40;
+
+	memcpy(szAPPID,"\x18\x32\x03\x01\x00\x00\x00\x02",8);
+	memcpy(szRnd,"\xD0\xF4\x66\xC6",4);
+	memcpy(szDeviceNo,"\x64\x01\x00\x00\x01\x02",6);
+	memcpy(szDateTime,"\x20\x19\x09\x04\x21\x01\x32",7);
+
+	memset(szMAC,0x00,8);
+	ret = cmd_1036(bVer,szAPPID,
+		szRnd,
+		0x0001,0x00000064,0,10000,0x06,szDeviceNo,szDateTime,
+		szMAC);
+
+	if(ret)
+	{
+		PRINTK("\n用户卡消费1036 失败:%d",ret);
+		return;
+	}
+
+	PRINTK("\n用户卡消费1036：%02X%02X%02X%02X",szMAC[0],szMAC[1],szMAC[2],szMAC[3]);
+	return;
 }
 
 void		test_verify_tac(void)

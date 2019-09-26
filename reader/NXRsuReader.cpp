@@ -161,7 +161,7 @@ UINT CNXRsuReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 	memset(szTime,0x00,4);
 	CMisc::Int2Bytes(tm,szTime);
 
-	iResult = lpfn_RSU_INIT_rq(m_hDevice, (char *)szTime, 3, 30, 22, 0, 1000);
+	iResult = iResult = lpfn_RSU_INIT_rq(m_hDevice, (char *)szTime, 3, 30, 22, 0, 1000);
 	if(iResult!=0)
 	{
 		PRINTK("\nlpfn_RSU_INIT_rq失败");
@@ -279,7 +279,7 @@ UINT CNXRsuReader::RunCmd(char *strCmd, char *strResult)
 	if(strlen(strResult) < 4)
 	{
 		sprintf(strResult,"%x", &iResult);
-		return iResult;
+		return 0x6710;
 	}
 
 	char strState[5];
@@ -338,46 +338,34 @@ UINT CNXRsuReader::PSAM_RunCmd(char *strCmd, char *strResult)
 		#ifdef DEBUG_PRINT
 			PRINTK("\nPSAM: CMD FAILURE WITH ERROR %d",strResult);
 		#endif
+		delete []pBuffer;
 		return iResult;
 	}
 
+	memset(btData,0x00,512);
 	iResult = lpfn_PSAM_CHANNEL_rs(m_hDevice, m_bPSAMNode, &iAPDULIST, (char *)btData, 2000);
 	if(iResult != SUCCESS)
 	{
 		#ifdef DEBUG_PRINT
 			PRINTK("\nPSAM: RSP FAILURE WITH ERROR %d",strResult);
 		#endif
+		delete []pBuffer;
 		return iResult;
 	}
 
 	// 将返回的字节序列转换成字符串
-	CMisc::ByteToString(&btData[1], btData[0] + 2,strResult);
-
-#ifdef DEBUG_PRINT
-	PRINTK("\nPSAM RSP:%s",strResult);
-#endif
+	CMisc::ByteToString(btData+1, btData[0],strResult);
 
 	delete []pBuffer;
 
-	if(strlen(strResult) < 4)
-	{
-		sprintf(strResult, "%x", &iResult);
-		return iResult;
-	}
+	iResult = btData[btData[0]+1];
+	iResult = iResult *0x100 + btData[btData[0]+2]; 
 
-	char strState[5];
-	
-	memset(strState,0x00,5);
-	memcpy(strState,strResult+strlen(strResult) - 4, 4);
+#ifdef DEBUG_PRINT
+	PRINTK("\nPSAM RSP:%s %04X",strResult,iResult);
+#endif
 
-	strResult[strlen(strResult)-4]=0x00;
-
-	iResult = CMisc::ascToUC(strState[0]);
-	iResult = iResult*0x10 + CMisc::ascToUC(strState[1]);
-	iResult = iResult*0x10 + CMisc::ascToUC(strState[2]);
-	iResult = iResult*0x10 + CMisc::ascToUC(strState[3]);
-
-	if(iResult==0x9000) iResult = 0;
+	if(iResult==0x9000) return 0;
 
 	return iResult;
 }
@@ -520,6 +508,7 @@ UINT CNXRsuReader::SecureRead(BYTE bKeyIndex,BYTE bFileID,BYTE bOffset,BYTE bLen
 	PRINTK("\nFileID=%02X\tFile Length=%02x",obuFileId, obuFileLength);
 
 	bRetFileLen = (BYTE)obuFileLength;
+	strResp[0]=0x00;
 	CMisc::ByteToString(replyData,bRetFileLen,strResp);
 
 	PRINTK("\nREPLYDATA:%s",strResp);

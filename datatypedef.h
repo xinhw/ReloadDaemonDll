@@ -95,4 +95,13 @@
 	#define PWRITEFILEREC WRITEFILEREC *
 
 
+	typedef struct tagOBUKey
+	{
+		char *strAPDU;
+		char *strKeyHeader;
+		char *strPID;
+		char *strDID;
+		char *strDesc;
+	}OBUKEY;
+
 #endif

@@ -280,13 +280,23 @@ int __stdcall openReader(int nType,int ncom,int nbaud)
 		return ret;
 	}
 
-	//	金溢OBU端口器
+	//	金溢OBU读卡器
 	if(READER_TYPE_JINYI==nType)
 	{
 		preader[ncom] = new CJYRsuReader();
 
 		memset(strcom,0x00,32);
 		sprintf(strcom,"COM%d",ncom);
+		ret = preader[ncom]->Open(strcom,nbaud);
+		return ret;
+	}
+
+	//	德卡D8读卡器读卡器
+	if(READER_TYPE_D8==nType)
+	{
+		preader[ncom] = new CD8Reader();
+
+		memset(strcom,0x00,32);
 		ret = preader[ncom]->Open(strcom,nbaud);
 		return ret;
 	}
@@ -992,7 +1002,7 @@ int	__stdcall obuGetUID(BYTE *szUID,int ncom)
 
 	int n = ncom%MAX_READER_NUM;
 
-	if(!validation(1,n)) return -1;
+	if(!validation(0,n)) return -1;
 
 	COBUCard *pcard = new COBUCard(preader[n],pcmd[n]);
 
@@ -1025,7 +1035,7 @@ int __stdcall obuRead(BYTE *elf01_mk,int ncom)
 
 	int n = ncom%MAX_READER_NUM;
 
-	if(!validation(1,n)) return -1;
+	if(!validation(0,n)) return -1;
 
 	COBUCard *pcard = new COBUCard(preader[n],pcmd[n]);
 
@@ -1456,12 +1466,30 @@ void __stdcall setAgentCode(char *s,int ncom)
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		setCardType
+Created:		2019-08-28 08:23:56
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void	__stdcall	setCardType(int ntype)
 {
 	gnCardType = ntype;
 }
 
 
+/*-------------------------------------------------------------------------
+Function:		readerBeep
+Created:		2019-08-28 08:23:53
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
 void __stdcall readerBeep(int ncom,BYTE bAct)
 {
 	PRINTK("\r\n读卡器端口(readerBeep)：%d",ncom);
@@ -1474,4 +1502,204 @@ void __stdcall readerBeep(int ncom,BYTE bAct)
 	}
 
 	return;
+}
+
+/*-------------------------------------------------------------------------
+Function:		cpcGetSNO
+Created:		2019-08-28 08:23:50
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int __stdcall cpcGetSNO(BYTE *szSNO,int ncom)
+{
+	int ret;
+	char strCmd[32],strResp[32];
+
+	PRINTK("\r\n读卡器端口(cpcGetSNO)：%d",ncom);
+
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	memset(strCmd,0x00,32);
+	memset(strResp,0x00,32);
+	ret = preader[n]->RunCmd("00A40000023F00",strResp);
+	if(ret)
+	{
+		sprintf(strCmd,"获取卡唯一号失败，返回:%04X",ret);
+		return ret;
+	}
+
+	//	获取卡唯一号
+	memset(strCmd,0x00,32);
+	memset(strResp,0x00,32);
+	ret = preader[n]->RunCmd("80F6000304",strResp);
+	if(ret)
+	{
+		sprintf(strCmd,"获取卡唯一号失败，返回:%04X",ret);
+		return ret;
+	}
+	CMisc::StringToByte(strResp,szSNO);	
+
+
+	return ret;
+}
+
+/*-------------------------------------------------------------------------
+Function:		cpcInit
+Created:		2019-08-28 08:23:43
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int __stdcall cpcInit(BYTE *elf01,int ncom)
+{
+	int ret;
+
+	PRINTK("\r\n读卡器端口(cpcInit)：%d",ncom);
+
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	CCPCCard *pcard = new CCPCCard(preader[n],pcmd[n]);
+
+	ret = pcard->init(elf01);
+	if(ret)
+	{
+		pcmd[n]->cmd_1050(pcard->m_strListNo,0x9000,0x00);
+	}
+	else
+	{
+		pcmd[n]->cmd_1050(pcard->m_strListNo,(WORD)ret,0x01);
+	}
+
+	delete pcard;
+
+	return ret;
+}
+
+
+
+/*-------------------------------------------------------------------------
+Function:		cpcRead
+Created:		2019-08-28 08:23:46
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+        
+Reversion:
+        
+-------------------------------------------------------------------------*/
+int __stdcall cpcRead(BYTE *elf01_mf,BYTE *elf02_mf,BYTE *ef01_df,int ncom)
+{
+	int ret;
+	char strCmd[32],strResp[512];
+
+
+	PRINTK("\r\n读卡器端口(cpcRead)：%d",ncom);
+
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(1,n)) return -1;
+
+	//	选择3F00
+	memset(strCmd,0x00,32);
+	memset(strResp,0x00,512);
+	ret = preader[n]->RunCmd("00A40000023F00",strResp);
+	if(ret)
+	{
+		sprintf(strCmd,"选择3F00:%04X",ret);
+		return ret;
+	}
+
+	//	读取EF01
+	memset(strCmd,0x00,32);
+	memset(strResp,0x00,512);
+	ret = preader[n]->RunCmd("00B081001E",strResp);
+	if(ret)
+	{
+		sprintf(strCmd,"读取EF01(MF)失败:%04X",ret);
+		return ret;
+	}
+	CMisc::StringToByte(strResp,elf01_mf);	
+
+	//	读取EF02
+	memset(strCmd,0x00,32);
+	memset(strResp,0x00,512);
+	ret = preader[n]->RunCmd("00B0820040",strResp);
+	if(ret)
+	{
+		sprintf(strCmd,"读取EF02(MF)失败:%04X",ret);
+		return ret;
+	}
+	CMisc::StringToByte(strResp,elf02_mf);	
+
+
+	//	选择DF01
+	memset(strCmd,0x00,32);
+	memset(strResp,0x00,512);
+	ret = preader[n]->RunCmd("00A4000002DF01",strResp);
+	if(ret)
+	{
+		sprintf(strCmd,"选择DF01:%04X",ret);
+		return ret;
+	}
+
+	memset(strCmd,0x00,32);
+	memset(strResp,0x00,512);
+	ret = preader[n]->RunCmd("00B0810080",strResp);
+	if(ret)
+	{
+		sprintf(strCmd,"读取EF01(DF01)失败:%04X",ret);
+		return ret;
+	}
+	CMisc::StringToByte(strResp,ef01_df);	
+
+	return ret;
+}
+
+
+/*-------------------------------------------------------------------------
+Function:		obuInitBySAM
+Created:		2019-08-28 08:23:46
+Author:			Xin Hongwei(hongwei.xin@avantport.com)
+Parameters: 
+				bSAMNode	[in]	SAM卡节点
+				elf01_mf	[in]	系统信息文件，27字节
+				elf01_adf	[in]	车辆信息文件，59字节
+				ncom		[in]	读卡器的串口号
+Reversion:
+				通过OBU一发母卡初始化OBU
+-------------------------------------------------------------------------*/
+int __stdcall obuInitBySAM(BYTE bSAMNode,BYTE *elf01_mf,BYTE *elf01_adf,int ncom)
+{
+	int ret;
+
+	PRINTK("\r\n读卡器端口(obuInitBySAM)：%d",ncom);
+
+	int n = ncom%MAX_READER_NUM;
+
+	if(!validation(0,n)) return -1;
+
+	COBUCardSAM *pcard = new COBUCardSAM(preader[n],NULL);
+
+	pcard->setSAMNode(bSAMNode);
+
+	ret= pcard->init(elf01_mf,elf01_adf);
+	if(ret)
+	{
+		PRINTK("\nOBU初始化失败！");
+	}
+	else
+	{
+		PRINTK("\nOBU初始化成功！");
+	}
+	delete pcard;
+
+	return ret;
 }
