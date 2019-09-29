@@ -30,7 +30,7 @@
 	V0.28	增加3DES天喻、楚天龙、珠海星汉卡的一发功能
 	V0.29	增加通过母卡一发OBU，支持金溢、万集读卡器
 */
-#define DLL_VERSION		"V0.29 多串口国密(3DES)算法ETC用户卡、OBU发行动态库"
+#define DLL_VERSION		"V0.29.1 多串口国密(3DES)算法ETC用户卡、OBU发行动态库"
 
 //	读卡器类型
 #define READER_TYPE_CPU_CARD		0x00			//	航天金卡用户卡读卡器

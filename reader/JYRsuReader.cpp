@@ -220,7 +220,14 @@ UINT CJYRsuReader::Initialize(BYTE *strsno,BYTE &bATSLen,BYTE *strResult)
 
 	PRINTK("\nOBU APPLICATION:");
 	for(i=0;i<16;i++) PRINTK("%02X",(BYTE)m_szApplication[i]);
+
+	PRINTK("\nOBU Configuration:");
+	for(i=0;i<7;i++) PRINTK("%02X",(BYTE)btObuConfiguration[i]);	
 	/*	*/
+
+	bATSLen = 7;
+	memcpy(strResult,btObuConfiguration,7);
+
 	return 0;
 }
 
